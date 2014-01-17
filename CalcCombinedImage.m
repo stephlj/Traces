@@ -19,6 +19,12 @@
 %   in smFRET from bead images. Or, use the Matlab function
 %   cpselect to generate points manually.
 %
+%Update 1/2014: fitgeotrans does a bit better than my handwritten code in
+%CalcChannelMapping; it might be iterating to find optimal solutions or
+%something like that.  Regardless, I now use fitgeotrans, but, for
+%backwards compatibility, turn the output of fitgeotrans into A, b, and
+%then re-form tform here.  
+%
 %Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
 function composite = CalcCombinedImage(A,b,StartImg,EndImg)
