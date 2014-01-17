@@ -7,7 +7,7 @@ Requires Matlab with the following toolboxes installed:
 
 ##Getting Started##
 
-Open the smFRETsetup.m file and change parameters as necessary. For example, you will probably want to change defaultdatadir and codedir.  You will also want to follow the instructions in smFRETsetup under Display Defaults to make sure figures will show up well on your screen.
+Open the ```matlab  smFRETsetup.m```  file and change parameters as necessary. For example, you will probably want to change defaultdatadir and codedir.  You will also want to follow the instructions in smFRETsetup under Display Defaults to make sure figures will show up well on your screen.
 
 To analyze the sample data in this repository, run
 
