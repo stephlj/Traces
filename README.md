@@ -13,6 +13,7 @@ To analyze the sample data in this repository, run
 
 ```matlab
 smFRET('Nucleosomes4000xdil')
+```
 
 from the command line.  Pass '1' as the second optional input to run in debug mode, which will provide some additional figures.
 
