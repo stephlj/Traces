@@ -1,0 +1,12 @@
+{
+  "Channels": [{
+    "Name": "Default",
+    "DisplayMode": 1,
+    "HistogramMax": -1,
+    "Max": 547,
+    "Gamma": 1,
+    "Min": 90,
+    "Color": -1
+  }],
+  "Comments": {"Summary": ""}
+}
