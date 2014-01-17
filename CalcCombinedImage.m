@@ -1,4 +1,4 @@
-%function composite = CalcCombinedImage(A,b,StartImg,EndImg)
+%function composite = CalcCombinedImage(A,b,StartImg,EndImg,ShowResults)
 %
 %Given two images and the transformation matrix and vectors A, b that 
 %define an affine map from StartImg to EndImg (see outputs of CalcChannelMapping), 
@@ -27,7 +27,9 @@
 %
 %Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function composite = CalcCombinedImage(A,b,StartImg,EndImg)
+function composite = CalcCombinedImage(A,b,StartImg,EndImg,ShowResults)
+
+if ~exist('ShowResults','var') ShowResults = 0; end
 
 tformMatrix = [A; -b'];
 tformMatrix = [tformMatrix,[0; 0; 1]];
@@ -40,4 +42,7 @@ alignedimgG = imwarp(StartImg,tform,'OutputView',Rfixed);
 
 composite = imfuse(EndImg,alignedimgG,'blend');
 
-figure, imshowpair(EndImg,alignedimgG,'blend')
+if ShowResults
+    figure, imshowpair(EndImg,alignedimgG,'blend')
+    title('Green overlayed on red')
+end

@@ -40,6 +40,7 @@ Acceptor = 0; %This means the acceptor channel is the one on the left
 %from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
+FramesToAvg = 10; %How many frames to average over for spotfinding
 BeadSize = 10; %Diameter of a circle that defines a bead (used for the channel
     %mapping procedure); beads whose centers are closer than BeadSize will 
     %not be included, and found beads will be circled by a circle of radius BeadSize.  
@@ -68,4 +69,4 @@ SmoothFRET = 10; %Same as SmoothIntensities but for the FRET signal.  At some
 save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'defaultdatadir','splitx','Acceptor','BeadSize','BeadNeighborhood',...
     'DNASize','DNANeighborhood','NormImg','SmoothIntensities','SmoothFRET',...
-    'Fig1Pos','Fig2Pos');
+    'Fig1Pos','Fig2Pos','FramesToAvg');

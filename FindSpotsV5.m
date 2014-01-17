@@ -195,7 +195,8 @@ disp(strcat('Number of peaks kept: ',int2str(size(spots,1))))
 
 %For checking the results: make a figure that puts a box around each spot
 %found.  Also put a red x where it thinks the center of each spot is.
-if ShowResults
+%Updated 1/2014 for some error handling in case no spots were found:
+if ShowResults && size(spots,1) > 0 && size(spots,2) > 0
     PutBoxesOnImageV4(imggray,spots,boxsize,0);
     title(ImgTitle,'Fontsize',16)
 end

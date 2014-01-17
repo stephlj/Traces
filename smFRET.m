@@ -64,6 +64,10 @@ function smFRET(rootname,debug)
                 ylabel('Counts')
                 newthresh = input('Enter new threshold to use:');
                 close
+                %Error handling:
+                while newthresh <=0 || newthresh >= 1
+                    newthresh = input('Enter new threshold to use:');
+                end
                 [newspots,thisn,thisxout] = FindSpotsV5(SpotImg,'ShowResults',1,...
                     'UserThresh',newthresh,'ImgTitle',ChName,'NeighborhoodSize',OrdfiltSize,...
                     'maxsize',MinDist);
@@ -115,7 +119,7 @@ function smFRET(rootname,debug)
 
         for i = 1:BdDir
             BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); %Keeps a record of which bead files went into the map
-            TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 10]);
+            TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 params.FramesToAvg]);
             if size(TotImg,3) == 1
                 allBdImgs(:,:,i) = TotImg;
             else
@@ -151,7 +155,7 @@ function smFRET(rootname,debug)
                 if size(TotImg,3)==1
                     PutBoxesOnImageV4(mat2gray(TotImg),[spotsR{i};spotsG_abs],params.BeadSize,'0','w');
                 else
-                    PutBoxesOnImageV4(mat2gray(mean(TotImg(:,:,1:10),3)),[spotsR{i};spotsG_abs],params.BeadSize,'0','w');
+                    PutBoxesOnImageV4(mat2gray(mean(TotImg(:,:,1:params.FramesToAvg),3)),[spotsR{i};spotsG_abs],params.BeadSize,'0','w');
                 end
                 clear spotsG_abs
             end
@@ -172,7 +176,7 @@ function smFRET(rootname,debug)
                 if size(TotImg,3) == 1
                     PutBoxesOnImageV4(mat2gray(TotImg),[matchR{i}';matchG_abs'],params.BeadSize);
                 else
-                    PutBoxesOnImageV4(mat2gray(mean(TotImg(:,:,1:10),3)),[matchR{i}';matchG_abs'],params.BeadSize);
+                    PutBoxesOnImageV4(mat2gray(mean(TotImg(:,:,1:params.FramesToAvg),3)),[matchR{i}';matchG_abs'],params.BeadSize);
                 end
                 %Another way of plotting the matching: blue line between points
                 %in the two channels, with a green dot for where the point is
@@ -201,10 +205,10 @@ function smFRET(rootname,debug)
         %Update 1/2014: the built-in Matlab function fitgeotrans does a bit
         %better than my hand-written code in CalcChannelMapping, so I
         %switched to using that:
-        %[A,b] = CalcChannelMapping(matchGall,matchRall);
+        %[A,b] = CalcChannelMapping(matchGall,matchRall)
         tform = fitgeotrans(matchRall',matchGall','Affine'); %Note different input order for fitgeotrans
-        A = tform.T(1:2,1:2);
-        b = -tform.T(3,1:2);
+        A = tform.T(1:2,1:2)
+        b = transpose(-tform.T(3,1:2))
         
         %Plot the results for each movie:
         for i = 1:BdDir
@@ -221,7 +225,9 @@ function smFRET(rootname,debug)
             hist(min(errs,[],2),0:0.1:10)
             ylabel('Counts','Fontsize',12)
             xlabel('Distance between mapped red bead and real red bead','Fontsize',12)
+            CalcCombinedImage(A,b,allBdImgs(:,257:end,i),allBdImgs(:,1:256,i),1);
             pause
+            close
             close
             close
             clear newR matchG_abs
@@ -275,7 +281,7 @@ function smFRET(rootname,debug)
             
         if strcmpi(useoldspots,'n')
            %Load this movie--just the first 10 frames for finding spots
-           TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 10]);
+           TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 params.FramesToAvg]);
            [imgRed,imgGreen] = SplitImg(TotImg,params);
            
            %Find spots in both channels, but don't double-count:
@@ -284,14 +290,21 @@ function smFRET(rootname,debug)
            %will have a frame of reference of the acceptor image, which
            %is fine because that's what I pass into UserSpotSelectionV4.
            
-           composite = CalcCombinedImage(A,b,imgGreen,imgRed);
+           composite = CalcCombinedImage(A,b,mean(imgGreen,3),...
+               mean(imgRed,3));
            
            %Find spots in this new image:
            [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
+           figure, imshow(mean(imgGreen,3),[]);
+           title('Green Channel')
+           figure, imshow(mean(imgRed,3),[]);
+           title('Red Channel')
             spotsR = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
                 params.DNANeighborhood,params.DNASize);
             clear n xout
+            
+            close all
 
 %             %Find spots in green channel
 %             [spotsG,n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...

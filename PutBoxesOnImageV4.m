@@ -30,6 +30,7 @@ if size(spots,2)~=2
     spots = transpose(spots);
 end
 
+figure
 imshow(img)
 hold on
 
