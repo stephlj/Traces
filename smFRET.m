@@ -198,7 +198,14 @@ function smFRET(rootname,debug)
         %Step three: calculate the transformation using all pairs of beads,
         %from all bead movies or snapshots that were loaded:
         %Calculate transformation:
-        [A,b] = CalcChannelMapping(matchGall,matchRall);
+        %Update 1/2014: the built-in Matlab function fitgeotrans does a bit
+        %better than my hand-written code in CalcChannelMapping, so I
+        %switched to using that:
+        %[A,b] = CalcChannelMapping(matchGall,matchRall);
+        tform = fitgeotrans(matchRall',matchGall','Affine'); %Note different input order for fitgeotrans
+        A = tform.T(1:2,1:2);
+        b = -tform.T(3,1:2);
+        
         %Plot the results for each movie:
         for i = 1:BdDir
             disp(strcat('Iterating through bead images for user to check quality (',...
@@ -270,65 +277,79 @@ function smFRET(rootname,debug)
            %Load this movie--just the first 10 frames for finding spots
            TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 10]);
            [imgRed,imgGreen] = SplitImg(TotImg,params);
-
+           
            %Find spots in both channels, but don't double-count:
-            %Find spots in green channel
-            [spotsG,n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+           %Update 1/2014: finding spots in a composite image, so that
+           %mid-FRET spots don't get lost.  NOTE that the combined image
+           %will have a frame of reference of the acceptor image, which
+           %is fine because that's what I pass into UserSpotSelectionV4.
+           
+           composite = CalcCombinedImage(A,b,imgGreen,imgRed);
+           
+           %Find spots in this new image:
+           [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-            spotsG = SptFindUserThresh(spotsG,imgGreen,n,xout,'Green Channel',params.DNANeighborhood,params.DNASize);
+            spotsR = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
+                params.DNANeighborhood,params.DNASize);
             clear n xout
-            spotsG = spotsG';
-            %Figure out where these spots would be in the red channel:
-            spotsRguess = A*spotsG+repmat(b,1,size(spotsG,2));
-            spotsG_abs(1,:) = spotsG(1,:);
-            spotsG_abs(2,:) = spotsG(2,:)+size(TotImg,2)/2;
-            if debug
-                figure
-                PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),[spotsG_abs';spotsRguess'],params.DNASize);
-                title('Spots found in green, with red pairs','Fontsize',12)
-                pause
-                close
-            end
 
-            %Find spots in red channel
-            [spotsR,n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
-                'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-            spotsR = SptFindUserThresh(spotsR,imgRed,n,xout,'Red Channel',params.DNANeighborhood,params.DNASize);
-            clear n xout
-            spotsR = spotsR';
-            %Make sure that none of spotsRguess duplicate spotsR: if any do, keep
-            %only the spotsR version because directly finding the spot is probably
-            %more accurate than using the transformation from the green channel to
-            %guess where it is.  This will also elimninate any spots that are too
-            %close together:
-            SelfDists = FindSpotDists([spotsRguess,spotsR]);
-            spottooclose = SelfDists>params.DNASize;
-            %Each row will be all 1's if the spot represented by the row is more than
-            %sqrt(2)*sqrt(maxsize) away from another spot.  If there's another spot too
-            %close, one or more elements will be zero.  So below, ask if the sum of a
-            %peak's row is equal to the length of the row (minus one, because of the
-            %zero element where it's too close to itself)
-            spotstemp = [];
-            for j = 1:size(spotsRguess,2)
-                if sum(spottooclose(j,:))==length(spottooclose(j,:))-1
-                    spotstemp(:,end+1) = spotsRguess(:,j);
-                end
-            end
-            spots = [spotstemp,spotsR];
-            clear spotstemp
-
-            if debug
-                figure
-                PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),[spotsG_abs';spotsRguess';spotsR'],params.DNASize);
-                title('All spots found in red and green channels, and green matched to red','Fontsize',12)
-                figure 
-                PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),spots',params.DNASize);
-                title('All spots to be analyzed','Fontsize',12)
-                pause
-                close all
-            end
+%             %Find spots in green channel
+%             [spotsG,n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+%                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
+%             spotsG = SptFindUserThresh(spotsG,imgGreen,n,xout,'Green Channel',params.DNANeighborhood,params.DNASize);
+%             clear n xout
+%             spotsG = spotsG';
+%             %Figure out where these spots would be in the red channel:
+%             spotsRguess = A*spotsG+repmat(b,1,size(spotsG,2));
+%             spotsG_abs(1,:) = spotsG(1,:);
+%             spotsG_abs(2,:) = spotsG(2,:)+size(TotImg,2)/2;
+%             if debug
+%                 figure
+%                 PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),[spotsG_abs';spotsRguess'],params.DNASize);
+%                 title('Spots found in green, with red pairs','Fontsize',12)
+%                 pause
+%                 close
+%             end
+% 
+%             %Find spots in red channel
+%             [spotsR,n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
+%                 'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
+%             spotsR = SptFindUserThresh(spotsR,imgRed,n,xout,'Red Channel',params.DNANeighborhood,params.DNASize);
+%             clear n xout
+%             spotsR = spotsR';
+%             %Make sure that none of spotsRguess duplicate spotsR: if any do, keep
+%             %only the spotsR version because directly finding the spot is probably
+%             %more accurate than using the transformation from the green channel to
+%             %guess where it is.  This will also elimninate any spots that are too
+%             %close together:
+%             SelfDists = FindSpotDists([spotsRguess,spotsR]);
+%             spottooclose = SelfDists>params.DNASize;
+%             %Each row will be all 1's if the spot represented by the row is more than
+%             %sqrt(2)*sqrt(maxsize) away from another spot.  If there's another spot too
+%             %close, one or more elements will be zero.  So below, ask if the sum of a
+%             %peak's row is equal to the length of the row (minus one, because of the
+%             %zero element where it's too close to itself)
+%             spotstemp = [];
+%             for j = 1:size(spotsRguess,2)
+%                 if sum(spottooclose(j,:))==length(spottooclose(j,:))-1
+%                     spotstemp(:,end+1) = spotsRguess(:,j);
+%                 end
+%             end
+%             spots = [spotstemp,spotsR];
+%             clear spotstemp
+% 
+%             if debug
+%                 figure
+%                 PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),[spotsG_abs';spotsRguess';spotsR'],params.DNASize);
+%                 title('All spots found in red and green channels, and green matched to red','Fontsize',12)
+%                 figure 
+%                 PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),spots',params.DNASize);
+%                 title('All spots to be analyzed','Fontsize',12)
+%                 pause
+%                 close all
+%             end
             
-            save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots')
+           save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots')
 
            %Iterate through spots; display traces and allow user to select which ones to keep
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))

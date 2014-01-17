@@ -1,7 +1,8 @@
 %function UserSpotSelectionV4()
 %
 %Iterates through all the spots in a movie and allows user to adjust
-%background, keep the ones they like, etc.
+%background, keep the ones they like, etc. Note that spots are passed in in
+%the frame of reference of the ACCEPTOR channel.
 %
 %The CPLC FRET code (in IDL) from TJ Ha's lab at UIUC uses a circle that's
 %9 pxls diameter, and includes 3 pixels in the first row, then 5 pixels, 
