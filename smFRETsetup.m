@@ -13,8 +13,8 @@ function smFRETsetup
 %defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
 defaultsavedir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data analysis';
 %Where to load data from:
-%defaultdatadir = '/Volumes/smFRET/smFRET data';
-defaultdatadir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data';
+defaultdatadir = '/Volumes/smFRET/smFRET data';
+%defaultdatadir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data';
 %Where the code is (which is where it saves this parameter file)
 %codedir = '/Volumes/smFRET/smFRET analysis code';
 codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';

@@ -229,7 +229,7 @@ function smFRET(rootname,debug)
             hist(min(errs,[],2),0:0.1:10)
             ylabel('Counts','Fontsize',12)
             xlabel('Distance between mapped red bead and real red bead','Fontsize',12)
-            CalcCombinedImage(A,b,allBdImgs(:,257:end,i),allBdImgs(:,1:256,i),1);
+            CalcCombinedImage(Amatlab,bmatlab,allBdImgs(:,257:end,i),allBdImgs(:,1:256,i),1);
             pause
             close
             close
@@ -244,6 +244,7 @@ function smFRET(rootname,debug)
     end
 
 %%%%%%SECOND PART: Analyze data:
+close all
     D_Data = uigetdir(D_Beads,'Select directory with data to analyze');
     %Figure out how many bead files to analyze there are:
     ToAnalyze = dir(fullfile(D_Data,strcat(rootname,'_*')));
@@ -305,7 +306,7 @@ function smFRET(rootname,debug)
            title('Green Channel')
            figure, imshow(mean(imgRed,3),[]);
            title('Red Channel')
-            spotsR = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
+            spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
                 params.DNANeighborhood,params.DNASize);
             clear n xout
             
