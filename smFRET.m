@@ -93,6 +93,8 @@ function smFRET(rootname,debug)
             Map = load(fullfile(D_Beads,'ChannelMapping.mat'));
             A = Map.A;
             b = Map.b;
+            Amatlab = Map.Amatlab;
+            bmatlab = Map.bmatlab;
             clear Map prevmapdir
         else
             disp(strcat('Bead map not found in',Beads))
@@ -203,12 +205,14 @@ function smFRET(rootname,debug)
         %from all bead movies or snapshots that were loaded:
         %Calculate transformation:
         %Update 1/2014: the built-in Matlab function fitgeotrans does a bit
-        %better than my hand-written code in CalcChannelMapping, so I
-        %switched to using that:
-        %[A,b] = CalcChannelMapping(matchGall,matchRall)
+        %better than my hand-written code in CalcChannelMapping for overlaying 
+        %images using CalcCombinedImage, but mine does better in terms of 
+        %calculating where a spot in the donor channel should be in the acceptor
+        %channel.  So for now, calculating and saving both:
+        [A,b] = CalcChannelMapping(matchGall,matchRall)
         tform = fitgeotrans(matchRall',matchGall','Affine'); %Note different input order for fitgeotrans
-        A = tform.T(1:2,1:2)
-        b = transpose(-tform.T(3,1:2))
+        Amatlab = tform.T(1:2,1:2)
+        bmatlab = transpose(-tform.T(3,1:2))
         
         %Plot the results for each movie:
         for i = 1:BdDir
@@ -234,7 +238,8 @@ function smFRET(rootname,debug)
         end
         clear allBdImgs matchG matchR matchGall matchRall
 
-        save(fullfile(D_Beads,'ChannelMapping.mat'),'A','b','BeadFilesInMap');
+        save(fullfile(D_Beads,'ChannelMapping.mat'),'A','b','BeadFilesInMap',...
+            'Amatlab','bmatlab');
         save('PathToRecentMap','MostRecentMapDir');
     end
 
@@ -290,7 +295,7 @@ function smFRET(rootname,debug)
            %will have a frame of reference of the acceptor image, which
            %is fine because that's what I pass into UserSpotSelectionV4.
            
-           composite = CalcCombinedImage(A,b,mean(imgGreen,3),...
+           composite = CalcCombinedImage(Amatlab,bmatlab,mean(imgGreen,3),...
                mean(imgRed,3));
            
            %Find spots in this new image:
