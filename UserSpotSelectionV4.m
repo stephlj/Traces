@@ -63,7 +63,8 @@ allGrI = zeros(size(spots,2),length(alltifs));
 GrSpots = zeros(size(spots));
     
 for jj = 1:100:length(alltifs)
-    moviebit = LoadUManagerTifsV5(PathToMovie,[jj jj+99]);
+    %Being explicit about numeric types for now:
+    moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));
     [imgR,imgG] = SplitImg(moviebit,params);
     if jj==1
         imgRinit = imgR(:,:,1:10);
