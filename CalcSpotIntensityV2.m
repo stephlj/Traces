@@ -24,9 +24,9 @@ function I = CalcSpotIntensityV2(img,spotcen)
 
 SpotDiam = 5;
 
-mask = zeros(SpotDiam,SpotDiam);
-mask(2:4,:) = ones(3,SpotDiam);
-mask(:,2:4) = ones(SpotDiam,3);
+mask = zeros(SpotDiam,SpotDiam,class(img));
+mask(2:4,:) = ones(3,SpotDiam,class(img));
+mask(:,2:4) = ones(SpotDiam,3,class(img));
 
 %The part of the image that contains the spot is going to be in:
 SpotCenRound = round(spotcen);
@@ -43,7 +43,7 @@ end
 
 spotimg = img(SpotBox(1,1):SpotBox(1,2),SpotBox(2,1):SpotBox(2,2),:);
 
-I = zeros(1,size(img,3));
+I = zeros(1,size(img,3),class(img));
 
 % %For debugging:
 %     figure
