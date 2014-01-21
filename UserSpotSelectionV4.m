@@ -92,7 +92,7 @@ for jj = 1:100:length(alltifs)
        allGrI(kk,jj:jj+99) = CalcSpotIntensityV2(imgG,GrSpots(:,kk));
     end
    clear grspot imgR imgG moviebit
-   disp(sprintf('Calculated intensity for frames %d to %d', jj, jj+99))
+   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))
 end
 
 %%%Interactive section
