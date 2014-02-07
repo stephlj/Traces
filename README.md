@@ -43,7 +43,7 @@ By the way, any time it asks you to press "anything else", it will probably cras
 
 ##Acknowledgements##
 
-I am extremely grateful to [Matt Johnson](http://www.mit.edu/~mattjj/) and [Luke Breuer](http://luke.breuer.com/) for extensive help developing this software.  This project would have been dead in the water without the significant intellectual and time contributions that they made! I am also indebted to TJ Ha's lab at UIUC, which has made what I consider to be "industry-standard" [smFRET code](cplc.illinois.edu/software/) freely available on their website. In this repository I make frequent allusions to the Ha lab code, noting where my code differs from theirs and where I have followed their lead.
+I am extremely grateful to [Matt Johnson](http://www.mit.edu/~mattjj/) and [Luke Breuer](http://luke.breuer.com/) for extensive help developing this software.  This project would have been dead in the water without the significant intellectual and time contributions that they made! I am also indebted to TJ Ha's lab at UIUC, which has made what I consider to be "industry-standard" [smFRET code](http://cplc.illinois.edu/software/) freely available on their website. In this repository I make frequent allusions to the Ha lab code, noting where my code differs from theirs and where I have followed their lead.
 
 ##Licensing Information##
 
