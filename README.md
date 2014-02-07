@@ -41,6 +41,10 @@ After you're finished, or if you decided to use the existing map in the GoodBead
 
 By the way, any time it asks you to press "anything else", it will probably crash if you press the space bar.  Choose a different anything else!
 
+##Acknowledgements##
+
+I am extremely grateful to Matt Johnson (themattjohnson.com, github.com/mattjj) and Luke Breuer (luke.breuer.com) for extensive help developing this software.  This project would have been dead in the water without the significant intellectual and time contributions that they made! I am also indebted to TJ Ha's lab at UIUC, which has made what I consider to be "industry-standard" smFRET code freely available on their website (cplc.illinois.edu/software/). In this repository I make frequent allusions to the Ha lab code, noting where my code differs from theirs and where I have followed their lead.
+
 ##Licensing Information##
 
 Coming soon!
