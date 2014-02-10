@@ -1,11 +1,11 @@
-%function val = GetInfoFromMetaData(dirname,paramname)
+% function val = GetInfoFromMetaData(dirname,paramname)
 %
-%Paramname can be: 
-%imgsize ->output will be a vector of xpxls,ypxls
-%fps -> output will be frames per second
+% Paramname can be: 
+% imgsize ->output will be a vector of xpxls,ypxls
+% fps -> output will be frames per second
 %
-%Steph 10/2013
-%Copyright 2013 Stephanie Johnson, University of California, San Francisco
+% Steph 10/2013
+% Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
 function val = GetInfoFromMetaData(dirname,paramname)
 
