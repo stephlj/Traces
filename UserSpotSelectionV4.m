@@ -1,28 +1,28 @@
-%function UserSpotSelectionV4()
+% function UserSpotSelectionV4()
 %
-%Iterates through all the spots in a movie and allows user to adjust
-%background, keep the ones they like, etc. Note that spots are passed in in
-%the frame of reference of the ACCEPTOR channel.
+% Iterates through all the spots in a movie and allows user to adjust
+% background, keep the ones they like, etc. Note that spots are passed in in
+% the frame of reference of the ACCEPTOR channel.
 %
-%The CPLC FRET code (in IDL) from TJ Ha's lab at UIUC uses a circle that's
-%9 pxls diameter, and includes 3 pixels in the first row, then 5 pixels, 
-%7 pxls, 9, 9, 9, 7, 5, 3.
+% The CPLC FRET code (in IDL) from TJ Ha's lab at UIUC uses a circle that's
+% 9 pxls diameter, and includes 3 pixels in the first row, then 5 pixels, 
+% 7 pxls, 9, 9, 9, 7, 5, 3.
 %
-%V3 uses circles instead of squares for calculating intensities.
-%V4 isn't passed a movie; instead it's passed a directory name, and
-%only loads 100 frames at a time, calculates the intensity, then loads the
-%next 100 frames etc.  Otherwise my computer runs out of RAM.
+% V3 uses circles instead of squares for calculating intensities.
+% V4 isn't passed a movie; instead it's passed a directory name, and
+% only loads 100 frames at a time, calculates the intensity, then loads the
+% next 100 frames etc.  Otherwise my computer runs out of RAM.
 %
-%Updated 12/2013 to allow the user to pass the figure position information
-%via params, so it's easier to put this code onto different computers.
+% Updated 12/2013 to allow the user to pass the figure position information
+% via params, so it's easier to put this code onto different computers.
 %
-%Steph 10/2013
-%Copyright 2013 Stephanie Johnson, University of California, San Francisco
+% Steph 10/2013
+% Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
 function UserSpotSelectionV4(spots,PathToMovie,params,A,b,savedir,fps,setnum)
 
 %%%Setting up some stuff
-%subfunction for putting circles around a spot:
+% subfunction for putting circles around a spot:
     function boxfun(currspot)
         %CalcSpotIntensityV2 puts a circle of diameter 5 around each spot:
         t = 0:pi/100:2*pi;
@@ -30,7 +30,7 @@ function UserSpotSelectionV4(spots,PathToMovie,params,A,b,savedir,fps,setnum)
         clear t
     end
 
-%Make spots 2-by-numspots matrices, if it's not already
+% Make spots 2-by-numspots matrices, if it's not already
 if size(spots,1)~=2
     spots = transpose(spots);
 end
@@ -41,8 +41,8 @@ end
 %%%Interactive section
 k = 1;%Indexes current spot being plotted
 
-%So that when you go back to a previous spot, you don't have to redo
-%selections you did before:
+% So that when you go back to a previous spot, you don't have to redo
+% selections you did before:
 Rbkgnd = zeros(size(spots,2),1);
 Gbkgnd = zeros(size(spots,2),1);
 xlims = zeros(size(spots,2),2);
