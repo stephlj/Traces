@@ -25,7 +25,7 @@ The wrapper function that is tailored to our experimental setup assumes the foll
 
 Open the `smFRETsetup.m` file and change parameters as necessary. For example, you will probably want to change `defaultdatadir` and `codedir`.  You will also want to follow the instructions under Display Defaults to make sure figures will show up well on your screen.
 
-To analyze the sample data in this repository, run
+Sample data that can be analyzed by my code can be found in my [smFRETdata](https://github.com/stephlj/smFRETdata) repository. To analyze the sample data in that  repository, run
 
 ```matlab
 smFRET('Nucleosomes4000xdil')
