@@ -54,10 +54,8 @@ Copyright (c) 2014 Stephanie Johnson, Ph.D.
 University of California, San Francisco
 
 ##To Do##
-* Channel Mapping: my CalcChannelMap versus Matlab's fitgeotrans.  Fitgeotrans does better when you overlay the images, but mine does better in terms of error in calculated spot center versus detected spot center, especially near the edge between channels.
-* Image smoothing before spot finding?
-* Figure out image scaling, loading as uint16 vs double
-* Refining spot centers--Gaussian fit or pseudo-fit as in Ha lab code
-* Calculating intensities and subtracting background better as in Ha lab code 
+* Image smoothing before spot finding? Seems to be fine without it ... 
+* Refining intensity calculation--Gaussian fit or pseudo-fit as in Ha lab code
+* Whole image background subtraction as in Ha lab code 
 
 
