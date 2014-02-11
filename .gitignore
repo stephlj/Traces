@@ -1,1 +1,9 @@
 /SampleData
+AnalysisParameters.mat
+FREThistoRough.m
+Fake_Data.m
+FindSpotCenGauss.m
+FindSpotCentersV2.m
+PathToRecentMap.mat
+ScrewAround.mat
+TestChannelMapping.m
