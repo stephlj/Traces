@@ -14,7 +14,7 @@
 
 function allimgs = LoadUManagerTifsV5(D,varargin)
 
-    %Input error handling
+    % Input error handling
     if ~isempty(varargin)
         StartStop = sort(varargin{1});
         if StartStop(1)<=0
@@ -22,19 +22,19 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
         end
     end
 
-    %In folder D uManager will have saved a bunch of image files, and two
-    %text files that contain information about the data and its acquisition.
+    % In folder D uManager will have saved a bunch of image files, and two
+    % text files that contain information about the data and its acquisition.
     
-    %First figure out the size of the images:
+    % First figure out the size of the images:
     val = GetInfoFromMetaData(D,'imgsize');
     xpxls = val(1);
     ypxls = val(2);
     
-    %Next figure out how many tif files there are:
+    % Next figure out how many tif files there are:
     
     alltifs = dir(fullfile(D,'img*.tif'));
     
-    %Update 1/2014: Load one file to get the integer type class:
+    % Update 1/2014: Load one file to get the integer type class:
     temp = imread(fullfile(D,alltifs(1).name));
     classtype = class(temp);
     clear temp
@@ -45,11 +45,11 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
         allimgs = zeros(xpxls,ypxls,(StartStop(2)-StartStop(1)+1),classtype);
     end
 
-    %Load all the bead images into a 3d matrix:
+    % Load all the bead images into a 3d matrix:
     if isempty(varargin)
         for i = 1:length(alltifs)
             img = imread(fullfile(D,alltifs(i).name));
-            %img = mat2gray(img);
+            % img = mat2gray(img);
             allimgs(:,:,i) = img;
             clear img
         end
@@ -60,7 +60,7 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
         end
         for i = StartStop(1):StartStop(2);
             img = imread(fullfile(D,alltifs(i).name));
-            %img = mat2gray(img);
+            % img = mat2gray(img);
             allimgs(:,:,incr) = img;
             clear img
             incr = incr+1;

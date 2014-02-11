@@ -35,7 +35,7 @@ Fig1Pos = [25,400,600,500];
 % splitx = 1, Acceptor = 0.
 splitx = 1; %This means red-green channels are left and right (not top and bottom)
 Acceptor = 0; %This means the acceptor channel is the one on the left 
-    %(or on the top if splitx is 0)
+    % (or on the top if splitx is 0)
 % Our acquisition procedure automatically saves other necessary variables
 % like how many pixels on each side our images our, the frame rate, etc.
 % But those could be coded in here and then smFRET rewritten to use values
@@ -44,30 +44,30 @@ Acceptor = 0; %This means the acceptor channel is the one on the left
 %%%%%%%% Analysis parameters: %%%%%%%%
 FramesToAvg = 10; %How many frames to average over for spotfinding
 PxlsToExclude = 10; %How many pixels on each side of the image, along the axis that
-    %contains both channels, to exclude from analysis.  On our system with
-    %a decent channel alignment this is about 10 pixels.  This avoids
-    %finding spots in areas of the image where the channels might overlap.
-    %Set to zero to use the whole image.
+    % contains both channels, to exclude from analysis.  On our system with
+    % a decent channel alignment this is about 10 pixels.  This avoids
+    % finding spots in areas of the image where the channels might overlap.
+    % Set to zero to use the whole image.
 BeadSize = 10; %Diameter of a circle that defines a bead (used for the channel
-    %mapping procedure); beads whose centers are closer than BeadSize will 
-    %not be included, and found beads will be circled by a circle of radius BeadSize.  
+    % mapping procedure); beads whose centers are closer than BeadSize will 
+    % not be included, and found beads will be circled by a circle of radius BeadSize.  
 BeadNeighborhood = 9^2; %Our spot-finding algorithm looks for local maxima in 
-    %"neighborhoods" (see FindSpotsV4 comments). This defines the size of a
-    %neighborhood (area, in square pixels) for the beads.  Needs to be a perfect
-    %square, and best if sqrt(BeadNeighborhood) is odd.  Should be a little 
-    %bigger than we expect beads to be.
+    % "neighborhoods" (see FindSpotsV4 comments). This defines the size of a
+    % neighborhood (area, in square pixels) for the beads.  Needs to be a perfect
+    % square, and best if sqrt(BeadNeighborhood) is odd.  Should be a little 
+    % bigger than we expect beads to be.
 DNASize = 10; %Same as BeadSize but for DNA: diameter of expected spots.  Note that
-    %the code that actually calculates the intensity of a DNA spot is
-    %currently hard-coded to integrate over a circle of diameter 5 pixels;
-    %DNASize only determines how close two spots can be and still be
-    %included in the analysis.
+    % the code that actually calculates the intensity of a DNA spot is
+    % currently hard-coded to integrate over a circle of diameter 5 pixels;
+    % DNASize only determines how close two spots can be and still be
+    % included in the analysis.
 DNANeighborhood = 9^2;%Same as BeadNeighborhood but for DNA.
 SmoothIntensities = 3; %If this is zero (or negative), don't do any smoothing 
-    %of the acceptor and donor intensities; if greater than zero, moving
-    %average smoothing filter of width specified by this variable.  Must be
-    %an integer.
+    % of the acceptor and donor intensities; if greater than zero, moving
+    % average smoothing filter of width specified by this variable.  Must be
+    % an integer.
 SmoothFRET = 10; %Same as SmoothIntensities but for the FRET signal.  At some
-    %point should implement a Gauss filter instead
+    % point should implement a Gauss filter instead
     
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%
 save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...

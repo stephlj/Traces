@@ -54,7 +54,7 @@ for jj = 1:100:length(alltifs)
     
     for kk = 1:size(Rspots,2)
        allRedI(kk,jj:jj+99) = CalcSpotIntensityV2(imgR,Rspots(:,kk));
-       %Find matching green spot:
+       % Find matching green spot:
        Gspots(:,kk) = inv(A)*(Rspots(:,kk)-repmat(b,1,size(Rspots(:,kk),2)));
        allGrI(kk,jj:jj+99) = CalcSpotIntensityV2(imgG,Gspots(:,kk));
     end

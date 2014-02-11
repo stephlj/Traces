@@ -9,11 +9,11 @@
 
 function [MovieMin,MovieMax] = ScaleMovie(PathToMovie,numframes)
  
-    %First, set the initial max to the minimum possible value, then the initial minimum to
-    %the maximum possible value:
+    % First, set the initial max to the minimum possible value, then the initial minimum to
+    % the maximum possible value:
     MovieMax = 0;
-    %To get the maximum possible value, load one frame and figure out the
-    %numeric type:
+    % To get the maximum possible value, load one frame and figure out the
+    % numeric type:
     tempfr = LoadUManagerTifsV5(PathToMovie,[1 1]);
     if strcmpi(class(tempfr),'uint16')
         MovieMin = 2^16-1;

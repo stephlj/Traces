@@ -24,7 +24,7 @@ function UserSpotSelectionV4(spots,PathToMovie,params,A,b,savedir,fps,setnum)
 %%%Setting up some stuff
 % subfunction for putting circles around a spot:
     function boxfun(currspot)
-        %CalcSpotIntensityV2 puts a circle of diameter 5 around each spot:
+        % CalcSpotIntensityV2 puts a circle of diameter 5 around each spot:
         t = 0:pi/100:2*pi;
         plot(currspot(2)+10/2.*cos(t),currspot(1)+10/2.*sin(t),'-g')
         clear t
@@ -61,8 +61,8 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        GrI = allGrI(k,:)-Gbkgnd(k);
        FRET = RedI./(RedI+GrI);
        if params.SmoothIntensities>0
-           %Another thing I'm not sure I should do: Smooth the intensities and FRET
-           %values (see below)
+           % Another thing I'm not sure I should do: Smooth the intensities and FRET
+           % values (see below)
            SmoothIntensities = round(params.SmoothIntensities); %User error handling
            tempRedI = RedI;
            tempGrI = GrI;
@@ -82,27 +82,27 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        if ends(k)~=0
            FRET(ends(k):end) = 0;
        end
-       %TODO: convolve with a Gaussian instead of using a moving average
+       % TODO: convolve with a Gaussian instead of using a moving average
         
        xvect = ((1:length(RedI))./fps)*10^-3; %fps is actually frames per ms
        
-       %Show plots
+       % Show plots
        figure(h2)
-       %plot time-averaged red channel with box around spot
+       % plot time-averaged red channel with box around spot
        subplot(1,2,1)
        imshow(imgRinit)
        hold on
        boxfun(spots(:,k));
        hold off
        title('Red','Fontsize',12)
-       %plot time-averaged green channel with box around spot
+       % plot time-averaged green channel with box around spot
        subplot(1,2,2)
        imshow(imgGinit)
        hold on
        boxfun(GrSpots(:,k));
        hold off
        title('Green','Fontsize',12)
-       %TODO: Allow user to watch video
+       % TODO: Allow user to watch video
        
        figure(h1)
        subplot(2,1,1)
@@ -123,28 +123,28 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        end
        ylim([-.2 1.2])
        
-       %Interactive section:
+       % Interactive section:
        cc=1;
         while cc~=13
             ct=waitforbuttonpress;
             cc=get(gcf,'currentcharacter');
             
             if ct==1
-                %Go forward to the next bead
+                % Go forward to the next bead
                 if cc=='.'
                     k = k+1;
                     cc = 13;
-                %Go back one bead
+                % Go back one bead
                 elseif cc==',' 
                     if k>1
                         k=k-1;
                     end
                     cc=13;
-                %go to the next movie:
+                % go to the next movie:
                 elseif cc=='d'
                     k = size(spots,2)+1;
                     cc=13;
-                %Set background levels
+                % Set background levels
                 elseif cc=='b'
                     [x,~] = ginput(2);
                     x = sort(x);
@@ -152,13 +152,13 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                     Gbkgnd(k) = mean(GrI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
                     clear x
                     cc=13;
-                %Reset background to zero
+                % Reset background to zero
                 elseif cc=='r'
                     Rbkgnd(k)=0;
                     Gbkgnd(k)=0;
                     cc=13;
-                %Save figure.  Saves both the figure and a .mat of
-                %the red and green intensities and FRET values.
+                % Save figure.  Saves both the figure and a .mat of
+                % the red and green intensities and FRET values.
                 elseif cc=='s'
                     saveas(gca,fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))),'fig')
                     print('-depsc',fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))))
@@ -178,33 +178,33 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                     save(fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k),'.mat')),'RedI','GrI','FRET','fps')
                     clear RedToSave GrToSave FRETtoSave
                     cc=13;
-                %Zoom
+                % Zoom
                 elseif cc=='z'
                     [x,~] = ginput(2);
                     x = sort(x);
                     xlims(k,1) = x(1);
                     xlims(k,2) = x(2);
                     cc=13;
-                %Unzoom
+                % Unzoom
                 elseif cc=='u'
                     xlims(k,:) = [0,0];
                     cc=13;
                 elseif cc=='o'
                     offset = input('New offset:');
                     cc=13;
-                %Set end of signal (FRET set to zero after this point)
+                % Set end of signal (FRET set to zero after this point)
                 elseif cc=='e'
                     [x,~] = ginput(1);
                     ends(k) = round(x*fps/10^-3);
                     cc=13;
-                %Don't let extra "enters" build up:
+                % Don't let extra "enters" build up:
                 elseif isequal(cc,char(13)) %13 is the ascii code for the return key
                     cc=13;
                 end
             end
-       %end interactive section
+       % end interactive section
         end
-    %End loop over all spots 
+    % End loop over all spots 
     end
 close all
 

@@ -125,8 +125,8 @@ end
 % (1) Define a neighborhood as NeighborhoodSize square pixels--want the max and min
 % calculations to be over areas roughly the size we expect beads to be
 maxes = ordfilt2(imggray,NeighborhoodSize,ones(sqrt(NeighborhoodSize),sqrt(NeighborhoodSize))); 
-    %Note about ordfilt: This tests over square neighborhoods; make a matrix that's not ones
-    %everywhere to look over some other kind of domain shape.
+    % Note about ordfilt: This tests over square neighborhoods; make a matrix that's not ones
+    % everywhere to look over some other kind of domain shape.
 mins  = ordfilt2(imggray,1,ones(sqrt(NeighborhoodSize),sqrt(NeighborhoodSize)));
 
 % (2) Identify true maxes.  
@@ -140,9 +140,9 @@ mins  = ordfilt2(imggray,1,ones(sqrt(NeighborhoodSize),sqrt(NeighborhoodSize)));
 diffs = maxes-mins;
 [n,xout] = hist(reshape(diffs,1,numel(diffs)),50);
 if ~UserThresh
-    %Update 12/2013: Since not all the computers we run this code on have
-    %the Curve fitting toolbox, default to threshold of 0.15 if necessary.
-    %Turns out this does pretty well for most images.
+    % Update 12/2013: Since not all the computers we run this code on have
+    % the Curve fitting toolbox, default to threshold of 0.15 if necessary.
+    % Turns out this does pretty well for most images.
     try
         opts = fitoptions('gauss2','Algorithm','Trust-Region','lower',[0 0 0 0 0.15 0],...
             'upper',[Inf 1 Inf Inf 1 Inf],'StartPoint',[1 0.1 1 1 0.5 1]);
@@ -180,14 +180,14 @@ for i = 1:size(peaks,1)
     if (peaks(i,1)-maxsize)>=1 && (peaks(i,1)+maxsize)<=size(imggray,1) && ...
             (peaks(i,2)-maxsize)>=1 && (peaks(i,2)+maxsize)<=size(imggray,2) && ...
             sum(spottooclose(i,:))==length(spottooclose(i,:))-1
-        %Keep this peak.  
+        % Keep this peak.  
         if UseCentroid
             cen = FindSpotCentersV2(imggray((peaks(i,1)-cen_boxsize):(peaks(i,1)+cen_boxsize),...
                 (peaks(i,2)-cen_boxsize):(peaks(i,2)+cen_boxsize)));
-            %Because the center-finding algorithms were passed only a
-            %submatrix (ie a cropped image of each spot), they returned the (row,col) of
-            %the center of the spot in terms of submatrix.  Want to
-            %return centers relative to the original imggray matrix:
+            % Because the center-finding algorithms were passed only a
+            % submatrix (ie a cropped image of each spot), they returned the (row,col) of
+            % the center of the spot in terms of submatrix.  Want to
+            % return centers relative to the original imggray matrix:
             spots(:,end+1) = [peaks(i,1)-cen_boxsize-1+cen(1), peaks(i,2)-cen_boxsize-1+cen(2)];
         else
             spots(:,end+1) = [peaks(i,1),peaks(i,2)];

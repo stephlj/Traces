@@ -19,18 +19,18 @@
 function smFRET(rootname,debug)
 
 %%%%%%Preliminaries:
-    %Since debug is an optional input, set a default
+    % Since debug is an optional input, set a default
     if ~exist('debug','var') 
         debug=0; 
     else 
         disp('Running in debug mode.')
     end
 
-    %Nested functions for use later:
+    % Nested functions for use later:
     
-    %Function 1: Getting absolute (in the whole original image) coordinates
-    %for spots, rather than local (in a single channel) coordinates.
-    %Also makes use of the new PxlsToExclude parameter.
+    % Function 1: Getting absolute (in the whole original image) coordinates
+    % for spots, rather than local (in a single channel) coordinates.
+    % Also makes use of the new PxlsToExclude parameter.
     function [spotsGglobal,spotsRglobal] = SpotsIntoAbsCoords(spotsGlocal,...
             spotsRlocal,params_struct,imgwidth)
         if params_struct.splitx
@@ -56,8 +56,8 @@ function smFRET(rootname,debug)
         end
     end
 
-    %Function 2: Let user keep changing background threshhold for
-    %spotfinding till satisfied:
+    % Function 2: Let user keep changing background threshhold for
+    % spotfinding till satisfied:
     function newspots = SptFindUserThresh(oldspots,SpotImg,thisn,thisxout,...
             ChName,OrdfiltSize,MinDist)
         newspots = oldspots;
@@ -72,7 +72,7 @@ function smFRET(rootname,debug)
                 ylabel('Counts')
                 newthresh = input('Enter new threshold to use:');
                 close
-                %Error handling:
+                % Error handling:
                 while newthresh <=0 || newthresh >= 1
                     newthresh = input('Enter new threshold to use:');
                 end
@@ -88,17 +88,17 @@ function smFRET(rootname,debug)
 
     smFRETsetup;
     params = load('AnalysisParameters.mat');
-    %Error-handling: Check that the user-defined parameters are reasonable:
+    % Error-handling: Check that the user-defined parameters are reasonable:
     if round(params.PxlsToExclude)~=params.PxlsToExclude
         params.PxlsToExclude = round(params.PxlsToExclude);
     end
 
 %%%%%%FIRST PART: Channel mapping:
-    %Load an old channel mapping, or perform a new one:
+    % Load an old channel mapping, or perform a new one:
     DoMap = input('Press enter to perform channel mapping, anything else to load an old one:','s');
 
     if ~isempty(DoMap)
-        %Default to most recent map:
+        % Default to most recent map:
         prevmapdir = load('PathToRecentMap.mat');
         D_Beads = uigetdir(prevmapdir.MostRecentMapDir,'Select directory with old map');
         if exist(fullfile(D_Beads,'ChannelMapping.mat'),'file')
@@ -114,9 +114,9 @@ function smFRET(rootname,debug)
         end
     else
         D_Beads = uigetdir(params.defaultdatadir,'Select directory with beads');
-        %To easily load the most recent bead map:
+        % To easily load the most recent bead map:
         MostRecentMapDir = D_Beads;
-        %Figure out how many bead files to analyze there are:
+        % Figure out how many bead files to analyze there are:
         AllBeads = dir(fullfile(D_Beads,'Bead*'));
         num_BeadDir = input(strcat('How many bead files to analyze? Max:',...
             int2str(length(AllBeads)),' (Enter to use max; movies load first)'));
@@ -135,17 +135,17 @@ function smFRET(rootname,debug)
             BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); %Keeps a record of which bead files went into the map
             TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 params.FramesToAvg]);
             
-            %Updated 2/2014 to account for LoadUManagerTifs returning an
-            %image of the same numeric type as the initial files.  For
-            %spot-finding, we don't care much about numeric type and image
-            %contrast scaling, but in order to get the averaged image scaled
-            %between 0 and 1, use mean first:
+            % Updated 2/2014 to account for LoadUManagerTifs returning an
+            % image of the same numeric type as the initial files.  For
+            % spot-finding, we don't care much about numeric type and image
+            % contrast scaling, but in order to get the averaged image scaled
+            % between 0 and 1, use mean first:
             
             if size(TotImg,3) == 1
                 TotImg2 = TotImg;
             else
-                %allBdImgs(:,:,i) = mean(TotImg(:,:,1:10),3);
-                %With the new version of LoadUManagerTifs:
+                % allBdImgs(:,:,i) = mean(TotImg(:,:,1:10),3);
+                % With the new version of LoadUManagerTifs:
                 TotImg2 = mean(TotImg,3);
             end
             
@@ -153,18 +153,18 @@ function smFRET(rootname,debug)
             
             disp(strcat('Analyzing beads: ',int2str(i)',' of ',int2str(BdDir)))
 
-            %Step 1: Find spots in red and green channels separately, so split the
-            %image up into the two channels:
+            % Step 1: Find spots in red and green channels separately, so split the
+            % image up into the two channels:
             [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
 
-            %Find spots in green channel
+            % Find spots in green channel
             [spotsG{i},n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
                 'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
             spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
                 params.BeadNeighborhood,params.BeadSize);
             clear n xout
             
-            %Find spots in red channel
+            % Find spots in red channel
             [spotsR{i},n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
                 'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
             spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
@@ -172,7 +172,7 @@ function smFRET(rootname,debug)
             clear n xout
 
             if debug %Figure with all the spots found:
-                %plot all the boxes for both channels on a big image:
+                % plot all the boxes for both channels on a big image:
                 [spotsG_abs,spotsR_abs] = SpotsIntoAbsCoords(spotsG{i},...
                         spotsR{i},params,size(allBdImgs(:,:,i),2)/2);
                 PutBoxesOnImageV4(allBdImgs(:,:,i),[spotsR_abs,spotsG_abs],params.BeadSize,'0','w');
@@ -181,26 +181,26 @@ function smFRET(rootname,debug)
                 clear spotsG_abs spotsR_abs
             end
 
-            %Step 2: figure out which spots in one channel go with the spots in
-            %the other channel.  For our beads, which are brighter in the donor
-            %than acceptor channel, the matching works best if you match spots
-            %in donor to spots in acceptor:
+            % Step 2: figure out which spots in one channel go with the spots in
+            % the other channel.  For our beads, which are brighter in the donor
+            % than acceptor channel, the matching works best if you match spots
+            % in donor to spots in acceptor:
             [matchG{i},matchR{i}] = FindSpotMatches(spotsG{i},spotsR{i});
             matchGall = [matchGall, matchG{i}];
             matchRall = [matchRall, matchR{i}];
 
             if debug
-                %Box in green the ones that were matched:
+                % Box in green the ones that were matched:
                 [matchG_abs,matchR_abs] = SpotsIntoAbsCoords(matchG{i},...
                         matchR{i},params,size(allBdImgs(:,:,i),2)/2);
                 PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR_abs';matchG_abs'],params.BeadSize);
                 title('Only spots that were matched')
-                %Another way of plotting the matching: blue line between points
-                %in the two channels, with a green dot for where the point is
-                %in the green channel, and the end of the blue line where the
-                %point it got matched to in the red channel is.  This is also a
-                %great way of looking at the distortion between the two
-                %channels
+                % Another way of plotting the matching: blue line between points
+                % in the two channels, with a green dot for where the point is
+                % in the green channel, and the end of the blue line where the
+                % point it got matched to in the red channel is.  This is also a
+                % great way of looking at the distortion between the two
+                % channels
                 figure('Position',[200 200 325 625])
                 plot([matchR{i}(2,:);matchG{i}(2,:)],0-[matchR{i}(1,:);matchG{i}(1,:)],'-b')
                 hold on
@@ -221,20 +221,20 @@ function smFRET(rootname,debug)
             clear TotImg TotImg2 imgGreen imgRed spotsGabs
         end
 
-        %Step three: calculate the transformation using all pairs of beads,
-        %from all bead movies or snapshots that were loaded:
-        %Calculate transformation:
-        %Update 1/2014: the built-in Matlab function fitgeotrans does a bit
-        %better than my hand-written code in CalcChannelMapping for overlaying 
-        %images using CalcCombinedImage, but mine does better in terms of 
-        %calculating where a spot in the donor channel should be in the acceptor
-        %channel.  So for now, calculating and saving both:
+        % Step three: calculate the transformation using all pairs of beads,
+        % from all bead movies or snapshots that were loaded:
+        % Calculate transformation:
+        % Update 1/2014: the built-in Matlab function fitgeotrans does a bit
+        % better than my hand-written code in CalcChannelMapping for overlaying 
+        % images using CalcCombinedImage, but mine does better in terms of 
+        % calculating where a spot in the donor channel should be in the acceptor
+        % channel.  So for now, calculating and saving both:
         [A,b] = CalcChannelMapping(matchGall,matchRall)
         tform = fitgeotrans(matchRall',matchGall','Affine'); %Note different input order for fitgeotrans
         Amatlab = tform.T(1:2,1:2)
         bmatlab = transpose(-tform.T(3,1:2))
         
-        %Plot the results for each movie:
+        % Plot the results for each movie:
         for i = 1:BdDir
             disp(strcat('Iterating through bead images for user to check quality (',...
                 int2str(i),' of ',int2str(BdDir),')'))
@@ -246,8 +246,8 @@ function smFRET(rootname,debug)
             figure
             errs = FindSpotDists(matchR{i},newR);
             hist(min(errs,[],2),0:0.1:10)
-            %TODO: If the mean error is bigger than, say, 1 pxl, redo the
-            %mapping excluding points with too-large errors
+            % TODO: If the mean error is bigger than, say, 1 pxl, redo the
+            % mapping excluding points with too-large errors
             ylabel('Counts','Fontsize',12)
             xlabel('Distance between mapped red bead and real red bead','Fontsize',12)
             if params.splitx
@@ -273,9 +273,9 @@ function smFRET(rootname,debug)
 %%%%%%SECOND PART: Analyze data:
 close all
     D_Data = uigetdir(D_Beads,'Select directory with data to analyze');
-    %Figure out how many bead files to analyze there are:
+    % Figure out how many bead files to analyze there are:
     ToAnalyze = dir(fullfile(D_Data,strcat(rootname,'_*')));
-    %Get framerate for plotting:
+    % Get framerate for plotting:
     if isempty(ToAnalyze)
         disp('Did not find data to analyze; remember not to include _<number> at the end of rootname!') %error handling
         return
@@ -283,7 +283,7 @@ close all
     fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze(1).name),'fps');
     fps = 1/fps; %This is actually frames per ms
     
-    %Make sure not saving over old data:
+    % Make sure not saving over old data:
     if ~exist(fullfile(params.defaultsavedir,rootname),'dir')
         savedir = fullfile(params.defaultsavedir,rootname);
         mkdir(savedir)
@@ -302,9 +302,9 @@ close all
     end
 
     for i = 1:length(ToAnalyze)
-        %Update 12/2013: If this movie has already been analyzed, provide
-        %the option to use the previously found spots, instead of
-        %re-finding them
+        % Update 12/2013: If this movie has already been analyzed, provide
+        % the option to use the previously found spots, instead of
+        % re-finding them
         
         useoldspots = 'n';
         
@@ -313,7 +313,7 @@ close all
         end
             
         if strcmpi(useoldspots,'n')
-           %Load this movie--just the first FramesToAvg frames for finding spots
+           % Load this movie--just the first FramesToAvg frames for finding spots
            TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 params.FramesToAvg]);
            
            if size(TotImg,3) > 1
@@ -324,15 +324,15 @@ close all
            
            [imgRed,imgGreen] = SplitImg(TotImg,params);
            
-           %Find spots in both channels, but don't double-count:
-           %Update 1/2014: finding spots in a composite image, so that
-           %mid-FRET spots don't get lost.  NOTE that the combined image
-           %will have a frame of reference of the acceptor image, which
-           %is fine because that's what I pass into UserSpotSelectionV4.
+           % Find spots in both channels, but don't double-count:
+           % Update 1/2014: finding spots in a composite image, so that
+           % mid-FRET spots don't get lost.  NOTE that the combined image
+           % will have a frame of reference of the acceptor image, which
+           % is fine because that's what I pass into UserSpotSelectionV4.
            
            composite = CalcCombinedImage(Amatlab,bmatlab,imgGreen,imgRed);
            
-           %Find spots in this new image:
+           % Find spots in this new image:
            [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
            figure('Position',[params.Fig2Pos(1)+225,params.Fig1Pos(2),1.37*size(imgGreen,2),1.18*size(imgGreen,1)]), imshow(imgGreen);
@@ -347,16 +347,16 @@ close all
             
            save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots')
 
-           %Iterate through spots; display traces and allow user to select which ones to keep
+           % Iterate through spots; display traces and allow user to select which ones to keep
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            UserSpotSelectionV4(spots,fullfile(D_Data,ToAnalyze(i).name),params,A,b,savedir,fps,i);
         else
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots');
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           %Mainly for debugging for now:
-           %PutBoxesOnImageV3(mat2gray(mean(TotImg(:,:,1:20),3)),spots',params.SpotSize);
-           %title('All spots to be analyzed','Fontsize',12)
-           %UserSpotSelectionV3(spots,imgRed,imgGreen,params,A,b,savedir,fps,i);
+           % Mainly for debugging for now:
+           % PutBoxesOnImageV3(mat2gray(mean(TotImg(:,:,1:20),3)),spots',params.SpotSize);
+           % title('All spots to be analyzed','Fontsize',12)
+           % UserSpotSelectionV3(spots,imgRed,imgGreen,params,A,b,savedir,fps,i);
            UserSpotSelectionV4(oldspots.spots,fullfile(D_Data,ToAnalyze(i).name),params,A,b,savedir,fps,i);
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp

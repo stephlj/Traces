@@ -43,7 +43,7 @@ end
 % Lastly add a red dot in the center:
 % Update 9/2013: a red dot instead of an x
 if ~NoX
-    %plot(spots(:,2),spots(:,1),'xr')
+    % plot(spots(:,2),spots(:,1),'xr')
     plot(spots(:,2),spots(:,1),'.r','MarkerSize',3)
 end
 hold off

@@ -44,7 +44,7 @@ matched1 = [];
 matched2 = [];
 matches = 1;
 taken = []; %This prevents one spot in spots2 from getting matched to two 
-    %spots in spots1
+    % spots in spots1
 for i=1:size(Dists,1)
     if minDists(i)<=maxDist 
         if sum(ismember(taken,ind(i)))==0
@@ -61,20 +61,20 @@ for i=1:size(Dists,1)
 %             close
 %             clear matchG_abs
         else %Another spot in spots1 has already claimed this spot in spots2
-                %as its nearest neighbor.  Which one is closest?
+                % as its nearest neighbor.  Which one is closest?
             samespots2 = find(ind==ind(i));
             [~,winner] = min(minDists(samespots2));
-            %samespots2(winner) is the index of the spot in spots1 that has the
-            %shortest distance to the spot2 that has multiple matches.
+            % samespots2(winner) is the index of the spot in spots1 that has the
+            % shortest distance to the spot2 that has multiple matches.
             if samespots2(winner)==i
-                %Need to remove the previous spot in spot1 that had claimed
-                %this spot2.  Since this process is done iteratively, there
-                %should be only one spot before i that has the same ind as
-                %spot i.  So the spot to remove is spot1(samespots2(1)).
-                %But that's not necessarily the same as
-                %matched1(samespots2(1)).
-                %We know (i-matches-1) spot1's have been skipped because they didn't
-                %have a minDist to a spot2 that was less than maxDist:
+                % Need to remove the previous spot in spot1 that had claimed
+                % this spot2.  Since this process is done iteratively, there
+                % should be only one spot before i that has the same ind as
+                % spot i.  So the spot to remove is spot1(samespots2(1)).
+                % But that's not necessarily the same as
+                % matched1(samespots2(1)).
+                % We know (i-matches-1) spot1's have been skipped because they didn't
+                % have a minDist to a spot2 that was less than maxDist:
                 matched1temp = matched1;
                 matched2temp = matched2;
                 clear matched1 matched2
@@ -97,9 +97,9 @@ for i=1:size(Dists,1)
                 matched1(:,matches) = spots1(:,i);
                 matched2(:,matches) = spots2(:,ind(i));
                 clear matched1temp matched2temp
-            %if samespots2(winner)<i, we've already put it in matched1; if
-            %samespots2(winner)>i,we'll deal with it when we get to it.  in either
-            %case, do nothing with this spot for now.
+            % if samespots2(winner)<i, we've already put it in matched1; if
+            % samespots2(winner)>i,we'll deal with it when we get to it.  in either
+            % case, do nothing with this spot for now.
 %             %For debugging: need to uncomment the global TotImg at the top
 %             matchG_abs(1,:) = matched2(1,:);
 %             matchG_abs(2,:) = matched2(2,:)+size(TotImg,2)/2;

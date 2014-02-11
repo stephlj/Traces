@@ -13,9 +13,9 @@ function val = GetInfoFromMetaData(dirname,paramname)
     alllines = textscan(fid,'%s','Delimiter','\n');
     fclose(fid);
     if strcmpi(paramname,'imgsize')
-        %The way our metadata files are written, the size of the image
-        %will be in different places in the file depending on whether it
-        %was collected with Mult-D acquisition or Snap:
+        % The way our metadata files are written, the size of the image
+        % will be in different places in the file depending on whether it
+        % was collected with Mult-D acquisition or Snap:
         if strcmpi(alllines{1}(19),'"ROI": [')
             tempx = alllines{1}(22);
             tempy = alllines{1}(23);

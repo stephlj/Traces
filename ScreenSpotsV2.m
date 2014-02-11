@@ -54,14 +54,14 @@ while happy == 0
     elseif isempty(SelectedSpotx)
         happy = 1;
     else
-        %Find the nearest spot center to the user's click.  Start by
-        %finding the distance from user's click to every spot:
+        % Find the nearest spot center to the user's click.  Start by
+        % finding the distance from user's click to every spot:
         dists = sqrt((spotcenters(:,1)-SelectedSpotx.*ones(length(spotcenters),1)).^2+...
             (spotcenters(:,2)-SelectedSpoty.*ones(length(spotcenters),1)).^2);
         [~,closest] = min(dists);
-        %The closest spot to the click is the one at
-        %spotcenters(closest,:).
-        %If this spot is in newspots, deselect and move to badspots:
+        % The closest spot to the click is the one at
+        % spotcenters(closest,:).
+        % If this spot is in newspots, deselect and move to badspots:
         if ~isempty(find(ismember(newspots,spotcenters(closest,:))))
             badspots(end+1,:) = spotcenters(closest,:);
             badspots = sortrows(badspots);
@@ -70,8 +70,8 @@ while happy == 0
             clear newspots
             newspots = [tempspots(1:spotind(1)-1,:); tempspots(spotind(1)+1:end,:)];
             clear tempspots spotind
-            %Don't need to sort, the newspots vector should still be sorted
-        %if it's in badspots, re-select and move to newspots:
+            % Don't need to sort, the newspots vector should still be sorted
+        % if it's in badspots, re-select and move to newspots:
         elseif ~isempty(find(ismember(badspots,spotcenters(closest,:))))
             newspots(end+1,:) = spotcenters(closest,:);
             newspots = sortrows(newspots);
