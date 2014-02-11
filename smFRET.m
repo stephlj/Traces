@@ -1,20 +1,20 @@
-%function smFRET
+% function smFRET
 %
-%Wrapper function for analyzing smFRET data--loads data, calls the
-%functions that do the analysis, etc.
+% Wrapper function for analyzing smFRET data--loads data, calls the
+% functions that do the analysis, etc.
 %
-%This will analyze all the movies in a set at once, where a set is defined
-%as having the same root filename with _1, _2 at the end (the way
-%MicroManager saves multiple movies of the same root filename).  They all
-%have to be in the same folder.
+% This will analyze all the movies in a set at once, where a set is defined
+% as having the same root filename with _1, _2 at the end (the way
+% MicroManager saves multiple movies of the same root filename).  They all
+% have to be in the same folder.
 %
-%Inputs are:
-%Root filename (the movies it analyzes will be rootname_1, rootname_2 etc)
-%Optionally: if you want it to run all the various debugging things, pass
-%"1" as the second input.
+% Inputs are:
+% Root filename (the movies it analyzes will be rootname_1, rootname_2 etc)
+% Optionally: if you want it to run all the various debugging things, pass
+% "1" as the second input.
 %
-%Steph 9/2013
-%Copyright 2013 Stephanie Johnson, University of California, San Francisco
+% Steph 9/2013
+% Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
 function smFRET(rootname,debug)
 

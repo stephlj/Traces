@@ -19,7 +19,7 @@
 
 function [allRedI, allGrI, Gspots, imgRinit, imgGinit] = CalcIntensities(PathToMovie, Rspots, A, b,params)
 
-%Figure out the total number of image files in this movie:
+% Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
 allRedI = zeros(size(Rspots,2),length(alltifs));
 allGrI = zeros(size(Rspots,2),length(alltifs));
