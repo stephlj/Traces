@@ -132,7 +132,7 @@ function smFRET(rootname,debug)
         BeadFilesInMap = cell(BdDir,1);
 
         for i = 1:BdDir
-            BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); %Keeps a record of which bead files went into the map
+            BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); % Keeps a record of which bead files went into the map
             TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 params.FramesToAvg]);
             
             % Updated 2/2014 to account for LoadUManagerTifs returning an
@@ -230,7 +230,7 @@ function smFRET(rootname,debug)
         % calculating where a spot in the donor channel should be in the acceptor
         % channel.  So for now, calculating and saving both:
         [A,b] = CalcChannelMapping(matchGall,matchRall)
-        tform = fitgeotrans(matchRall',matchGall','Affine'); %Note different input order for fitgeotrans
+        tform = fitgeotrans(matchRall',matchGall','Affine'); % Note different input order for fitgeotrans
         Amatlab = tform.T(1:2,1:2)
         bmatlab = transpose(-tform.T(3,1:2))
         
@@ -281,7 +281,7 @@ close all
         return
     end
     fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze(1).name),'fps');
-    fps = 1/fps; %This is actually frames per ms
+    fps = 1/fps; % This is actually frames per ms
     
     % Make sure not saving over old data:
     if ~exist(fullfile(params.defaultsavedir,rootname),'dir')

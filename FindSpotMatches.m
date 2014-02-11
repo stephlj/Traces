@@ -34,7 +34,7 @@ end
 % Get the distances between all the spots:
 Dists = FindSpotDists(spots1,spots2);
 
-[minDists,ind] = min(Dists,[],2); %Minimum along each row
+[minDists,ind] = min(Dists,[],2); % Minimum along each row
 % Assume that if a spot in spots1 doesn't have match that's a shorter
 % distance away than the mean distance over all the spots plus the standard
 % deviation, that that spot doesn't have a match:
@@ -43,7 +43,7 @@ maxDist = mean(minDists)+std(minDists,1);
 matched1 = [];
 matched2 = [];
 matches = 1;
-taken = []; %This prevents one spot in spots2 from getting matched to two 
+taken = []; % This prevents one spot in spots2 from getting matched to two 
     % spots in spots1
 for i=1:size(Dists,1)
     if minDists(i)<=maxDist 

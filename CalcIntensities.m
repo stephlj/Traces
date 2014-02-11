@@ -39,7 +39,7 @@ for jj = 1:100:length(alltifs)
     % As noted in ScaleMovie, it's not clear to me if I should be scaling
     % each channel separately, or as one image.  Right now ScaleMovie
     % returns only one min and one max so scaling the image globally:
-    moviebit = mat2gray(moviebit,[overallMin overallMax]); %This also converts it to double precision
+    moviebit = mat2gray(moviebit,[overallMin overallMax]); % This also converts it to double precision
     [imgR,imgG] = SplitImg(moviebit,params);
     
     if jj==1

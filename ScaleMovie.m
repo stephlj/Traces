@@ -20,7 +20,7 @@ function [MovieMin,MovieMax] = ScaleMovie(PathToMovie,numframes)
     elseif strcmpi(class(tempfr),'uint8')
         MovieMin = 2^8-1;
     else
-        MovieMin = 100000; %Random very large number!
+        MovieMin = 100000; % Random very large number!
     end
     clear tempfr;
 

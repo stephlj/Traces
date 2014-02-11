@@ -39,14 +39,14 @@ end
 [allRedI, allGrI, GrSpots, imgRinit, imgGinit] = CalcIntensities(PathToMovie, spots, A, b,params);
 
 %%%Interactive section
-k = 1;%Indexes current spot being plotted
+k = 1; % Indexes current spot being plotted
 
 % So that when you go back to a previous spot, you don't have to redo
 % selections you did before:
 Rbkgnd = zeros(size(spots,2),1);
 Gbkgnd = zeros(size(spots,2),1);
 xlims = zeros(size(spots,2),2);
-ends = zeros(size(spots,2),1); %Where the end of the FRET signal should be (zero after this point)
+ends = zeros(size(spots,2),1); % Where the end of the FRET signal should be (zero after this point)
 offset = 10;
 
 h2 = figure('Position',params.Fig2Pos);
@@ -63,17 +63,17 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        if params.SmoothIntensities>0
            % Another thing I'm not sure I should do: Smooth the intensities and FRET
            % values (see below)
-           SmoothIntensities = round(params.SmoothIntensities); %User error handling
+           SmoothIntensities = round(params.SmoothIntensities); % User error handling
            tempRedI = RedI;
            tempGrI = GrI;
            clear RedI GrI
-           RedI = smooth(tempRedI,SmoothIntensities); %Moving average with span = SmoothIntensities
+           RedI = smooth(tempRedI,SmoothIntensities); % Moving average with span = SmoothIntensities
            GrI = smooth(tempGrI,SmoothIntensities);
            clear tempRedI tempGrI SmoothIntensities
        end
        if params.SmoothFRET>0
            tempFRET = FRET;
-           SmoothFRET = round(params.SmoothFRET); %User error handling
+           SmoothFRET = round(params.SmoothFRET); % User error handling
            clear FRET
            FRET = smooth(tempFRET,SmoothFRET);
            clear tempFRET SmoothFRET
@@ -84,7 +84,7 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        end
        % TODO: convolve with a Gaussian instead of using a moving average
         
-       xvect = ((1:length(RedI))./fps)*10^-3; %fps is actually frames per ms
+       xvect = ((1:length(RedI))./fps)*10^-3; % fps is actually frames per ms
        
        % Show plots
        figure(h2)

@@ -114,7 +114,7 @@ function smFRETBoxes(rootname,debug)
         BeadFilesInMap = cell(BdDir,1);
 
         for i = 1:BdDir
-            BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); %Keeps a record of which bead files went into the map
+            BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); % Keeps a record of which bead files went into the map
             TotImg = LoadUManagerTifsV4(fullfile(D_Beads,AllBeads(i).name));
             if size(TotImg,3) == 1
                 allBdImgs(:,:,i) = TotImg;
@@ -229,7 +229,7 @@ function smFRETBoxes(rootname,debug)
     ToAnalyze = dir(fullfile(D_Data,strcat(rootname,'_*')));
     % Get framerate for plotting:
     fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze(1).name),'fps');
-    fps = 1/fps; %This is actually frames per ms
+    fps = 1/fps; % This is actually frames per ms
     
     % Make sure not saving over old data:
     if ~exist(fullfile(params.defaultsavedir,rootname),'dir')

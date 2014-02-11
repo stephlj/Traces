@@ -25,7 +25,7 @@ if ~isempty(varargin) && ~ischar(varargin{1})
     return
 end
 
-newspots = spotcenters; %Start out assuming user wants to keep all spots
+newspots = spotcenters; % Start out assuming user wants to keep all spots
 badspots = [];
 
 happy = 0;

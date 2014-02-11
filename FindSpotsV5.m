@@ -70,10 +70,10 @@ UseCentroid = 0;
 UserThresh = 0;
 boxsize = maxsize;
 ImgTitle = 'Spots';
-mov_fr = 10; %Number of frames to average over, if given a movie 
+mov_fr = 10; % Number of frames to average over, if given a movie 
 
 % Other defaults:
-cen_boxsize = 2;%Size of the box to use for centroid calculation will be cen_boxsize*2+1
+cen_boxsize = 2; % Size of the box to use for centroid calculation will be cen_boxsize*2+1
 
 % Optional inputs:
 if ~isempty(varargin)
