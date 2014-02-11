@@ -57,5 +57,5 @@ University of California, San Francisco
 * Image smoothing before spot finding? Seems to be fine without it ... 
 * Refining intensity calculation--Gaussian fit or pseudo-fit as in Ha lab code
 * Whole image background subtraction as in Ha lab code 
-
+* Have the option to re-find spots every 10 frames
 
