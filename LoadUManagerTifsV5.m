@@ -1,16 +1,16 @@
-% function allimgs = LoadUManagerTifsV5(D)
+%function allimgs = LoadUManagerTifsV5(D)
 %
-% Loads all the images in a uManager-created folder into one 3-d matrix.
-% D is the full path to the folder where they're stored; output is the
-% image matrix.  In V5, images returned are NOT scaled between 0 and 1.
-% Also, the optional input allows the user to specify how many images to
-% load, in the form of [start end] vector.
+%Loads all the images in a uManager-created folder into one 3-d matrix.
+%D is the full path to the folder where they're stored; output is the
+%image matrix.  In V5, images returned are NOT scaled between 0 and 1.
+%Also, the optional input allows the user to specify how many images to
+%load, in the form of [start end] vector.
 %
-% Updated 1/2014 to return an allimgs array of the same integer type as 
-% the original file (in our case, to keep it as uint16).
+%Updated 1/2014 to return an allimgs array of the same integer type as 
+%the original file (in our case, to keep it as uint16).
 %
-% Steph 3/2013, updated 10/2013
-% Copyright 2013 Stephanie Johnson, University of California, San Francisco
+%Steph 3/2013, updated 10/2013
+%Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
 function allimgs = LoadUManagerTifsV5(D,varargin)
 

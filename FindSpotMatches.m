@@ -1,29 +1,29 @@
-% function [matched1,matched2] = FindSpotMatches(spots1,spots2)
+%function [matched1,matched2] = FindSpotMatches(spots1,spots2)
 %
-% Given two sets of spots (e.g., a set of spots found in the red channel and
-% a set of spots in the green channel), find a matching between them.
-% IMPORTANT: it will match the spots in spots1 to spots in spots2, so the
-% order you enter the inputs in matters!
+%Given two sets of spots (e.g., a set of spots found in the red channel and
+%a set of spots in the green channel), find a matching between them.
+%IMPORTANT: it will match the spots in spots1 to spots in spots2, so the
+%order you enter the inputs in matters!
 %
-% Inputs are (x,y) pairs along the rows or columns for two sets of spots.
-% Returns two sets of spots, where each column of matched1 and matched 2 is
-% (x,y) of a spot, and the first column of matched1 is the spot that matches
-% the spot represented by the first column of matched 2, etc.
+%Inputs are (x,y) pairs along the rows or columns for two sets of spots.
+%Returns two sets of spots, where each column of matched1 and matched 2 is
+%(x,y) of a spot, and the first column of matched1 is the spot that matches
+%the spot represented by the first column of matched 2, etc.
 %
-% Currently implemented with a "greedy" algorithm, which assumes the
-% alignment between the spots (ie. the channels) isn't too far off to begin
-% with.  So just find the spot in the other channel with the shortest
-% distance to the current spot.
+%Currently implemented with a "greedy" algorithm, which assumes the
+%alignment between the spots (ie. the channels) isn't too far off to begin
+%with.  So just find the spot in the other channel with the shortest
+%distance to the current spot.
 %
-% Steph 9/2013
-% Copyright 2013 Stephanie Johnson, University of California, San Francisco
+%Steph 9/2013
+%Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
 function [matched1,matched2] = FindSpotMatches(spots1,spots2)
 
-% global TotImg
+%global TotImg
 
-% Make the inputs 2-by-numspots matrices, if they're not already, for
-% convenience
+%Make the inputs 2-by-numspots matrices, if they're not already, for
+%convenience
 if size(spots1,1)~=2
     spots1 = transpose(spots1);
 end
@@ -31,13 +31,13 @@ if size(spots2,1)~=2
     spots2 = transpose(spots2);
 end
 
-% Get the distances between all the spots:
+%Get the distances between all the spots:
 Dists = FindSpotDists(spots1,spots2);
 
 [minDists,ind] = min(Dists,[],2); %Minimum along each row
-% Assume that if a spot in spots1 doesn't have match that's a shorter
-% distance away than the mean distance over all the spots plus the standard
-% deviation, that that spot doesn't have a match:
+%Assume that if a spot in spots1 doesn't have match that's a shorter
+%distance away than the mean distance over all the spots plus the standard
+%deviation, that that spot doesn't have a match:
 maxDist = mean(minDists)+std(minDists,1);
 
 matched1 = [];

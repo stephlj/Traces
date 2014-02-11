@@ -1,20 +1,20 @@
-% function smFRET
+%function smFRET
 %
-% Wrapper function for analyzing smFRET data--loads data, calls the
-% functions that do the analysis, etc.
+%Wrapper function for analyzing smFRET data--loads data, calls the
+%functions that do the analysis, etc.
 %
-% This will analyze all the movies in a set at once, where a set is defined
-% as having the same root filename with _1, _2 at the end (the way
-% MicroManager saves multiple movies of the same root filename).  They all
-% have to be in the same folder.
+%This will analyze all the movies in a set at once, where a set is defined
+%as having the same root filename with _1, _2 at the end (the way
+%MicroManager saves multiple movies of the same root filename).  They all
+%have to be in the same folder.
 %
-% Inputs are:
-% Root filename (the movies it analyzes will be rootname_1, rootname_2 etc)
-% Optionally: if you want it to run all the various debugging things, pass
-% "1" as the second input.
+%Inputs are:
+%Root filename (the movies it analyzes will be rootname_1, rootname_2 etc)
+%Optionally: if you want it to run all the various debugging things, pass
+%"1" as the second input.
 %
-% Steph 9/2013
-% Copyright 2013 Stephanie Johnson, University of California, San Francisco
+%Steph 9/2013
+%Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
 function smFRET(rootname,debug)
 
@@ -22,28 +22,36 @@ function smFRET(rootname,debug)
     %Since debug is an optional input, set a default
     if ~exist('debug','var') 
         debug=0; 
-    elseif debug == 1
-        disp('Right now debug assume channels are split L-R and acceptor is on the L!')
+    else 
+        disp('Running in debug mode.')
     end
 
     %Nested functions for use later:
-    %Function 1: Getting red and green channels out of a combined image:
-    function [imgR,imgG] = SplitImg(img,params_struct)
+    
+    %Function 1: Getting absolute (in the whole original image) coordinates
+    %for spots, rather than local (in a single channel) coordinates.
+    %Also makes use of the new PxlsToExclude parameter.
+    function [spotsGglobal,spotsRglobal] = SpotsIntoAbsCoords(spotsGlocal,...
+            spotsRlocal,params_struct,imgwidth)
         if params_struct.splitx
                 if ~params_struct.Acceptor
-                    imgG = img(:,(size(img,2)/2)+1:end,:); 
-                    imgR = img(:,1:(size(img,2)/2),:);
+                    spotsGglobal(1,:) = spotsGlocal(1,:);
+                    spotsGglobal(2,:) = spotsGlocal(2,:)+imgwidth+params_struct.PxlsToExclude;
+                    spotsRglobal = spotsRlocal;
                 else
-                    imgR = img(:,(size(img,2)/2)+1:end,:); 
-                    imgG = img(:,1:(size(img,2)/2),:);
+                    spotsRglobal(1,:) = spotsRlocal(1,:);
+                    spotsRglobal(2,:) = spotsRlocal(2,:)+imgwidth+params_struct.PxlsToExclude;
+                    spotsGglobal = spotsGlocal;
                 end
             else
                 if ~params_struct.Acceptor
-                    imgG = img((size(img,2)/2)+1:end,:,:); 
-                    imgR = img(1:(size(img,2)/2),:,:);
+                    spotsGglobal(1,:) = spotsGlocal(1,:)+imgwidth+params_struct.PxlsToExclude;
+                    spotsGglobal(2,:) = spotsGlocal(2,:);
+                    spotsRglobal = spotsRlocal;
                 else
-                    imgR = img((size(img,2)/2)+1:end,:,:); 
-                    imgG = img(1:(size(img,2)/2),:,:);
+                    spotsRglobal(1,:) = spotsRlocal(1,:)+imgwidth+params_struct.PxlsToExclude;
+                    spotsRglobal(2,:) = spotsRlocal(2,:);
+                    spotsGglobal = spotsGlocal;
                 end
         end
     end
@@ -57,8 +65,8 @@ function smFRET(rootname,debug)
         while happy==0
             answer = input('Press enter if satisfied, anything else if not:','s');
             if ~isempty(answer)
-                close
-                bar(thisxout,thisn)
+                close all
+                figure,bar(thisxout,thisn)
                 title('Choose a threshold between background and true spots:','Fontsize',12)
                 xlabel('<-Background intensities ... Real spot intensities->')
                 ylabel('Counts')
@@ -80,6 +88,10 @@ function smFRET(rootname,debug)
 
     smFRETsetup;
     params = load('AnalysisParameters.mat');
+    %Error-handling: Check that the user-defined parameters are reasonable:
+    if round(params.PxlsToExclude)~=params.PxlsToExclude
+        params.PxlsToExclude = round(params.PxlsToExclude);
+    end
 
 %%%%%%FIRST PART: Channel mapping:
     %Load an old channel mapping, or perform a new one:
@@ -122,19 +134,28 @@ function smFRET(rootname,debug)
         for i = 1:BdDir
             BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); %Keeps a record of which bead files went into the map
             TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 params.FramesToAvg]);
+            
+            %Updated 2/2014 to account for LoadUManagerTifs returning an
+            %image of the same numeric type as the initial files.  For
+            %spot-finding, we don't care much about numeric type and image
+            %contrast scaling, but in order to get the averaged image scaled
+            %between 0 and 1, use mean first:
+            
             if size(TotImg,3) == 1
-                allBdImgs(:,:,i) = TotImg;
+                TotImg2 = TotImg;
             else
                 %allBdImgs(:,:,i) = mean(TotImg(:,:,1:10),3);
                 %With the new version of LoadUManagerTifs:
-                allBdImgs(:,:,i) = mean(TotImg,3);
+                TotImg2 = mean(TotImg,3);
             end
-
+            
+            allBdImgs(:,:,i) = mat2gray(TotImg2);
+            
             disp(strcat('Analyzing beads: ',int2str(i)',' of ',int2str(BdDir)))
 
             %Step 1: Find spots in red and green channels separately, so split the
             %image up into the two channels:
-            [imgRed,imgGreen] = SplitImg(TotImg,params);
+            [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
 
             %Find spots in green channel
             [spotsG{i},n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
@@ -152,14 +173,12 @@ function smFRET(rootname,debug)
 
             if debug %Figure with all the spots found:
                 %plot all the boxes for both channels on a big image:
-                spotsG_abs(:,1) = spotsG{i}(:,1);
-                spotsG_abs(:,2) = spotsG{i}(:,2)+size(TotImg,2)/2;
-                if size(TotImg,3)==1
-                    PutBoxesOnImageV4(mat2gray(TotImg),[spotsR{i};spotsG_abs],params.BeadSize,'0','w');
-                else
-                    PutBoxesOnImageV4(mat2gray(mean(TotImg(:,:,1:params.FramesToAvg),3)),[spotsR{i};spotsG_abs],params.BeadSize,'0','w');
-                end
-                clear spotsG_abs
+                [spotsG_abs,spotsR_abs] = SpotsIntoAbsCoords(spotsG{i},...
+                        spotsR{i},params,size(allBdImgs(:,:,i),2)/2);
+                PutBoxesOnImageV4(allBdImgs(:,:,i),[spotsR_abs,spotsG_abs],params.BeadSize,'0','w');
+                pause
+                close
+                clear spotsG_abs spotsR_abs
             end
 
             %Step 2: figure out which spots in one channel go with the spots in
@@ -172,14 +191,10 @@ function smFRET(rootname,debug)
 
             if debug
                 %Box in green the ones that were matched:
-                matchG_abs(1,:) = matchG{i}(1,:);
-                matchG_abs(2,:) = matchG{i}(2,:)+size(TotImg,2)/2;
-                figure
-                if size(TotImg,3) == 1
-                    PutBoxesOnImageV4(mat2gray(TotImg),[matchR{i}';matchG_abs'],params.BeadSize);
-                else
-                    PutBoxesOnImageV4(mat2gray(mean(TotImg(:,:,1:params.FramesToAvg),3)),[matchR{i}';matchG_abs'],params.BeadSize);
-                end
+                [matchG_abs,matchR_abs] = SpotsIntoAbsCoords(matchG{i},...
+                        matchR{i},params,size(allBdImgs(:,:,i),2)/2);
+                PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR_abs';matchG_abs'],params.BeadSize);
+                title('Only spots that were matched')
                 %Another way of plotting the matching: blue line between points
                 %in the two channels, with a green dot for where the point is
                 %in the green channel, and the end of the blue line where the
@@ -190,15 +205,20 @@ function smFRET(rootname,debug)
                 plot([matchR{i}(2,:);matchG{i}(2,:)],0-[matchR{i}(1,:);matchG{i}(1,:)],'-b')
                 hold on
                 plot(matchR{i}(2,:),0-matchR{i}(1,:),'xr')
-                ylim([-512 0])
-                xlim([0 256])
+                if params.splitx == 1
+                    ylim([-size(allBdImgs(:,:,i),1) 0])
+                    xlim([0 size(allBdImgs(:,:,i),2)/2])
+                else
+                    ylim([-size(allBdImgs(:,:,i),1)/2 0])
+                    xlim([0 size(allBdImgs(:,:,i),2)])
+                end
                 title('Red x is center of point in red channel')
                 pause
                 close all
-                clear matchG_abs
+                clear matchG_abs matchR_abs
             end
 
-            clear TotImg imgGreen imgRed spotsGabs
+            clear TotImg TotImg2 imgGreen imgRed spotsGabs
         end
 
         %Step three: calculate the transformation using all pairs of beads,
@@ -218,18 +238,25 @@ function smFRET(rootname,debug)
         for i = 1:BdDir
             disp(strcat('Iterating through bead images for user to check quality (',...
                 int2str(i),' of ',int2str(BdDir),')'))
-            matchG_abs(1,:) = matchG{i}(1,:);
-            matchG_abs(2,:) = matchG{i}(2,:)+size(allBdImgs(:,:,i),2)/2;
+            [matchG_abs,~] = SpotsIntoAbsCoords(matchG{i},...
+                matchR{i},params,size(allBdImgs(:,:,i),2)/2);
             newR = A*matchG{i}+repmat(b,1,size(matchG{i},2));
-            figure
-            PutBoxesOnImageV4(mat2gray(allBdImgs(:,:,i)),[newR';matchG_abs'],params.BeadSize);
+            PutBoxesOnImageV4(allBdImgs(:,:,i),[newR';matchG_abs'],params.BeadSize);
             title('Spots found in green, matched to red','Fontsize',12)
             figure
             errs = FindSpotDists(matchR{i},newR);
             hist(min(errs,[],2),0:0.1:10)
+            %TODO: If the mean error is bigger than, say, 1 pxl, redo the
+            %mapping excluding points with too-large errors
             ylabel('Counts','Fontsize',12)
             xlabel('Distance between mapped red bead and real red bead','Fontsize',12)
-            CalcCombinedImage(Amatlab,bmatlab,allBdImgs(:,257:end,i),allBdImgs(:,1:256,i),1);
+            if params.splitx
+                CalcCombinedImage(Amatlab,bmatlab,...
+                    allBdImgs(:,(size(allBdImgs(:,:,i))/2)+1:end,i),allBdImgs(:,1:size(allBdImgs(:,:,i))/2,i),1);
+            else
+                CalcCombinedImage(Amatlab,bmatlab,...
+                    allBdImgs((size(allBdImgs(:,:,i))/2)+1:end,:,i),allBdImgs(1:size(allBdImgs(:,:,i))/2,:,i),1);
+            end 
             pause
             close
             close
@@ -286,8 +313,15 @@ close all
         end
             
         if strcmpi(useoldspots,'n')
-           %Load this movie--just the first 10 frames for finding spots
+           %Load this movie--just the first FramesToAvg frames for finding spots
            TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 params.FramesToAvg]);
+           
+           if size(TotImg,3) > 1
+               TotImg = mean(TotImg,3);
+           end
+            
+           TotImg = mat2gray(TotImg);
+           
            [imgRed,imgGreen] = SplitImg(TotImg,params);
            
            %Find spots in both channels, but don't double-count:
@@ -296,86 +330,25 @@ close all
            %will have a frame of reference of the acceptor image, which
            %is fine because that's what I pass into UserSpotSelectionV4.
            
-           composite = CalcCombinedImage(Amatlab,bmatlab,mean(imgGreen,3),...
-               mean(imgRed,3));
+           composite = CalcCombinedImage(Amatlab,bmatlab,imgGreen,imgRed);
            
            %Find spots in this new image:
            [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-           figure, imshow(mean(imgGreen,3),[]);
-           title('Green Channel')
-           figure, imshow(mean(imgRed,3),[]);
-           title('Red Channel')
-            spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
-                params.DNANeighborhood,params.DNASize);
-            clear n xout
-            
-            close all
-
-%             %Find spots in green channel
-%             [spotsG,n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
-%                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-%             spotsG = SptFindUserThresh(spotsG,imgGreen,n,xout,'Green Channel',params.DNANeighborhood,params.DNASize);
-%             clear n xout
-%             spotsG = spotsG';
-%             %Figure out where these spots would be in the red channel:
-%             spotsRguess = A*spotsG+repmat(b,1,size(spotsG,2));
-%             spotsG_abs(1,:) = spotsG(1,:);
-%             spotsG_abs(2,:) = spotsG(2,:)+size(TotImg,2)/2;
-%             if debug
-%                 figure
-%                 PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),[spotsG_abs';spotsRguess'],params.DNASize);
-%                 title('Spots found in green, with red pairs','Fontsize',12)
-%                 pause
-%                 close
-%             end
-% 
-%             %Find spots in red channel
-%             [spotsR,n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
-%                 'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-%             spotsR = SptFindUserThresh(spotsR,imgRed,n,xout,'Red Channel',params.DNANeighborhood,params.DNASize);
-%             clear n xout
-%             spotsR = spotsR';
-%             %Make sure that none of spotsRguess duplicate spotsR: if any do, keep
-%             %only the spotsR version because directly finding the spot is probably
-%             %more accurate than using the transformation from the green channel to
-%             %guess where it is.  This will also elimninate any spots that are too
-%             %close together:
-%             SelfDists = FindSpotDists([spotsRguess,spotsR]);
-%             spottooclose = SelfDists>params.DNASize;
-%             %Each row will be all 1's if the spot represented by the row is more than
-%             %sqrt(2)*sqrt(maxsize) away from another spot.  If there's another spot too
-%             %close, one or more elements will be zero.  So below, ask if the sum of a
-%             %peak's row is equal to the length of the row (minus one, because of the
-%             %zero element where it's too close to itself)
-%             spotstemp = [];
-%             for j = 1:size(spotsRguess,2)
-%                 if sum(spottooclose(j,:))==length(spottooclose(j,:))-1
-%                     spotstemp(:,end+1) = spotsRguess(:,j);
-%                 end
-%             end
-%             spots = [spotstemp,spotsR];
-%             clear spotstemp
-% 
-%             if debug
-%                 figure
-%                 PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),[spotsG_abs';spotsRguess';spotsR'],params.DNASize);
-%                 title('All spots found in red and green channels, and green matched to red','Fontsize',12)
-%                 figure 
-%                 PutBoxesOnImageV4(mat2gray(mean(TotImg,3)),spots',params.DNASize);
-%                 title('All spots to be analyzed','Fontsize',12)
-%                 pause
-%                 close all
-%             end
+           figure('Position',[params.Fig2Pos(1)+225,params.Fig1Pos(2),1.37*size(imgGreen,2),1.18*size(imgGreen,1)]), imshow(imgGreen);
+           title('Green Channel','Fontsize',14)
+           figure('Position',[params.Fig1Pos(1)+75,params.Fig1Pos(2),1.37*size(imgGreen,2),1.18*size(imgGreen,1)]), imshow(imgRed);
+           title('Red Channel','Fontsize',14)
+           spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
+               params.DNANeighborhood,params.DNASize);
+           clear n xout
+           
+           close all
             
            save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots')
 
            %Iterate through spots; display traces and allow user to select which ones to keep
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           %Mainly for debugging for now:
-           %PutBoxesOnImageV3(mat2gray(mean(TotImg(:,:,1:20),3)),spots',params.SpotSize);
-           %title('All spots to be analyzed','Fontsize',12)
-           %UserSpotSelectionV3(spots,imgRed,imgGreen,params,A,b,savedir,fps,i);
            UserSpotSelectionV4(spots,fullfile(D_Data,ToAnalyze(i).name),params,A,b,savedir,fps,i);
         else
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots');

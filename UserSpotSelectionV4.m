@@ -1,48 +1,28 @@
-% function UserSpotSelectionV4()
+%function UserSpotSelectionV4()
 %
-% Iterates through all the spots in a movie and allows user to adjust
-% background, keep the ones they like, etc. Note that spots are passed in in
-% the frame of reference of the ACCEPTOR channel.
+%Iterates through all the spots in a movie and allows user to adjust
+%background, keep the ones they like, etc. Note that spots are passed in in
+%the frame of reference of the ACCEPTOR channel.
 %
-% The CPLC FRET code (in IDL) from TJ Ha's lab at UIUC uses a circle that's
-% 9 pxls diameter, and includes 3 pixels in the first row, then 5 pixels, 
-% 7 pxls, 9, 9, 9, 7, 5, 3.
+%The CPLC FRET code (in IDL) from TJ Ha's lab at UIUC uses a circle that's
+%9 pxls diameter, and includes 3 pixels in the first row, then 5 pixels, 
+%7 pxls, 9, 9, 9, 7, 5, 3.
 %
-% V3 uses circles instead of squares for calculating intensities.
-% V4 isn't passed a movie; instead it's passed a directory name, and
-% only loads 100 frames at a time, calculates the intensity, then loads the
-% next 100 frames etc.  Otherwise my computer runs out of RAM.
+%V3 uses circles instead of squares for calculating intensities.
+%V4 isn't passed a movie; instead it's passed a directory name, and
+%only loads 100 frames at a time, calculates the intensity, then loads the
+%next 100 frames etc.  Otherwise my computer runs out of RAM.
 %
-% Updated 12/2013 to allow the user to pass the figure position information
-% via params, so it's easier to put this code onto different computers.
+%Updated 12/2013 to allow the user to pass the figure position information
+%via params, so it's easier to put this code onto different computers.
 %
-% Steph 10/2013
-% Copyright 2013 Stephanie Johnson, University of California, San Francisco
+%Steph 10/2013
+%Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
 function UserSpotSelectionV4(spots,PathToMovie,params,A,b,savedir,fps,setnum)
 
 %%%Setting up some stuff
-% Subfunction: Getting red and green channels out of a combined image:
-    function [imgRed,imgGreen] = SplitImg(img,params_struct)
-        if params_struct.splitx
-                if ~params_struct.Acceptor
-                    imgGreen = img(:,(size(img,2)/2)+1:end,:); 
-                    imgRed = img(:,1:(size(img,2)/2),:);
-                else
-                    imgRed = img(:,(size(img,2)/2)+1:end,:); 
-                    imgGreen = img(:,1:(size(img,2)/2),:);
-                end
-            else
-                if ~params_struct.Acceptor
-                    imgGreen = img((size(img,2)/2)+1:end,:,:); 
-                    imgRed = img(1:(size(img,2)/2),:,:);
-                else
-                    imgRed = img((size(img,2)/2)+1:end,:,:); 
-                    imgGreen = img(1:(size(img,2)/2),:,:);
-                end
-        end
-    end
-% function for putting circles around a spot:
+%subfunction for putting circles around a spot:
     function boxfun(currspot)
         %CalcSpotIntensityV2 puts a circle of diameter 5 around each spot:
         t = 0:pi/100:2*pi;
@@ -50,56 +30,19 @@ function UserSpotSelectionV4(spots,PathToMovie,params,A,b,savedir,fps,setnum)
         clear t
     end
 
-% Make spots 2-by-numspots matrices, if it's not already
+%Make spots 2-by-numspots matrices, if it's not already
 if size(spots,1)~=2
     spots = transpose(spots);
 end
 
 %%%Get all the spot intensities
-% Figure out the total number of image files in this movie:
-alltifs = dir(fullfile(PathToMovie,'img*.tif'));
-allRedI = zeros(size(spots,2),length(alltifs));
-allGrI = zeros(size(spots,2),length(alltifs));
-GrSpots = zeros(size(spots));
-    
-for jj = 1:100:length(alltifs)
-    %Being explicit about numeric types for now:
-    moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));
-    [imgR,imgG] = SplitImg(moviebit,params);
-    if jj==1
-        imgRinit = imgR(:,:,1:10);
-        imgGinit = imgG(:,:,1:10);
-    end
-    if params.NormImg == 1
-        %Make the image so that each frame is scaled between 0 and 1--not sure if
-        %this is the right thing to do or not:
-        imgRtemp = imgR;
-        imgGtemp = imgG;
-        clear imgR imgG
-        imgR = zeros(size(imgRtemp));
-        imgG = zeros(size(imgGtemp));
-        for p = 1:size(imgRtemp,3)
-            imgR(:,:,p) = mat2gray(imgRtemp(:,:,p));%Otherwise mat2gray will scale the entire movie, not frame by frame
-            imgG(:,:,p) = mat2gray(imgGtemp(:,:,p));
-        end
-        clear imgRtemp imgGtemp
-    end
-    
-    for kk = 1:size(spots,2)
-       allRedI(kk,jj:jj+99) = CalcSpotIntensityV2(imgR,spots(:,kk));
-       %Find matching green spot:
-       GrSpots(:,kk) = inv(A)*(spots(:,kk)-repmat(b,1,size(spots(:,kk),2)));
-       allGrI(kk,jj:jj+99) = CalcSpotIntensityV2(imgG,GrSpots(:,kk));
-    end
-   clear grspot imgR imgG moviebit
-   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))
-end
+[allRedI, allGrI, GrSpots, imgRinit, imgGinit] = CalcIntensities(PathToMovie, spots, A, b,params);
 
 %%%Interactive section
 k = 1;%Indexes current spot being plotted
 
-% So that when you go back to a previous spot, you don't have to redo
-% selections you did before:
+%So that when you go back to a previous spot, you don't have to redo
+%selections you did before:
 Rbkgnd = zeros(size(spots,2),1);
 Gbkgnd = zeros(size(spots,2),1);
 xlims = zeros(size(spots,2),2);
@@ -147,14 +90,14 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        figure(h2)
        %plot time-averaged red channel with box around spot
        subplot(1,2,1)
-       imshow(mean(imgRinit,3),[])
+       imshow(imgRinit)
        hold on
        boxfun(spots(:,k));
        hold off
        title('Red','Fontsize',12)
        %plot time-averaged green channel with box around spot
        subplot(1,2,2)
-       imshow(mean(imgGinit,3),[])
+       imshow(imgGinit)
        hold on
        boxfun(GrSpots(:,k));
        hold off

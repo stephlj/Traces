@@ -1,21 +1,21 @@
-% function newspots = ScreenSpots(img,spotcenters,boxdim,varargin)
+%function newspots = ScreenSpots(img,spotcenters,boxdim,varargin)
 %
-% Interactive function that allows user to choose spots, from those found by 
-% FindSpotsV3, that they don't want included in further analyses.
+%Interactive function that allows user to choose spots, from those found by 
+%FindSpotsV3, that they don't want included in further analyses.
 %
-% Inputs are the image that spots were found in, a vector of (x,y)
-% coordinates where the spot centers are, and boxdim that determines the
-% size of the box to put around each spot.  The user should click in the box
-% in order to deselect or re-select a spot.  Output is a vector of the kept
-% spotcenters.
+%Inputs are the image that spots were found in, a vector of (x,y)
+%coordinates where the spot centers are, and boxdim that determines the
+%size of the box to put around each spot.  The user should click in the box
+%in order to deselect or re-select a spot.  Output is a vector of the kept
+%spotcenters.
 %
-% Optional input is a string to put on the image, so you know what you're
-% analyzing.
+%Optional input is a string to put on the image, so you know what you're
+%analyzing.
 %
-% This version uses an updated version of PutBoxesOnImage that allows figure
-% data to be replaced without replotting the whole thing--makes it much faster!
+%This version uses an updated version of PutBoxesOnImage that allows figure
+%data to be replaced without replotting the whole thing--makes it much faster!
 %
-% Steph 6/2013
+%Steph 6/2013
 
 function newspots = ScreenSpotsV2(img,spotcenters,boxdim,varargin)
 
