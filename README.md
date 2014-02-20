@@ -1,6 +1,6 @@
 #Single-Molecule FRET Analysis Code#
 
-Welcome to Stephanie Johnson's smFRET code repository!  While you are welcome to download the repository as-is and run it off the shelf (at your own risk, I make no guarantees this code is "right"), this code is written as modularly as possible, so that it can be adapted as needed for your own experiment. For example, `FindSpots` should find spots in any image you give it (as a function of user-specified parameters, such as the sizes of the spots, how close together they can be, etc). A wrapper function that calls various portions of the analysis in proper order, called `smFRET.m`, is included but is highly tailored to my setup.
+Welcome to Stephanie Johnson's smFRET code repository!  While you are welcome to download the repository as-is and run it off the shelf (at your own risk, I make no guarantees this code is "right"), this code is written as modularly as possible, so that it can be adapted as needed for your own experiment. For example, `FindSpots` should find spots in any image you give it (as a function of user-specified parameters, such as the sizes of the spots, how close together they can be, etc). You should be able to write your own FindSpots function and as long as it takes an image and returns spot centers, it will interface with the rest of the code. A wrapper function that calls various portions of the analysis in proper order, called `smFRET.m`, is included but is highly tailored to my setup.
 
 The general outline of the analysis workflow is:
 (1) Calculate a map that correlates pixels in the acceptor channel image to pixels in the donor channel image, as these will never be perfectly aligned in an smFRET setup.  Or, load an old one.
@@ -8,12 +8,16 @@ The general outline of the analysis workflow is:
 
 More information (including detailed derivations of, for example, the channel mapping linear algebra) can be found in the (currently non-existent) smFRET Users's Manual pdf that accompanies this repository.
 
+I would be very grateful if you would [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find bugs in the code or find it doesn't work well with your data.
+
 ##System Requirements##
 
 Requires Matlab with the following toolboxes installed:
 * Image Processing Toolbox
 * Curve Fitting Toolbox
 * Optimization Toolbox
+
+This code was written for analyzing prism-based TIRF images; it may not work well for objective-based setups (for example, you may have to alter or re-write `FindSpots`).
 
 The wrapper function that is tailored to our experimental setup assumes the following about the data:
 * We acquire data with the open-source UCSF software [Micro-Manager](http://www.micro-manager.org), using its Multi-D acquisition tool. Micro-Manager then stores the data as follows: You give Micro-Manager a root file name, and then every time you hit acquire it creates a new directory called rootname_1, rootname_2, etc.  Each of these directories contains one tiff per frame from the acquired movie, with filename img_000000000_000.tif, img_000000001_000.tif, etc. In each movie's directory Micro-Manager also saves a metadata.txt file with information about frame rate, etc.
