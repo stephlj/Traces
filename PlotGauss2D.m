@@ -17,6 +17,10 @@ function Discrete2DGauss = PlotGauss2D(plotsize,params)
 
     Discrete2DGauss = zeros(plotsize);
     
+    if length(params)==5
+        params(6) = params(5);
+    end
+    
     for i=1:plotsize(1)
         for j=1:plotsize(2)
             Discrete2DGauss(i,j)=params(1)*exp(-params(5)*(i-params(3))^2-params(6)*(j-params(4))^2) + params(2);
