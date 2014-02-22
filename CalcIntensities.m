@@ -21,6 +21,7 @@ function [allRedI, allGrI, Gspots, imgRinit, imgGinit] = CalcIntensities(PathToM
 
 % Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
+
 allRedI = zeros(size(Rspots,2),length(alltifs));
 allGrI = zeros(size(Rspots,2),length(alltifs));
 Gspots = zeros(size(Rspots));
@@ -33,6 +34,9 @@ Gspots = zeros(size(Rspots));
 % of the whole movie.
 
 [overallMin,overallMax] = ScaleMovie(PathToMovie,length(alltifs));
+
+fitparamsR = cell(length(alltifs)/100,size(Rspots,2));
+fitparamsG = cell(length(alltifs)/100,size(Rspots,2));
 
 for jj = 1:100:length(alltifs)
     moviebit = LoadUManagerTifsV5(PathToMovie,[jj jj+99]);
@@ -53,10 +57,14 @@ for jj = 1:100:length(alltifs)
     end
     
     for kk = 1:size(Rspots,2)
-       allRedI(kk,jj:jj+99) = CalcSpotIntensityV2(imgR,Rspots(:,kk));
+       %allRedI(kk,jj:jj+99) = CalcSpotIntensityV2(imgR,Rspots(:,kk));
+       [allRedI(kk,jj:jj+99),fitparamsR{jj+1,kk}] = CalcSpotIntensityV3(imgR,...
+           Rspots(:,kk),params.DNASize,fitparamsR{jj,kk});
        % Find matching green spot:
        Gspots(:,kk) = inv(A)*(Rspots(:,kk)-repmat(b,1,size(Rspots(:,kk),2)));
-       allGrI(kk,jj:jj+99) = CalcSpotIntensityV2(imgG,Gspots(:,kk));
+       %allGrI(kk,jj:jj+99) = CalcSpotIntensityV2(imgG,Gspots(:,kk));
+       [allGrI(kk,jj:jj+99),fitparamsG{jj+1,kk}] = CalcSpotIntensityV3(imgG,...
+           Gspots(:,kk),params.DNASize,fitparamsG{jj,kk});
     end
    clear imgR imgG moviebit
    disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))

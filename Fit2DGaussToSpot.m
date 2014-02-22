@@ -47,7 +47,7 @@ if ~isempty(varargin)
             debug = varargin{k+1};
         elseif strcmpi(varargin{k},'symGauss')
             symGauss = varargin{k+1};
-        elseif strcmpi(varargin{k},'StartParams')
+        elseif strcmpi(varargin{k},'StartParams') && ~isempty(varargin{k+1})
             A_init = varargin{k+1}(6);
             bkgnd_init = varargin{k+1}(5);
             Xcen_init = varargin{k+1}(1);
@@ -66,28 +66,28 @@ opts = optimset('Display','off'); %Don't display a warning if the fit doesn't co
 
 if symGauss
     [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCostSym(params,spotimg),...
-        [A_init,bkgnd_init,Xcen_init,Ycen_init,Xvar_init],opts);
+        [Xcen_init,Ycen_init,Xvar_init,bkgnd_init,A_init],opts);
 %     if exitflag==0
 %         keyboard;
 %     end
-    A = fitparams(1);
-    bkgnd = fitparams(2);
-    Xcen = fitparams(3);
-    Ycen = fitparams(4);
-    Xvar = fitparams(5);
+    A = fitparams(5);
+    bkgnd = fitparams(4);
+    Xcen = fitparams(1);
+    Ycen = fitparams(2);
+    Xvar = fitparams(3);
     Yvar = Xvar;
 else
     [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCost(params,spotimg),...
-        [A_init,bkgnd_init,Xcen_init,Ycen_init,Xvar_init,Yvar_init],opts);
+        [Xcen_init,Ycen_init,Xvar_init,Yvar_init,bkgnd_init,A_init],opts);
 %     if exitflag==0
 %         keyboard;
 %     end
-    A = fitparams(1);
-    bkgnd = fitparams(2);
-    Xcen = fitparams(3);
-    Ycen = fitparams(4);
-    Xvar = fitparams(5);
-    Yvar = fitparams(6);
+    A = fitparams(6);
+    bkgnd = fitparams(5);
+    Xcen = fitparams(1);
+    Ycen = fitparams(2);
+    Xvar = fitparams(3);
+    Yvar = fitparams(4);
 end
 
 if debug

@@ -13,7 +13,7 @@ function smFRETsetup
 % defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
 defaultsavedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData/RealDNA/analysis';
 % Where to load data from:
-defaultdatadir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData/RealDNA';
+defaultdatadir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData';
 % defaultdatadir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data';
 % Where the code is (which is where it saves this parameter file)
 % codedir = '/Volumes/smFRET/smFRET analysis code';
@@ -48,7 +48,7 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
-Refine_Bd_Cen = 0; %If this is 1, use a 2D gaussian fit to refine the bead center
+Refine_Bd_Cen = 1; %If this is 1, use a 2D gaussian fit to refine the bead center
     % position.  This will increase computational time for the channel
     % mapping by about a factor of 2, for roughly a factor of 2 improvement
     % in bead center localization (that is, the mean error will go down by

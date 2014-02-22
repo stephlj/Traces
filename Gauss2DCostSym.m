@@ -7,8 +7,8 @@
 % The difference between this and Gauss2DCost is that this insists the
 % Gaussian be rotationally symmetric (i.e. have the same xvar as yvar).
 %
-% Params must be a vector of: [A,B,x0,y0,var], where
-% Gauss2D = A*exp(-var*(x-x0)^2-var*(y-y0)^2)+C
+% Params must be a vector of: [x0,y0,var,B,A], where
+% Gauss2D = A*exp(-var*(x-x0)^2-var*(y-y0)^2)+B
 %
 % Thanks to David Wu for showing me how to write this (and the original
 % versions of the other associated functions, Fit2DGaussToSpot and
@@ -19,11 +19,11 @@
 
 function cost = Gauss2DCostSym(params,data)
 
-    A = params(1);
-    B = params(2);
-    x0 = params(3);
-    y0 = params(4);
-    var = params(5);
+    A = params(5);
+    B = params(4);
+    x0 = params(1);
+    y0 = params(2);
+    var = params(3);
     
     difference = zeros(size(data));
     

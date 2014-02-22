@@ -4,8 +4,8 @@
 % of the differences between the computed Gaussian, given the parameters in
 % params, and the actual image, in data. Called by Fit2DGaussToSpot.m
 %
-% Params must be a vector of: [A,B,x0,y0,xvar,yvar], where
-% Gauss2D = A*exp(-xvar*(x-x0)^2-yvar*(y-y0)^2)+C
+% Params must be a vector of: [x0,y0,xvar,yvar,B,A], where
+% Gauss2D = A*exp(-xvar*(x-x0)^2-yvar*(y-y0)^2)+B
 %
 % Thanks to David Wu for showing me how to write this (and the original
 % versions of the other associated functions, Fit2DGaussToSpot and
@@ -16,12 +16,12 @@
 
 function cost = Gauss2DCost(params,data)
 
-    A = params(1);
-    B = params(2);
-    x0 = params(3);
-    y0 = params(4);
-    xvar = params(5);
-    yvar = params(6);
+    A = params(6);
+    B = params(5);
+    x0 = params(1);
+    y0 = params(2);
+    xvar = params(3);
+    yvar = params(4);
     
     difference = zeros(size(data));
     

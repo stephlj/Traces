@@ -36,7 +36,9 @@ if size(spots,1)~=2
 end
 
 %%%Get all the spot intensities
+tic
 [allRedI, allGrI, GrSpots, imgRinit, imgGinit] = CalcIntensities(PathToMovie, spots, A, b,params);
+toc
 
 %%%Interactive section
 k = 1; % Indexes current spot being plotted
