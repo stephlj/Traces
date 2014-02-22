@@ -11,9 +11,9 @@ function smFRETsetup
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
 % defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
-defaultsavedir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data analysis';
+defaultsavedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData/RealDNA/analysis';
 % Where to load data from:
-defaultdatadir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData';
+defaultdatadir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData/RealDNA';
 % defaultdatadir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data';
 % Where the code is (which is where it saves this parameter file)
 % codedir = '/Volumes/smFRET/smFRET analysis code';
@@ -61,7 +61,7 @@ BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in
     % neighborhood (area, in square pixels) for the beads.  Needs to be a perfect
     % square, and best if sqrt(BeadNeighborhood) is odd.  Should be a little 
     % bigger than we expect beads to be.
-DNASize = 10; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
+DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
     % the code that actually calculates the intensity of a DNA spot is
     % currently hard-coded to integrate over a circle of diameter 5 pixels;
     % DNASize only determines how close two spots can be and still be

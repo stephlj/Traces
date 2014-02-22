@@ -374,10 +374,15 @@ close all
            figure('Position',[params.Fig1Pos(1)+75,params.Fig1Pos(2),1.37*size(imgGreen,2),1.18*size(imgGreen,1)]), imshow(imgRed);
            title('Red Channel','Fontsize',14)
            spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
-               params.DNANeighborhood,params.DNASize);
+               params.DNANeighborhood,params.DNASize,'default');
            clear n xout
            
            close all
+           
+            % Note because spots are never displayed on the full image,
+            % only on the image split into two channels, I don't need to
+            % add params.PxlsToExclude to get spots into the right
+            % coordinates (unlike with the beads)
             
            save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots')
 
