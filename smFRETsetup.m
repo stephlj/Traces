@@ -48,6 +48,11 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
+Refine_Bd_Cen = 0; %If this is 1, use a 2D gaussian fit to refine the bead center
+    % position.  This will increase computational time for the channel
+    % mapping by about a factor of 2, for roughly a factor of 2 improvement
+    % in bead center localization (that is, the mean error will go down by
+    % a factor of 2). Doesn't really change the map much.
 BeadSize = 8; % Diameter of a circle that defines a bead (used for the channel
     % mapping procedure); beads whose centers are closer than BeadSize will 
     % not be included, and found beads will be circled by a circle of radius BeadSize.  
@@ -73,4 +78,4 @@ SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal.  At some
 save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'defaultdatadir','splitx','Acceptor','BeadSize','BeadNeighborhood',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
-    'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude');
+    'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen');

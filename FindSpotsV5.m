@@ -22,16 +22,6 @@
 % 'ShowResults',1: to show an image at the end with boxes 
 %   around all the spots (you can also use ScreenSpots for this, which has
 %   an interactive component). Default is 0.
-% 'Method','Centroid' OR 'Method','GaussFit': Refine the spot center by
-%   finding the centroid/center of mass; or by a local 2D Gaussian fit.
-%   Default is to take the pixel with the max intensity as the center.
-%   Currently centroid actually does a worse job than the default, and 
-%   GaussFit takes longer without significantly improving the resuls for 
-%   channel mapping with the beads. Should not be called when finding spots 
-%   in real movies--spot centers will be refined at a later point for real data.
-%   NOTE: If GaussFit method is used, this will also check that spots are
-%   surrounded by a sufficiently low-intensity minimum, to help exclude
-%   two or more spots very close together.
 % 'UserThresh',<val>: Instead of calculating a threshold for "true" maxima
 %   automatically, will use val.
 % 'ImgTitle',<string>: If ShowResults is 1 and you want to give the image a title
@@ -39,6 +29,20 @@
 %   Default is 'Spots'.
 % 'FramesToAvg',<val>: If given a movie, number of frames to average before
 %   finding spots. Default is 10 frames.
+% 'Method','Centroid' OR 'Method','GaussFit': Refine the spot center by
+%   finding the centroid/center of mass; or by a local 2D Gaussian fit.
+%   Default is to take the pixel with the max intensity as the center.
+%   Currently centroid actually does a worse job than the default. 
+%   GaussFit takes about 2x longer, and offers minimal improvement (mean
+%   localization error of 0.4 pxl compared to 0.7 pxl). 
+%   NOTES:(1) GaussFit should not be called when finding spots 
+%   in real movies--spot centers will be refined at a later point for real data.
+%   (2) GaussFit tends to do better with a slightly smaller maxsize
+%   parameter than you might use with the default parameter, BUT it should
+%   be large enough to have enough background to fit. So, if your beads are
+%   roughly 4 pixels across, a maxsize of 8 is good. (3) If GaussFit method
+%   is used, this will also check that spots are surrounded by a sufficiently
+%   low-intensity minimum, to help exclude two or more spots very close together.
 %
 % Outputs:
 % Spots:  a 2-by-numspots vector where each column is the (row,col) for the center of
@@ -128,7 +132,6 @@ bkgnd_tolerance = 0.01; % Extra spot refinement for Gaussian fitting:
     % mean intensity value around the spot has to go to less than the
     % fitted background value plus this tolerance (for real spots, at least
     % in the case of beads, they're usually within 0.01 of each other).
-
 
 % Error handling for inputs:
 if rem(NeighborhoodSize,sqrt(NeighborhoodSize))~=0
@@ -242,7 +245,7 @@ for i = 1:size(peaks,1)
             if (FindSpotDists(peaks(i,:),newspotcen)<cen_tolerance) && (mean(spotboundary)<=bkgnd+bkgnd_tolerance)
                 spots(:,end+1) = newspotcen;
             end
-            clear cen bkgnd newspotcen
+            clear cen bkgnd newspotcen spotboundary
         else
             spots(:,end+1) = [peaks(i,1),peaks(i,2)];
         end

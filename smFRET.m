@@ -59,7 +59,7 @@ function smFRET(rootname,debug)
     % Function 2: Let user keep changing background threshhold for
     % spotfinding till satisfied:
     function newspots = SptFindUserThresh(oldspots,SpotImg,thisn,thisxout,...
-            ChName,OrdfiltSize,MinDist)
+            ChName,OrdfiltSize,MinDist,Method)
         newspots = oldspots;
         happy = 0;
         while happy==0
@@ -78,7 +78,7 @@ function smFRET(rootname,debug)
                 end
                 [newspots,thisn,thisxout] = FindSpotsV5(SpotImg,'ShowResults',1,...
                     'UserThresh',newthresh,'ImgTitle',ChName,'NeighborhoodSize',OrdfiltSize,...
-                    'maxsize',MinDist);
+                    'maxsize',MinDist,'Method',Method);
             else
                 happy = 1;
             end
@@ -158,19 +158,33 @@ function smFRET(rootname,debug)
             [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
 
             % Find spots in green channel
-            [spotsG{i},n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
-                'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
-                'Method','GaussFit');
-            spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
-                params.BeadNeighborhood,params.BeadSize);
+            if params.Refine_Bd_Cen
+                [spotsG{i},n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+                    'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
+                    'Method','GaussFit');
+                spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
+                    params.BeadNeighborhood,params.BeadSize,'GaussFit');
+            else
+                [spotsG{i},n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+                    'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
+                spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
+                    params.BeadNeighborhood,params.BeadSize,'default');
+            end
             clear n xout
             
             % Find spots in red channel
-            [spotsR{i},n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
-                'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
-                'Method','GaussFit');
-            spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
-                params.BeadNeighborhood,params.BeadSize);
+            if params.Refine_Bd_Cen
+                [spotsR{i},n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
+                    'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
+                    'Method','GaussFit');
+                spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
+                    params.BeadNeighborhood,params.BeadSize,'GaussFit');
+            else
+                [spotsR{i},n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
+                    'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
+                spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
+                    params.BeadNeighborhood,params.BeadSize,'default');
+            end
             clear n xout
 
             if debug %Figure with all the spots found:
@@ -248,6 +262,7 @@ function smFRET(rootname,debug)
             figure
             errs = FindSpotDists(matchR{i},newR);
             hist(min(errs,[],2),0:0.1:10)
+            mean(min(errs,[],2))
             hold on
             plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
             hold off
