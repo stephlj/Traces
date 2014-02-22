@@ -36,20 +36,20 @@ function smFRET(rootname,debug)
         if params_struct.splitx
                 if ~params_struct.Acceptor
                     spotsGglobal(1,:) = spotsGlocal(1,:);
-                    spotsGglobal(2,:) = spotsGlocal(2,:)+imgwidth+params_struct.PxlsToExclude;
+                    spotsGglobal(2,:) = spotsGlocal(2,:)+imgwidth;
                     spotsRglobal = spotsRlocal;
                 else
                     spotsRglobal(1,:) = spotsRlocal(1,:);
-                    spotsRglobal(2,:) = spotsRlocal(2,:)+imgwidth+params_struct.PxlsToExclude;
+                    spotsRglobal(2,:) = spotsRlocal(2,:)+imgwidth;
                     spotsGglobal = spotsGlocal;
                 end
             else
                 if ~params_struct.Acceptor
-                    spotsGglobal(1,:) = spotsGlocal(1,:)+imgwidth+params_struct.PxlsToExclude;
+                    spotsGglobal(1,:) = spotsGlocal(1,:)+imgwidth;
                     spotsGglobal(2,:) = spotsGlocal(2,:);
                     spotsRglobal = spotsRlocal;
                 else
-                    spotsRglobal(1,:) = spotsRlocal(1,:)+imgwidth+params_struct.PxlsToExclude;
+                    spotsRglobal(1,:) = spotsRlocal(1,:)+imgwidth;
                     spotsRglobal(2,:) = spotsRlocal(2,:);
                     spotsGglobal = spotsGlocal;
                 end
@@ -186,6 +186,21 @@ function smFRET(rootname,debug)
                     params.BeadNeighborhood,params.BeadSize,'default');
             end
             clear n xout
+            
+            % spotsG and spotsR are actually params.PxlsToExclude off from
+            % the full image's coordinates along the axis along which the
+            % channels are split.  So add those pixels back:
+            if params.splitx
+                spotsG{i}(1,:) = spotsG{i}(1,:);
+                spotsG{i}(2,:) = spotsG{i}(2,:)+params.PxlsToExclude;
+                spotsR{i}(1,:) = spotsR{i}(1,:);
+                spotsR{i}(2,:) = spotsR{i}(2,:)+params.PxlsToExclude;
+            else
+                spotsG{i}(1,:) = spotsG{i}(1,:)+params.PxlsToExclude;
+                spotsG{i}(2,:) = spotsG{i}(2,:);
+                spotsR{i}(1,:) = spotsR{i}(1,:)+params.PxlsToExclude;
+                spotsR{i}(2,:) = spotsR{i}(2,:);
+            end
 
             if debug %Figure with all the spots found:
                 % plot all the boxes for both channels on a big image:
@@ -262,7 +277,6 @@ function smFRET(rootname,debug)
             figure
             errs = FindSpotDists(matchR{i},newR);
             hist(min(errs,[],2),0:0.1:10)
-            mean(min(errs,[],2))
             hold on
             plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
             hold off
