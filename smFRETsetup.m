@@ -48,7 +48,7 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
-BeadSize = 10; % Diameter of a circle that defines a bead (used for the channel
+BeadSize = 8; % Diameter of a circle that defines a bead (used for the channel
     % mapping procedure); beads whose centers are closer than BeadSize will 
     % not be included, and found beads will be circled by a circle of radius BeadSize.  
 BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in 

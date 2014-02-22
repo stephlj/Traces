@@ -248,6 +248,9 @@ function smFRET(rootname,debug)
             figure
             errs = FindSpotDists(matchR{i},newR);
             hist(min(errs,[],2),0:0.1:10)
+            hold on
+            plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
+            hold off
             % TODO: If the mean error is bigger than, say, 1 pxl, redo the
             % mapping excluding points with too-large errors
             ylabel('Counts','Fontsize',12)

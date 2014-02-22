@@ -10,6 +10,8 @@
 % Optional inputs: enter these as pairs ('<paraname>',<value>)
 % 'Debug', 1: display a set of images of the fit
 % 'symGauss', 1: force the variances in x and y to be the same
+% 'StartParams',[Xcen, Ycen, Xvar, Yvar, bkgnd, A]: start parameters to use
+%       for the fit
 %
 % Outputs: best fit values for:
 % Xcen, Ycen: location of the center of the spot in x and y
@@ -29,16 +31,6 @@ function [Xcen, Ycen, Xvar, Yvar, bkgnd, A] = Fit2DGaussToSpot(spotimg,varargin)
 debug = 0;
 symGauss = 0;
 
-if ~isempty(varargin)
-    for k = 1:2:length(varargin)
-        if strcmpi(varargin{k},'debug')
-            debug = varargin{k+1};
-        elseif strcmpi(varargin{k},'symGauss')
-            symGauss = varargin{k+1};
-        end
-    end
-end
-
 % Start with some intelligent guesses for initial parameters:
 A_init = max(spotimg(:)); %Guess that the amplitude is the intensity of the brightest pixel
 bkgnd_init = min(spotimg(:)); %Guess that the background is the minimum pixel intensity
@@ -49,12 +41,35 @@ Ycen_init = size(spotimg,1)/2;
 Xvar_init = 1/(size(spotimg,2)/4); % Assume the user didn't give you a huge ROI for a tiny spot ... 
 Yvar_init = 1/(size(spotimg,1)/4);
 
+if ~isempty(varargin)
+    for k = 1:2:length(varargin)
+        if strcmpi(varargin{k},'debug')
+            debug = varargin{k+1};
+        elseif strcmpi(varargin{k},'symGauss')
+            symGauss = varargin{k+1};
+        elseif strcmpi(varargin{k},'StartParams')
+            A_init = varargin{k+1}(6);
+            bkgnd_init = varargin{k+1}(5);
+            Xcen_init = varargin{k+1}(1);
+            Ycen_init = varargin{k+1}(2); 
+            Xvar_init = varargin{k+1}(3);
+            Yvar_init = varargin{k+1}(4);
+        end
+    end
+end
+
 % Find parameters that minimize the difference between a 2D Gaussian and
 % the actual image.  This "minimize the difference" problem is encapsulated
 % in the Gauss2DCost function.
+
+opts = optimset('Display','off'); %Don't display a warning if the fit doesn't converge
+
 if symGauss
-    fitparams = fminsearch(@(params)Gauss2DCostSym(params,spotimg),...
-        [A_init,bkgnd_init,Xcen_init,Ycen_init,Xvar_init]);
+    [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCostSym(params,spotimg),...
+        [A_init,bkgnd_init,Xcen_init,Ycen_init,Xvar_init],opts);
+%     if exitflag==0
+%         keyboard;
+%     end
     A = fitparams(1);
     bkgnd = fitparams(2);
     Xcen = fitparams(3);
@@ -62,8 +77,11 @@ if symGauss
     Xvar = fitparams(5);
     Yvar = Xvar;
 else
-    fitparams = fminsearch(@(params)Gauss2DCost(params,spotimg),...
-        [A_init,bkgnd_init,Xcen_init,Ycen_init,Xvar_init,Yvar_init]);
+    [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCost(params,spotimg),...
+        [A_init,bkgnd_init,Xcen_init,Ycen_init,Xvar_init,Yvar_init],opts);
+%     if exitflag==0
+%         keyboard;
+%     end
     A = fitparams(1);
     bkgnd = fitparams(2);
     Xcen = fitparams(3);
