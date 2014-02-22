@@ -1,4 +1,4 @@
-% function [Xcen, Ycen, Xvar, Yvar, bkgnd, A] = Fit2DGaussToSpot(spotimg)
+% function [Xcen, Ycen, Xvar, Yvar, bkgnd, A] = Fit2DGaussToSpot(spotimg,varargin)
 %
 % Given a region-of-interest (i.e. part of a frame from a FRET movie) that
 % nominally contains a single fluorescent spot, find the parameters of the
