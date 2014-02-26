@@ -157,7 +157,8 @@ end
 %%%%TODO: 
 %%%%May need to do some background subtraction and/or smoothing here, or maybe
 %%%%only for the non-movie inputs? So far seems fine.  Maybe I'll leave
-%%%%that for the user to do before passing in the image.
+%%%%that for the user to do before passing in the image. Ha lab code does
+%%%%NOT smooth before spot-finding (but they DO background subtract).
 
 % SPOTFINDING
 % (1) Define a neighborhood as NeighborhoodSize square pixels--want the max and min

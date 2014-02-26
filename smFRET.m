@@ -271,9 +271,9 @@ function smFRET(rootname,debug)
                 int2str(i),' of ',int2str(BdDir),')'))
             [matchG_abs,~] = SpotsIntoAbsCoords(matchG{i},...
                 matchR{i},params,size(allBdImgs(:,:,i),2)/2);
-            newR = A*matchG{i}+repmat(b,1,size(matchG{i},2));
+            newR = CalcSpotTransform(matchG{i},[],A,b);
             PutBoxesOnImageV4(allBdImgs(:,:,i),[newR';matchG_abs'],params.BeadSize);
-            title('Spots found in green, matched to red','Fontsize',12)
+            title('Spots found in green, mapped to red','Fontsize',12)
             figure
             errs = FindSpotDists(matchR{i},newR);
             hist(min(errs,[],2),0:0.1:10)
@@ -347,7 +347,9 @@ close all
         end
             
         if strcmpi(useoldspots,'n')
-           % Load this movie--just the first FramesToAvg frames for finding spots
+           % Finding spots and local background values
+            
+           % Load the first FramesToAvg frames for finding spots
            TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 params.FramesToAvg]);
            
            if size(TotImg,3) > 1
@@ -358,6 +360,8 @@ close all
            
            [imgRed,imgGreen] = SplitImg(TotImg,params);
            
+           % Step 0: TODO: calculate local background values 
+           
            % Find spots in both channels, but don't double-count:
            % Update 1/2014: finding spots in a composite image, so that
            % mid-FRET spots don't get lost.  NOTE that the combined image
@@ -365,8 +369,13 @@ close all
            % is fine because that's what I pass into UserSpotSelectionV4.
            
            composite = CalcCombinedImage(Amatlab,bmatlab,imgGreen,imgRed);
+           % The built-in Matlab function imfuse used to create the output
+           % of CalcCombinedImage only returns unit8 images, but fminsearch
+           % (called in Fit2DGaussToSpot below) needs a double, so convert
+           % back to doubles:
+           composite = mat2gray(composite);
            
-           % Find spots in this new image:
+           % Step 1: identify spots in this combined image:
            [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
            figure('Position',[params.Fig2Pos(1)+225,params.Fig1Pos(2),1.37*size(imgGreen,2),1.18*size(imgGreen,1)]), imshow(imgGreen);
@@ -379,23 +388,75 @@ close all
            
            close all
            
-            % Note because spots are never displayed on the full image,
-            % only on the image split into two channels, I don't need to
-            % add params.PxlsToExclude to get spots into the right
-            % coordinates (unlike with the beads)
+           % Step 2: fit a Gaussian to the spots found in the combined
+           % image to get values that will be used to refine the
+           % intensity-versus-time calculation later:
+           
+           spotGaussParams = zeros(6,size(spotsR,2));
+           spotGaussParamsR = zeros(6,size(spotsR,2));
+           spotGaussParamsG = zeros(6,size(spotsR,2));
+           Gspots = zeros(size(spotsR));
+           
+           for ss = 1:size(spotsR,2)
+               %Get ROI in composite image
+               spotimg = ExtractROI(composite,params.DNAsize,spotsR(:,ss));
+               %Get ROI in red channel
+               spotimgR = ExtractROI(imgRed,params.DNAsize,spotsR(:,ss));
+               %Get ROI in green channel:
+               %Get coordinates of this spot in the other channel:
+               Gspots(:,ss) = CalcSpotTransform([],spotsR(:,ss),A,b);
+               spotimgG = ExtractROI(imgGreen,params.DNAsize,Gspots(:,ss));
+                
+               %Fit Gaussian in composite channel:
+               disp(strcat('Composite for spot number',int2str(ss)))
+               [Xcen, Ycen, Xvar, Yvar, bkgnd, Amp] = Fit2DGaussToSpot(spotimg,'Debug',1);
+               spotGaussParams(:,ss) = [Xcen-floor(params.DNASize/2)-1+spotsR(1,ss),...
+                   Ycen-floor(params.DNASize/2)-1+spotsR(2,ss),Xvar, Yvar, bkgnd, Amp];
+               clear Xcen Ycen Xvar Yvar bkgnd Amp
+                
+               %Fit Gaussian in red channel:
+               disp(strcat('Red for spot number',int2str(ss)))
+               [Xcen, Ycen, Xvar, Yvar, bkgnd, Amp] = Fit2DGaussToSpot(spotimgR,'Debug',1,...
+                   'StartParams',spotGaussParams(:,ss));
+               spotGaussParamsR(:,ss) = [Xcen-floor(params.DNASize/2)-1+spotsR(1,ss),...
+                   Ycen-floor(params.DNASize/2)-1+spotsR(2,ss), Xvar, Yvar, bkgnd, Amp];
+               clear Xcen Ycen Xvar Yvar bkgnd Amp
+                
+               %Fit Gaussian in green channel:
+               disp(strcat('Green for spot number',int2str(ss)))
+               newcen = CalcSpotTransform([],[spotGaussParams(1,ss),spotGaussParams(2,ss)],A,b);
+               [Xcen, Ycen, Xvar, Yvar, bkgnd, Amp] = Fit2DGaussToSpot(spotimgG,'Debug',1,...
+                   'StartParams',[newcen(1), newcen(2), spotGaussParams(3,ss),...
+                   spotGaussParams(4,ss), spotGaussParams(5,ss), spotGaussParams(6,ss)]);
+               spotGaussParamsG(:,ss) = [Xcen-floor(params.DNASize/2)-1+Gspots(1,ss),...
+                    Ycen-floor(params.DNASize/2)-1+Gspots(2,ss), Xvar, Yvar, bkgnd, Amp];
+               clear Xcen Ycen Xvar Yvar bkgnd Amp
+           end
+           
+           % How different are these fit values from the fit parameters for
+           % each spot in its own channel?
+           
+           % Step 3: Load the whole movie in increments and calculate the
+           % intensity of each spot in each frame.
+           
+           % Save spot positions, intensities and associated GaussFit
+           % parameters in case the user wants to re-analyze.
+           % Note because spots are never displayed on the full image,
+           % only on the image split into two channels, I don't need to
+           % add params.PxlsToExclude to get spots into the right
+           % coordinates (unlike with the beads)
             
            save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots')
+           
+           % Step 4: Display a trace of intensity-vs-time for each spot,
+           % with an interactive section for the user to select spots that
+           % are true FRET, etc
 
-           % Iterate through spots; display traces and allow user to select which ones to keep
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            UserSpotSelectionV4(spots,fullfile(D_Data,ToAnalyze(i).name),params,A,b,savedir,fps,i);
-        else
+        else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots');
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           % Mainly for debugging for now:
-           % PutBoxesOnImageV3(mat2gray(mean(TotImg(:,:,1:20),3)),spots',params.SpotSize);
-           % title('All spots to be analyzed','Fontsize',12)
-           % UserSpotSelectionV3(spots,imgRed,imgGreen,params,A,b,savedir,fps,i);
            UserSpotSelectionV4(oldspots.spots,fullfile(D_Data,ToAnalyze(i).name),params,A,b,savedir,fps,i);
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp

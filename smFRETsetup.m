@@ -42,7 +42,8 @@ Acceptor = 0; % This means the acceptor channel is the one on the left
 % from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-FramesToAvg = 10; % How many frames to average over for spotfinding
+FramesToAvg = 10; % How many frames to average over for spotfinding and calculating
+    % the local background that will be subtracted
 PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
     % contains both channels, to exclude from analysis.  On our system with
     % a decent channel alignment this is about 10 pixels.  This avoids
