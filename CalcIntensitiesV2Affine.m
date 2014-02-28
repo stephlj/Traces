@@ -1,4 +1,4 @@
-% function [RedI,GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, tform,params)
+% function [RedI,GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, A, b,params)
 %
 % Calculates intensities for all spots in a movie.
 %
@@ -7,7 +7,7 @@
 % Rspots: locations of the spots in the acceptor channel
 % spotVars: x,y variances to use for each spot for the Gaussian weighting
 %   performed by CalcSpotIntensityV4
-% tform: mapping information for finding spots in the donor channel
+% A, b: mapping information for finding spots in the donor channel
 % params: file saved by smFRETsetup
 %
 % Outputs:
@@ -16,7 +16,7 @@
 % Steph 2/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [RedI, GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, tform,params)
+function [RedI, GrI] = CalcIntensitiesV2Affine(PathToMovie, Rspots, spotVars, A, b,params)
 
 % Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
@@ -24,7 +24,7 @@ alltifs = dir(fullfile(PathToMovie,'img*.tif'));
 RedI = zeros(size(Rspots,2),length(alltifs));
 GrI = zeros(size(Rspots,2),length(alltifs));
 % Find the spots in the coordinate system of the other (green) channel:
-Gspots = transpose(transformPointsInverse(tform,Rspots'));
+Gspots = CalcSpotTransform([],Rspots,A,b);
     
 % Updated 2/2014: scaling the entire movie such that the brightest pixel is
 % 1 and the dimmest is 0.  This is equivalent to mat2gray(), but I can't

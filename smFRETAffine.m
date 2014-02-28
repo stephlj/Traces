@@ -13,11 +13,10 @@
 % Optionally: if you want it to run all the various debugging things, pass
 % "1" as the second input.
 %
-% Steph 9/2013, updated 2/2014 to use a polynomial transformation rather
-% than affine to do mapping
+% Steph 9/2013
 % Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
-function smFRET(rootname,debug)
+function smFRETAffine(rootname,debug)
 
 %%%%%%Preliminaries:
     % Since debug is an optional input, set a default
@@ -31,6 +30,7 @@ function smFRET(rootname,debug)
     
     % Function 1: Getting absolute (in the whole original image) coordinates
     % for spots, rather than local (in a single channel) coordinates.
+    % Also makes use of the new PxlsToExclude parameter.
     function [spotsGglobal,spotsRglobal] = SpotsIntoAbsCoords(spotsGlocal,...
             spotsRlocal,params_struct,imgwidth)
         if params_struct.splitx
@@ -103,9 +103,10 @@ function smFRET(rootname,debug)
         D_Beads = uigetdir(prevmapdir.MostRecentMapDir,'Select directory with old map');
         if exist(fullfile(D_Beads,'ChannelMapping.mat'),'file')
             Map = load(fullfile(D_Beads,'ChannelMapping.mat'));
-            tformGtoR = Map.tformGtoR;
-            tformRtoG = Map.tformRtoG;
-            tformGtoRAffine = Map.tformGtoRAffine;
+            A = Map.A;
+            b = Map.b;
+            Amatlab = Map.Amatlab;
+            bmatlab = Map.bmatlab;
             clear Map prevmapdir
         else
             disp(strcat('Bead map not found in',Beads))
@@ -118,7 +119,7 @@ function smFRET(rootname,debug)
         % Figure out how many bead files to analyze there are:
         AllBeads = dir(fullfile(D_Beads,'Bead*'));
         num_BeadDir = input(strcat('How many bead files to analyze? Max:',...
-            int2str(length(AllBeads)),' (Enter to use max)'));
+            int2str(length(AllBeads)),' (Enter to use max; movies load first)'));
         if isempty(num_BeadDir)
             BdDir = length(AllBeads);
         else
@@ -252,93 +253,54 @@ function smFRET(rootname,debug)
         end
 
         % Step three: calculate the transformation using all pairs of beads,
-        % from all bead movies or snapshots that were loaded.
-        % Update 2/2014: An affine transformation (using my CalcChannelMapping),
-        % does ok at channel mapping--the vast majority of spots will be
-        % mapped to within 1.5 pixels of their true center. Matlab's
-        % fitgeotrans with the affine option doesn't do well at mapping
-        % points, but does better at getting overlaid channels.
-        % However, in order to fit Gaussians to each spot in real data
-        % (below), the mapping really needs to be good to within 0.5 pixel
-        % or less.  For that we need a 3rd-degree polynomial, not an
-        % affine.  So using Matlab's cp2tform:
-        % tform = cp2tform(matchRall',matchGall','polynomial',3); % Note different input order than my CalcChannelMapping
-        % But that does really horribly, and is really annoying, for making
-        % overlaid/composite images, which I need for the second half of
-        % this code. So also doing an affine transformation using
-        % fitgeotrans.
-        % Hey wait a sec, even though polynomial isn't listed as an option
-        % for fitgeotrans, it can do it!  sheesh
-        tformGtoR = fitgeotrans(matchRall',matchGall','polynomial',3);
-        % Unlike an affine transformation, I believe this is not
-        % invertible, so need to also calculate the other direction:
-        tformRtoG = fitgeotrans(matchGall',matchRall','polynomial',3);
-        % Ok actually the polynomial transformation does a terrible job of
-        % overlaying the two channels to make a combined image. So, lastly,
-        % also using fitgeotrans to get an affine transformation:
-        tformGtoRAffine = fitgeotrans(matchRall',matchGall','Affine');
+        % from all bead movies or snapshots that were loaded:
+        % Calculate transformation:
+        % Update 1/2014: the built-in Matlab function fitgeotrans does a bit
+        % better than my hand-written code in CalcChannelMapping for overlaying 
+        % images using CalcCombinedImage, but mine does better in terms of 
+        % calculating where a spot in the donor channel should be in the acceptor
+        % channel.  So for now, calculating and saving both:
+        [A,b] = CalcChannelMapping(matchGall,matchRall)
+        tform = fitgeotrans(matchRall',matchGall','Affine'); % Note different input order for fitgeotrans
+        Amatlab = tform.T(1:2,1:2)
+        bmatlab = transpose(-tform.T(3,1:2))
         
         % Plot the results for each movie:
         for i = 1:BdDir
             disp(strcat('Iterating through bead images for user to check quality (',...
                 int2str(i),' of ',int2str(BdDir),')'))
-            % Get green points in absolute coordinates
             [matchG_abs,~] = SpotsIntoAbsCoords(matchG{i},...
                 matchR{i},params,size(allBdImgs(:,:,i),2)/2);
-            % Use tform to map to where they should be in the red channel:
-            newR = transpose(transformPointsInverse(tformGtoR,matchG{i}'));
+            newR = CalcSpotTransform(matchG{i},[],A,b);
             PutBoxesOnImageV4(allBdImgs(:,:,i),[newR';matchG_abs'],params.BeadSize);
             title('Spots found in green, mapped to red','Fontsize',12)
             figure
             errs = FindSpotDists(matchR{i},newR);
-            hist(min(errs,[],2),0:0.1:2)
+            hist(min(errs,[],2),0:0.1:10)
             hold on
             plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
             hold off
             % TODO: If the mean error is bigger than, say, 1 pxl, redo the
-            % mapping excluding points with too-large errors. 
-            % Update 2/2014: it's possible fitgeotrans does this already?
-            % The older version, cp2tform, does, I believe
+            % mapping excluding points with too-large errors
             ylabel('Counts','Fontsize',12)
             xlabel('Distance between mapped red bead and real red bead','Fontsize',12)
-            
-            % Show an overlay of one channel on the other:
-            [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
-            CalcCombinedImage(tformGtoRAffine,imgGreen,imgRed,1);
-            
+%             if params.splitx
+%                 CalcCombinedImage(Amatlab,bmatlab,...
+%                     allBdImgs(:,(size(allBdImgs(:,:,i))/2)+1:end,i),allBdImgs(:,1:size(allBdImgs(:,:,i))/2,i),1);
+%             else
+%                 CalcCombinedImage(Amatlab,bmatlab,...
+%                     allBdImgs((size(allBdImgs(:,:,i))/2)+1:end,:,i),allBdImgs(1:size(allBdImgs(:,:,i))/2,:,i),1);
+%             end 
             pause
             close
             close
             close
-            clear newR errs
-            
-            % Because I explicitly calculated the transformation both ways,
-            % check also that the inverse transformation looks ok:
-            % Use tform to map to where they should be in the red channel:
-            newG = transpose(transformPointsInverse(tformRtoG,matchR{i}'));
-            % Get green points in absolute coordinates
-            [newG_abs,~] = SpotsIntoAbsCoords(newG,...
-                matchR{i},params,size(allBdImgs(:,:,i),2)/2);
-            PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR{i}';newG_abs'],params.BeadSize);
-            title('Spots found in red, mapped to green','Fontsize',12)
-            figure
-            errs = FindSpotDists(matchG{i},newG);
-            hist(min(errs,[],2),0:0.1:2)
-            hold on
-            plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
-            hold off
-            ylabel('Counts','Fontsize',12)
-            xlabel('Distance between mapped green bead and real green bead','Fontsize',12)
-            
-            pause
-            close
-            close
-            clear newG matchG_abs imgRed imgGreen errs
+            clear newR matchG_abs
         end
         clear allBdImgs matchG matchR matchGall matchRall
 
-        save(fullfile(D_Beads,'ChannelMapping.mat'),'tformGtoR','tformRtoG',...
-            'tformGtoRAffine','BeadFilesInMap');
+        save(fullfile(D_Beads,'ChannelMapping.mat'),'A','b','BeadFilesInMap',...
+            'Amatlab','bmatlab');
         save('PathToRecentMap','MostRecentMapDir');
     end
 
@@ -406,7 +368,7 @@ close all
            % will have a frame of reference of the acceptor image, which
            % is fine because that's what I pass into UserSpotSelectionV4.
            
-           composite = CalcCombinedImage(tformGtoRAffine,imgGreen,imgRed);
+           composite = CalcCombinedImage(Amatlab,bmatlab,imgGreen,imgRed);
            % The built-in Matlab function imfuse used to create the output
            % of CalcCombinedImage only returns unit8 images, but fminsearch
            % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
@@ -429,7 +391,7 @@ close all
            disp('Refining spot centers by 2D Gauss fit')
            
            [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGreen,...
-               imgRed,tformRtoG,tformGtoR,params.DNASize,1);
+               imgRed,Amatlab,bmatlab,params.DNASize);
            
            % Some notes about this fitting process:
            % (1) If you do this with beads instead of DNA, in which case
@@ -450,7 +412,7 @@ close all
            disp('Calculating frame-by-frame intensities')
            
            [RedI, GrI] = CalcIntensitiesV2(fullfile(D_Data,ToAnalyze(i).name),...
-               RefinedCenters, Vars, tformRtoG,params);
+               RefinedCenters, Vars, Amatlab, bmatlab,params);
            
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.
@@ -465,28 +427,18 @@ close all
                'SpotVars','RedI','GrI')
            clear SpotsInR SpotVars
            
-           if i==1
-               % Also save the params structure in the data analysis folder, so
-               % you know what analysis parameters were used to analyze the
-               % data:
-               params.fps = fps;
-               save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
-           end
-           
            % Step 4: Display a trace of intensity-vs-time for each spot,
            % with an interactive section for the user to select spots that
            % are true FRET, etc
 
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            UserSpotSelectionV4(RedI,GrI,RefinedCenters,...
-               fullfile(D_Data,ToAnalyze(i).name),params,tformRtoG,savedir,fps,i);
+               fullfile(D_Data,ToAnalyze(i).name),params,Amatlab,bmatlab,savedir,fps,i);
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
-           params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
-           params = params.params;
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
-               fullfile(D_Data,ToAnalyze(i).name),params,tformRtoG,savedir,fps,i);
+               fullfile(D_Data,ToAnalyze(i).name),params,Amatlab,bmatlab,savedir,fps,i);
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp
     end

@@ -1,5 +1,4 @@
-% function [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgG,imgR,tformfwd...
-%       tforminv,ROIsize,Debug)
+% function [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgG,imgR,A,b,ROIsize,Debug)
 %
 % Given a set of spot centers (spots) and the image they're found in
 % (composite, the single-channel image produced by CalcCombinedImage), fit 2D
@@ -13,10 +12,8 @@
 % composite: a single-channel, composite image. This will have the
 %   coordinate system of one of the channels; for me it's the acceptor
 %   channel.
-% tformfwd: matlab transformation structure that maps from the composite
-%   coordinate system to the other channel
-% tforminv: matlab transformation structure that maps from the other
-%   channel coordinate system to the composite image
+% A, b: matrix that performs the transformation from the other channel into
+%   the coordinate system of the composite image's channel
 % imgR, imgG: the two channels separately. This function compares the
 %   results of fitting a 2D Gaussian to the composite image versus the
 %   channels individually to best refine the spot's position and variance.
@@ -34,7 +31,7 @@
 % Steph 2/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgG,imgR,tformfwd,tforminv, ROIsize,varargin)
+function [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgG,imgR,A,b, ROIsize,varargin)
 
 if isempty(varargin)
     Debug=0;
@@ -47,7 +44,7 @@ end
 RefinedCenters = zeros(2,size(spotsR,2));
 Vars = zeros(2,size(spotsR,2));
 % Find the spots in the coordinate system of the other (green) channel:
-Gspots = transpose(transformPointsInverse(tformfwd,spotsR'));
+Gspots = CalcSpotTransform([],spotsR,A,b);
 
 for ss = 1:size(spotsR,2)
    % Get ROI in composite image
@@ -120,7 +117,7 @@ for ss = 1:size(spotsR,2)
            clear oldcen
        end
        % Convert back to the coordinate system of the other channel:
-       RefinedCenters(:,ss) = transpose(transformPointsInverse(tforminv,[XcenG,YcenG]));
+       RefinedCenters(:,ss) = CalcSpotTransform([XcenG,YcenG],[],A,b);
        Vars(:,ss) = [XvarG,YvarG];
        if Debug
             disp('Green channel wins.')
@@ -152,7 +149,7 @@ for ss = 1:size(spotsR,2)
        if AmpG > AmpR
             % Trust the green channel fit best
             % Convert back to the coordinate system of the other channel:
-            RefinedCenters(:,ss) = transpose(transformPointsInverse(tforminv,[XcenG,YcenG]));
+            RefinedCenters(:,ss) = CalcSpotTransform([XcenG,YcenG],[],A,b);
             Vars(:,ss) = [XvarG,YvarG];
             if Debug
                 disp('Green channel wins.')
