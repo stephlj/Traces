@@ -1,25 +1,19 @@
-% function UserSpotSelectionV4()
+% function UserSpotSelectionV4(allRedI,allGrI,spots,PathToMovie,params,A,b,savedir,fps,setnum)
 %
 % Iterates through all the spots in a movie and allows user to adjust
 % background, keep the ones they like, etc. Note that spots are passed in in
 % the frame of reference of the ACCEPTOR channel.
 %
-% The CPLC FRET code (in IDL) from TJ Ha's lab at UIUC uses a circle that's
-% 9 pxls diameter, and includes 3 pixels in the first row, then 5 pixels, 
-% 7 pxls, 9, 9, 9, 7, 5, 3.
-%
-% V3 uses circles instead of squares for calculating intensities.
-% V4 isn't passed a movie; instead it's passed a directory name, and
-% only loads 100 frames at a time, calculates the intensity, then loads the
-% next 100 frames etc.  Otherwise my computer runs out of RAM.
-%
 % Updated 12/2013 to allow the user to pass the figure position information
 % via params, so it's easier to put this code onto different computers.
+%
+% Updated 2/2014 so that the intensities are passed in, instead of being
+% calculated here.
 %
 % Steph 10/2013
 % Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
-function UserSpotSelectionV4(spots,PathToMovie,params,A,b,savedir,fps,setnum)
+function UserSpotSelectionV4(allRedI,allGrI,spots,PathToMovie,params,A,b,savedir,fps,setnum)
 
 %%%Setting up some stuff
 % subfunction for putting circles around a spot:
@@ -35,10 +29,13 @@ if size(spots,1)~=2
     spots = transpose(spots);
 end
 
-%%%Get all the spot intensities
-tic
-[allRedI, allGrI, GrSpots, imgRinit, imgGinit] = CalcIntensities(PathToMovie, spots, A, b,params);
-toc
+% Find spots in green channel:
+GrSpots = CalcSpotTransform([],spots,A,b);
+
+% Get an average image of the first 10 frames to display:
+moviebit = LoadUManagerTifsV5(PathToMovie,[1 1+params.FramesToAvg]);
+moviebit = mat2gray(mean(moviebit,3));
+[imgRinit,imgGinit] = SplitImg(moviebit,params);
 
 %%%Interactive section
 k = 1; % Indexes current spot being plotted

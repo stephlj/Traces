@@ -388,7 +388,7 @@ close all
            % image to get values that will be used to refine the
            % intensity-versus-time calculation later:
            
-           [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgGreen,...
+           [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGreen,...
                imgRed,Amatlab,bmatlab,params.DNASize);
            
            % Some notes about this fitting process:
@@ -407,25 +407,34 @@ close all
            % Step 3: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
            
+           [RedI, GrI] = CalcIntensitiesV2(fullfile(D_Data,ToAnalyze(i).name),...
+               RefinedCenters, Vars, Amatlab, bmatlab,params);
+           
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.
            % Note because spots are never displayed on the full image,
            % only on the image split into two channels, I don't need to
            % add params.PxlsToExclude to get spots into the right
            % coordinates (unlike with the beads)
-            
-           save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots')
+           
+           SpotsInR = RefinedCenters;
+           SpotVars = Vars;
+           save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'SpotsInR',...
+               'SpotVars','RedI','GrI')
+           clear SpotsInR SpotVars
            
            % Step 4: Display a trace of intensity-vs-time for each spot,
            % with an interactive section for the user to select spots that
            % are true FRET, etc
 
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           UserSpotSelectionV4(spots,fullfile(D_Data,ToAnalyze(i).name),params,A,b,savedir,fps,i);
+           UserSpotSelectionV4(RedI,GrI,RefinedCenters,...
+               fullfile(D_Data,ToAnalyze(i).name),params,Amatlab,bmatlab,savedir,fps,i);
         else %If the user wants to instead use previously saved data
-           oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'spots');
+           oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           UserSpotSelectionV4(oldspots.spots,fullfile(D_Data,ToAnalyze(i).name),params,A,b,savedir,fps,i);
+           UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
+               fullfile(D_Data,ToAnalyze(i).name),params,Amatlab,bmatlab,savedir,fps,i);
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp
     end
