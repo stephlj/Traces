@@ -183,4 +183,4 @@ end
 
 RefinedCenters = RefinedCenters(:,find(RefinedCenters(1,:)));
 Vars = Vars(:,find(Vars(1,:)));
-disp(sprintf('Kept %d of %d spots', size(RefinedCenters,2), size(spotsR,2)))
+disp(sprintf('GaussFit refinement: Kept %d of %d spots', size(RefinedCenters,2), size(spotsR,2)))

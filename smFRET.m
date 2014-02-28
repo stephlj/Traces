@@ -388,6 +388,8 @@ close all
            % image to get values that will be used to refine the
            % intensity-versus-time calculation later:
            
+           disp('Refining spot centers by 2D Gauss fit')
+           
            [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGreen,...
                imgRed,Amatlab,bmatlab,params.DNASize);
            
@@ -406,6 +408,8 @@ close all
            
            % Step 3: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
+           
+           disp('Calculating frame-by-frame intensities')
            
            [RedI, GrI] = CalcIntensitiesV2(fullfile(D_Data,ToAnalyze(i).name),...
                RefinedCenters, Vars, Amatlab, bmatlab,params);

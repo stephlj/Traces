@@ -46,10 +46,12 @@ for jj = 1:100:length(alltifs)
     for kk = 1:size(Rspots,2)
         % Get ROI in red channel
        spotimgR = ExtractROI(imgR,params.DNASize,Rspots(:,kk));
+       localcenR = Rspots(:,kk)-(round(Rspots(:,kk))-[floor(params.DNASize)/2; floor(params.DNASize)/2]);
        % Get ROI in green channel:
        spotimgG = ExtractROI(imgG,params.DNASize,Gspots(:,kk));
-       RedI(kk,jj:jj+99) = CalcSpotIntensityV4(spotimgR,Rspots(:,kk),spotVars(:,kk));
-       GrI(kk,jj:jj+99) = CalcSpotIntensityV4(spotimgG,Gspots(:,kk),spotVars(:,kk));
+       localcenG = Gspots(:,kk)-(round(Gspots(:,kk))-[floor(params.DNASize)/2; floor(params.DNASize)/2]);
+       RedI(kk,jj:jj+99) = CalcSpotIntensityV4(spotimgR,localcenR,spotVars(:,kk));
+       GrI(kk,jj:jj+99) = CalcSpotIntensityV4(spotimgG,localcenG,spotVars(:,kk));
        clear spotimgG spotimgR
     end
    clear imgR imgG moviebit
