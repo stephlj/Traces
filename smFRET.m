@@ -371,8 +371,8 @@ close all
            composite = CalcCombinedImage(Amatlab,bmatlab,imgGreen,imgRed);
            % The built-in Matlab function imfuse used to create the output
            % of CalcCombinedImage only returns unit8 images, but fminsearch
-           % (called in Fit2DGaussToSpot below) needs a double, so convert
-           % back to doubles:
+           % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
+           % double, so convert back to doubles:
            composite = mat2gray(composite);
            
            % Step 1: identify spots in this combined image:
@@ -389,10 +389,20 @@ close all
            % intensity-versus-time calculation later:
            
            [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgGreen,...
-               imgRed,A,b, params.DNASize);
+               imgRed,Amatlab,bmatlab,params.DNASize);
            
-           % How different are these fit values from the fit parameters for
-           % each spot in its own channel?
+           % Some notes about this fitting process:
+           % (1) If you do this with beads instead of DNA, in which case
+           % the "right answers" are obvious, the green channel is always
+           % the best fit (which makes sense since the beads are brightest
+           % in green), and it always keeps all the beads as "good"
+           % (2) As long as you're consistent, it doesn't seem to matter
+           % whether you pass Amatlab, bmatlab or A, b into GetGaussParams.
+           % However, whichever parameter set you pass is the one you need
+           % to use to convert between channels from now on! It also
+           % doesn't seem to make a huge difference if you use A, b even if
+           % you use Amatlab,bmatlab to make composite. Again just be
+           % consistent from this point onwards.
            
            % Step 3: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
