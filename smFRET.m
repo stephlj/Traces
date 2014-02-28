@@ -378,10 +378,6 @@ close all
            % Step 1: identify spots in this combined image:
            [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-           figure('Position',[params.Fig2Pos(1)+225,params.Fig1Pos(2),1.37*size(imgGreen,2),1.18*size(imgGreen,1)]), imshow(imgGreen);
-           title('Green Channel','Fontsize',14)
-           figure('Position',[params.Fig1Pos(1)+75,params.Fig1Pos(2),1.37*size(imgGreen,2),1.18*size(imgGreen,1)]), imshow(imgRed);
-           title('Red Channel','Fontsize',14)
            spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
                params.DNANeighborhood,params.DNASize,'default');
            clear n xout
@@ -392,46 +388,8 @@ close all
            % image to get values that will be used to refine the
            % intensity-versus-time calculation later:
            
-           spotGaussParams = zeros(6,size(spotsR,2));
-           spotGaussParamsR = zeros(6,size(spotsR,2));
-           spotGaussParamsG = zeros(6,size(spotsR,2));
-           Gspots = zeros(size(spotsR));
-           
-           for ss = 1:size(spotsR,2)
-               %Get ROI in composite image
-               spotimg = ExtractROI(composite,params.DNAsize,spotsR(:,ss));
-               %Get ROI in red channel
-               spotimgR = ExtractROI(imgRed,params.DNAsize,spotsR(:,ss));
-               %Get ROI in green channel:
-               %Get coordinates of this spot in the other channel:
-               Gspots(:,ss) = CalcSpotTransform([],spotsR(:,ss),A,b);
-               spotimgG = ExtractROI(imgGreen,params.DNAsize,Gspots(:,ss));
-                
-               %Fit Gaussian in composite channel:
-               disp(strcat('Composite for spot number',int2str(ss)))
-               [Xcen, Ycen, Xvar, Yvar, bkgnd, Amp] = Fit2DGaussToSpot(spotimg,'Debug',1);
-               spotGaussParams(:,ss) = [Xcen-floor(params.DNASize/2)-1+spotsR(1,ss),...
-                   Ycen-floor(params.DNASize/2)-1+spotsR(2,ss),Xvar, Yvar, bkgnd, Amp];
-               clear Xcen Ycen Xvar Yvar bkgnd Amp
-                
-               %Fit Gaussian in red channel:
-               disp(strcat('Red for spot number',int2str(ss)))
-               [Xcen, Ycen, Xvar, Yvar, bkgnd, Amp] = Fit2DGaussToSpot(spotimgR,'Debug',1,...
-                   'StartParams',spotGaussParams(:,ss));
-               spotGaussParamsR(:,ss) = [Xcen-floor(params.DNASize/2)-1+spotsR(1,ss),...
-                   Ycen-floor(params.DNASize/2)-1+spotsR(2,ss), Xvar, Yvar, bkgnd, Amp];
-               clear Xcen Ycen Xvar Yvar bkgnd Amp
-                
-               %Fit Gaussian in green channel:
-               disp(strcat('Green for spot number',int2str(ss)))
-               newcen = CalcSpotTransform([],[spotGaussParams(1,ss),spotGaussParams(2,ss)],A,b);
-               [Xcen, Ycen, Xvar, Yvar, bkgnd, Amp] = Fit2DGaussToSpot(spotimgG,'Debug',1,...
-                   'StartParams',[newcen(1), newcen(2), spotGaussParams(3,ss),...
-                   spotGaussParams(4,ss), spotGaussParams(5,ss), spotGaussParams(6,ss)]);
-               spotGaussParamsG(:,ss) = [Xcen-floor(params.DNASize/2)-1+Gspots(1,ss),...
-                    Ycen-floor(params.DNASize/2)-1+Gspots(2,ss), Xvar, Yvar, bkgnd, Amp];
-               clear Xcen Ycen Xvar Yvar bkgnd Amp
-           end
+           [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgGreen,...
+               imgRed,A,b, params.DNASize);
            
            % How different are these fit values from the fit parameters for
            % each spot in its own channel?

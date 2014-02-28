@@ -62,32 +62,50 @@ end
 % the actual image.  This "minimize the difference" problem is encapsulated
 % in the Gauss2DCost function.
 
-opts = optimset('Display','off'); %Don't display a warning if the fit doesn't converge
+opts = optimset('Display','off'); % Don't display a warning if the fit doesn't converge
 
 if symGauss
     [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCostSym(params,spotimg),...
         [Xcen_init,Ycen_init,Xvar_init,bkgnd_init,A_init],opts);
-%     if exitflag==0
-%         keyboard;
-%     end
-    A = fitparams(5);
-    bkgnd = fitparams(4);
-    Xcen = fitparams(1);
-    Ycen = fitparams(2);
-    Xvar = fitparams(3);
-    Yvar = Xvar;
+    if exitflag==0
+        % If the fit fails, return the default parameters. Sometimes the
+        % parameters it gets from a failed fit are pretty whacky. Return a
+        % very low amplitude as indication that this is not a good Gaussian.
+        A = 0.0001;
+        bkgnd = bkgnd_init;
+        Xcen = Xcen_init;
+        Ycen = Ycen_init;
+        Xvar = Xvar_init;
+        Yvar = Xvar; 
+    else
+        A = fitparams(5);
+        bkgnd = fitparams(4);
+        Xcen = fitparams(1);
+        Ycen = fitparams(2);
+        Xvar = fitparams(3);
+        Yvar = Xvar;
+    end
 else
     [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCost(params,spotimg),...
         [Xcen_init,Ycen_init,Xvar_init,Yvar_init,bkgnd_init,A_init],opts);
-%     if exitflag==0
-%         keyboard;
-%     end
-    A = fitparams(6);
-    bkgnd = fitparams(5);
-    Xcen = fitparams(1);
-    Ycen = fitparams(2);
-    Xvar = fitparams(3);
-    Yvar = fitparams(4);
+    if exitflag==0
+        % If the fit fails, return the default parameters. Sometimes the
+        % parameters it gets from a failed fit are pretty whacky. Return a
+        % very low amplitude as indication that this is not a good Gaussian.
+        A = 0.0001;
+        bkgnd = bkgnd_init;
+        Xcen = Xcen_init;
+        Ycen = Ycen_init;
+        Xvar = Xvar_init;
+        Yvar = Yvar_init; 
+    else 
+        A = fitparams(6);
+        bkgnd = fitparams(5);
+        Xcen = fitparams(1);
+        Ycen = fitparams(2);
+        Xvar = fitparams(3);
+        Yvar = fitparams(4);
+    end
 end
 
 if debug
@@ -119,6 +137,6 @@ if debug
     title('Difference','Fontsize',14)
     zlim([0 1])
     
-    pause
-    close
+    %pause
+    %close
 end
