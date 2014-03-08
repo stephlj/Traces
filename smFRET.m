@@ -398,7 +398,8 @@ close all
            
            [imgRed,imgGreen] = SplitImg(TotImg,params);
            
-           % Step 0: TODO: calculate local background values 
+           % Step 0: subtract background:
+           [imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
            
            % Find spots in both channels, but don't double-count:
            % Update 1/2014: finding spots in a composite image, so that
@@ -406,7 +407,7 @@ close all
            % will have a frame of reference of the acceptor image, which
            % is fine because that's what I pass into UserSpotSelectionV4.
            
-           composite = CalcCombinedImage(tformGtoRAffine,imgGreen,imgRed);
+           composite = CalcCombinedImage(tformGtoRAffine,imgGMinusBkgnd,imgRMinusBkgnd);
            % The built-in Matlab function imfuse used to create the output
            % of CalcCombinedImage only returns unit8 images, but fminsearch
            % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
@@ -428,8 +429,8 @@ close all
            
            disp('Refining spot centers by 2D Gauss fit')
            
-           [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGreen,...
-               imgRed,tformRtoG,tformGtoR,params.DNASize,1);
+           [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
+               imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize);
            
            % Some notes about this fitting process:
            % (1) If you do this with beads instead of DNA, in which case
