@@ -32,7 +32,7 @@ imgGbkgnd = imfilter(imgGmedians,h2);
 imgRMinusBkgnd = imgR - imgRbkgnd;
 imgGMinusBkgnd = imgG - imgGbkgnd;
 
-if varargin{1}==1
+if ~isempty(varargin{1})
     figure
     subplot(1,2,1)
     imshow(imgR,[])

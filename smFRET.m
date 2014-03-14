@@ -291,7 +291,7 @@ function smFRET(rootname,debug)
             title('Spots found in green, mapped to red','Fontsize',12)
             figure
             errs = FindSpotDists(matchR{i},newR);
-            hist(min(errs,[],2),0:0.1:2)
+            hist(min(errs,[],2),[0:0.1:10])
             hold on
             plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
             hold off
@@ -305,6 +305,7 @@ function smFRET(rootname,debug)
             % Show an overlay of one channel on the other:
             [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
             CalcCombinedImage(tformGtoRAffine,imgGreen,imgRed,1);
+            %CalcCombinedImage(tformGtoR,imgGreen,imgRed,1);
             
             pause
             close
@@ -323,7 +324,7 @@ function smFRET(rootname,debug)
             title('Spots found in red, mapped to green','Fontsize',12)
             figure
             errs = FindSpotDists(matchG{i},newG);
-            hist(min(errs,[],2),0:0.1:2)
+            hist(min(errs,[],2),[0:0.1:10])
             hold on
             plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
             hold off
