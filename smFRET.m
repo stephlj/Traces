@@ -405,6 +405,17 @@ close all
            % Step 0: subtract background:
            [imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
            
+           % Even if the user doesn't want to find spots in the composite
+           % image, the composite is still used as a guess as to which
+           % channel is best to use for fitting a Gaussian, for refining
+           % centers.
+           composite = CalcCombinedImage(tformGtoRAffine,imgGMinusBkgnd,imgRMinusBkgnd);
+           % The built-in Matlab function imfuse used to create the output
+           % of CalcCombinedImage only returns unit8 images, but fminsearch
+           % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
+           % double, so convert back to doubles:
+           composite = mat2gray(composite);
+           
            % Step 1: find spots
            % Find spots in both channels, but don't double-count. Allow
            % user to decide whether to find spots separately in each
@@ -416,13 +427,6 @@ close all
                % will have a frame of reference of the acceptor image, which
                % is fine because that's what I pass into UserSpotSelectionV4.
 
-               composite = CalcCombinedImage(tformGtoRAffine,imgGMinusBkgnd,imgRMinusBkgnd);
-               % The built-in Matlab function imfuse used to create the output
-               % of CalcCombinedImage only returns unit8 images, but fminsearch
-               % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
-               % double, so convert back to doubles:
-               composite = mat2gray(composite);
-
                % Step 1.1 Identify spots in this combined image:
                [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                      'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
@@ -431,39 +435,66 @@ close all
                clear n xout
 
                close all
-
-               % Step 1.2: fit a Gaussian to the spots found in the combined
-               % image to get values that will be used to refine the
-               % intensity-versus-time calculation later:
-
-               disp('Refining spot centers by 2D Gauss fit')
-
-               [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
-                   imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize);
-
-               % Some notes about this fitting process:
-               % (1) If you do this with beads instead of DNA, in which case
-               % the "right answers" are obvious, the green channel is always
-               % the best fit (which makes sense since the beads are brightest
-               % in green), and it always keeps all the beads as "good"
-               % (2) As long as you're consistent, it doesn't seem to matter
-               % whether you pass Amatlab, bmatlab or A, b into GetGaussParams.
-               % However, whichever parameter set you pass is the one you need
-               % to use to convert between channels from now on! It also
-               % doesn't seem to make a huge difference if you use A, b even if
-               % you use Amatlab,bmatlab to make composite. Again just be
-               % consistent from this point onwards.
            else
-               [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
+               % Step 1.1 Identify spots in acceptor channel
+               [spotsR,n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
                      'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-               spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
+               spotsR = SptFindUserThresh(spotsR,imgRed,n,xout,'Red Channel',...
                    params.DNANeighborhood,params.DNASize,'default');
                clear n xout
 
-               close all
+               close
+               
+               % And in donor channel
+               [spotsG,n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
+               spotsG = SptFindUserThresh(spotsG,imgGreen,n,xout,'Green Channel',...
+                   params.DNANeighborhood,params.DNASize,'default');
+               clear n xout
+
+               close
+               
+               % For right now, instead of this, using the GetGaussParams
+               % function below
+%                % Step 1.2: Convert green channel spot locations to red
+%                % channel locations, and check that no spots are double
+%                % counted and/or too close to other spots:
+%                spotsGinR = transpose(transformPointsInverse(tformGtoR,spotsG'));
+%                Dists = FindSpotDists(spotsR,spotsGinR);
+%                spotnottooclose = Dists>params.DNASize;
+%                % As in FindSpotsV5, each column of spotnottooclose will be all 1's if the 
+%                % spotG represented by the column is more than params.DNASize away from 
+%                % the spotR represented by each row. If there's already a spotR too
+%                % close, one or more elements of the column will be zero.  So now
+%                % ask if the sum of each column is equal to the length of the
+%                % column. If so, add it to spots:
+%                spots = spotsGinR(:,sum(spotnottooclose,2)==size(spotnottooclose,2));
+%                spots(:,end+1:end+size(spotsR,2)) = spotsR;
            end
            
-           % Step 2: Load the whole movie in increments and calculate the
+           disp(sprintf('Found %d total spots',size(spots,2)))
+           
+           % Step 2: fit a Gaussian to each spot to get values that will be 
+           % used to refine the intensity-versus-time calculation later:
+
+           disp('Refining spot centers by 2D Gauss fit')
+
+           [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
+               imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize);
+           % NOTE: USE GetGaussParamsAffine if the Affine transformation,
+           % rather than polynomial, is a better transformation to use!
+
+           % Some notes about this fitting process:
+           % (1) If you do this with beads instead of DNA, in which case
+           % the "right answers" are obvious, the green channel is always
+           % the best fit (which makes sense since the beads are brightest
+           % in green), and it always keeps all the beads as "good"
+           % (2) Whichever parameter set you pass GetGaussParams (affine vs
+           % polynomial, mine vs matlab's, etc) is the one you need
+           % to use to convert between channels from now on! Though it
+           % doesn't matter what you used for the composite image.
+           
+           % Step 3: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
            
            disp('Calculating frame-by-frame intensities')

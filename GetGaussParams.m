@@ -44,6 +44,10 @@ else
     Debug=0;
 end
 
+spotTolerance = 2; % How close can two peaks be to be considered the same,
+    % within the error of the mapping calculation? For us, for a good
+    % chanenl map, this is 2 pxls max
+
 RefinedCenters = zeros(2,size(spotsR,2));
 Vars = zeros(2,size(spotsR,2));
 % Find the spots in the coordinate system of the other (green) channel:
@@ -107,7 +111,7 @@ for ss = 1:size(spotsR,2)
        % Check that picking out an ROI based on the composite image didn't
        % mess up the fit (if the center picked out by spot-finding on the
        % composite image was way off from the "true" center):
-       if FindSpotDists([XcenG,YcenG],[Xcen,Ycen]) >= 3
+       if FindSpotDists([XcenG,YcenG],[Xcen,Ycen]) >= spotTolerance
            spotimgG = ExtractROI(imgG,ROIsize,[XcenG,YcenG]);
            oldcen = [XcenG,YcenG];
            if Debug
@@ -128,7 +132,7 @@ for ss = 1:size(spotsR,2)
    elseif AmpR >= 0.6*Amp && AmpG < 0.6*Amp
        % Trust the red channel fit best
        % Again check that the fit used the best ROI:
-       if FindSpotDists([XcenR,YcenR],[Xcen,Ycen]) >= 3
+       if FindSpotDists([XcenR,YcenR],[Xcen,Ycen]) >= spotTolerance
            spotimgR = ExtractROI(imgR,ROIsize,[XcenR,YcenR]);
            oldcen = [XcenR,YcenR];
            if Debug
@@ -145,8 +149,8 @@ for ss = 1:size(spotsR,2)
        if Debug
             disp('Red channel wins.')
        end
-   elseif FindSpotDists([XcenG,YcenG],[Xcen,Ycen]) <= 2 && ...
-           FindSpotDists([XcenR,YcenR],[Xcen,Ycen]) <= 2
+   elseif FindSpotDists([XcenG,YcenG],[Xcen,Ycen]) <= spotTolerance && ...
+           FindSpotDists([XcenR,YcenR],[Xcen,Ycen]) <= spotTolerance
        % This is the same spot in both channels, mid-FRET probably. Go with
        % whichever fit has higher amplitude, as probably more accurate
        if AmpG > AmpR
