@@ -1,4 +1,4 @@
-% function UserSpotSelectionV4(allRedI,allGrI,spots,PathToMovie,params,tform,savedir,fps,setnum)
+% function UserSpotSelectionV4(allRedI,allGrI,spots,PathToMovie,params,A,b,savedir,fps,setnum)
 %
 % Iterates through all the spots in a movie and allows user to adjust
 % background, keep the ones they like, etc. Note that spots are passed in in
@@ -13,7 +13,7 @@
 % Steph 10/2013
 % Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
-function UserSpotSelectionV4(allRedI,allGrI,spots,PathToMovie,params,tform,savedir,fps,setnum)
+function UserSpotSelectionV4Affine(allRedI,allGrI,spots,PathToMovie,params,A,b,savedir,fps,setnum)
 
 %%%Setting up some stuff
 % subfunction for putting circles around a spot:
@@ -30,7 +30,7 @@ if size(spots,1)~=2
 end
 
 % Find spots in green channel:
-GrSpots = transpose(transformPointsInverse(tform,spots'));
+GrSpots = CalcSpotTransform([],spots,A,b);
 
 % Get an average image of the first 10 frames to display:
 moviebit = LoadUManagerTifsV5(PathToMovie,[1 1+params.FramesToAvg]);

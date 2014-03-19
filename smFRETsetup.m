@@ -11,7 +11,7 @@ function smFRETsetup
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
 % defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
-defaultsavedir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data analysis';
+defaultsavedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData/RealDNA/analysis';
 % Where to load data from:
 defaultdatadir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData';
 % defaultdatadir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data';
@@ -42,13 +42,19 @@ Acceptor = 0; % This means the acceptor channel is the one on the left
 % from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-FramesToAvg = 10; % How many frames to average over for spotfinding
+FramesToAvg = 10; % How many frames to average over for spotfinding and calculating
+    % the local background that will be subtracted
 PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
     % contains both channels, to exclude from analysis.  On our system with
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
-BeadSize = 10; % Diameter of a circle that defines a bead (used for the channel
+Refine_Bd_Cen = 1; %If this is 1, use a 2D gaussian fit to refine the bead center
+    % position.  This will increase computational time for the channel
+    % mapping by about a factor of 2, for roughly a factor of 2 improvement
+    % in bead center localization (that is, the mean error will go down by
+    % a factor of 2). Doesn't really change the map much.
+BeadSize = 8; % Diameter of a circle that defines a bead (used for the channel
     % mapping procedure); beads whose centers are closer than BeadSize will 
     % not be included, and found beads will be circled by a circle of radius BeadSize.  
 BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in 
@@ -56,21 +62,23 @@ BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in
     % neighborhood (area, in square pixels) for the beads.  Needs to be a perfect
     % square, and best if sqrt(BeadNeighborhood) is odd.  Should be a little 
     % bigger than we expect beads to be.
-DNASize = 10; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
+DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
     % the code that actually calculates the intensity of a DNA spot is
     % currently hard-coded to integrate over a circle of diameter 5 pixels;
     % DNASize only determines how close two spots can be and still be
     % included in the analysis.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
-SmoothIntensities = 3; % If this is zero (or negative), don't do any smoothing 
+BkgndSubSigma = 2; % For background subtraction: variance of the Gaussian filter that is applied
+SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal.  At some
+SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
     
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%
 save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'defaultdatadir','splitx','Acceptor','BeadSize','BeadNeighborhood',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
-    'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude');
+    'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
+    'BkgndSubSigma');

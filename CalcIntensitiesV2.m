@@ -1,30 +1,30 @@
-% function [RedI,GrI] = CalcIntensities(PathToMovie, Rspots, A, b)
+% function [RedI,GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, tform,params)
 %
 % Calculates intensities for all spots in a movie.
 %
 % Inputs:
 % PathToMovie: a path to a directory with the movie
-% numframes: the number of frames in the movie
 % Rspots: locations of the spots in the acceptor channel
-% A, b: mapping information for finding spots in the donor channel
+% spotVars: x,y variances to use for each spot for the Gaussian weighting
+%   performed by CalcSpotIntensityV4
+% tform: mapping information for finding spots in the donor channel
 % params: file saved by smFRETsetup
 %
 % Outputs:
 % RedI, GrI: Intensity-vs-time information for each spot
-% imgRinit, imgGinit: Averaged and scaled images of the first few frames, for use
-%   in display in UserSpotSelection, which calls this function
 %
 % Steph 2/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [allRedI, allGrI, Gspots, imgRinit, imgGinit] = CalcIntensities(PathToMovie, Rspots, A, b,params)
+function [RedI, GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, tform,params)
 
 % Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
 
-allRedI = zeros(size(Rspots,2),length(alltifs));
-allGrI = zeros(size(Rspots,2),length(alltifs));
-Gspots = zeros(size(Rspots));
+RedI = zeros(size(Rspots,2),length(alltifs));
+GrI = zeros(size(Rspots,2),length(alltifs));
+% Find the spots in the coordinate system of the other (green) channel:
+Gspots = transpose(transformPointsInverse(tform,Rspots'));
     
 % Updated 2/2014: scaling the entire movie such that the brightest pixel is
 % 1 and the dimmest is 0.  This is equivalent to mat2gray(), but I can't
@@ -35,9 +35,6 @@ Gspots = zeros(size(Rspots));
 
 [overallMin,overallMax] = ScaleMovie(PathToMovie,length(alltifs));
 
-fitparamsR = cell(length(alltifs)/100,size(Rspots,2));
-fitparamsG = cell(length(alltifs)/100,size(Rspots,2));
-
 for jj = 1:100:length(alltifs)
     moviebit = LoadUManagerTifsV5(PathToMovie,[jj jj+99]);
     % As noted in ScaleMovie, it's not clear to me if I should be scaling
@@ -46,25 +43,16 @@ for jj = 1:100:length(alltifs)
     moviebit = mat2gray(moviebit,[overallMin overallMax]); % This also converts it to double precision
     [imgR,imgG] = SplitImg(moviebit,params);
     
-    if jj==1
-        if size(imgR,3)>=params.FramesToAvg
-            imgRinit = mat2gray(mean(imgR(:,:,1:params.FramesToAvg),3));
-            imgGinit = mat2gray(mean(imgG(:,:,1:params.FramesToAvg),3));
-        else
-            imgRinit = mat2gray(mean(imgR,3));
-            imgGinit = mat2gray(mean(imgG,3));
-        end
-    end
-    
     for kk = 1:size(Rspots,2)
-       %allRedI(kk,jj:jj+99) = CalcSpotIntensityV2(imgR,Rspots(:,kk));
-       [allRedI(kk,jj:jj+99),fitparamsR{jj+1,kk}] = CalcSpotIntensityV3(imgR,...
-           Rspots(:,kk),params.DNASize,fitparamsR{jj,kk});
-       % Find matching green spot:
-       Gspots(:,kk) = inv(A)*(Rspots(:,kk)-repmat(b,1,size(Rspots(:,kk),2)));
-       %allGrI(kk,jj:jj+99) = CalcSpotIntensityV2(imgG,Gspots(:,kk));
-       [allGrI(kk,jj:jj+99),fitparamsG{jj+1,kk}] = CalcSpotIntensityV3(imgG,...
-           Gspots(:,kk),params.DNASize,fitparamsG{jj,kk});
+        % Get ROI in red channel
+       spotimgR = ExtractROI(imgR,params.DNASize,Rspots(:,kk));
+       localcenR = Rspots(:,kk)-(round(Rspots(:,kk))-[floor(params.DNASize)/2; floor(params.DNASize)/2]);
+       % Get ROI in green channel:
+       spotimgG = ExtractROI(imgG,params.DNASize,Gspots(:,kk));
+       localcenG = Gspots(:,kk)-(round(Gspots(:,kk))-[floor(params.DNASize)/2; floor(params.DNASize)/2]);
+       RedI(kk,jj:jj+99) = CalcSpotIntensityV4(spotimgR,localcenR,spotVars(:,kk));
+       GrI(kk,jj:jj+99) = CalcSpotIntensityV4(spotimgG,localcenG,spotVars(:,kk));
+       clear spotimgG spotimgR
     end
    clear imgR imgG moviebit
    disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))

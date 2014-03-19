@@ -1,7 +1,7 @@
-% function composite = CalcCombinedImage(A,b,StartImg,EndImg,ShowResults)
+% function composite = CalcCombinedImage(tform,StartImg,EndImg,ShowResults)
 %
-% Given two images and the transformation matrix and vectors A, b that 
-% define an affine map from StartImg to EndImg (see outputs of CalcChannelMapping), 
+% Given two images and the transformation encoded in the matlab-specific
+% structure tform that maps from StartImg to EndImg, 
 % calculate the transformed version of StartImg and return a
 % composite of EndImg and the transformed image.
 %
@@ -11,30 +11,12 @@
 % spotfinding algorithm that only looks for spots in green and spots in red
 % separately.
 %
-% Note: you could also modify this code to find tform using built-in Matlab
-% functions:
-%   Use fitgeotrans with pairs of matching points:
-%   tform = fitgeotrans(matchRall',matchGall','Affine');
-%   where matchRall, matchRall are, for example, the pairs of points found
-%   in smFRET from bead images. Or, use the Matlab function
-%   cpselect to generate points manually.
-%
-% Update 1/2014: fitgeotrans does a bit better than my handwritten code in
-% CalcChannelMapping; it might be iterating to find optimal solutions or
-% something like that.  Regardless, I now use fitgeotrans, but, for
-% backwards compatibility, turn the output of fitgeotrans into A, b, and
-% then re-form tform here.  
-%
+% Steph 2/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function composite = CalcCombinedImage(A,b,StartImg,EndImg,ShowResults)
+function composite = CalcCombinedImage(tform,StartImg,EndImg,ShowResults)
 
 if ~exist('ShowResults','var') ShowResults = 0; end
-
-tformMatrix = [A; -b'];
-tformMatrix = [tformMatrix,[0; 0; 1]];
-
-tform = affine2d(tformMatrix);
 
 Rfixed = imref2d(size(EndImg));
 
