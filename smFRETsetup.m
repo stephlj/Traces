@@ -49,7 +49,12 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
-Refine_Bd_Cen = 1; %If this is 1, use a 2D gaussian fit to refine the bead center
+UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
+    % overlaid on the other to find spots in real data. Otherwise, find
+    % spots separately in each channel. While using a combined image has
+    % the advantage of capturing mid-FRET spots, it depends heavily on the
+    % quality of the channel mapping.
+Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead center
     % position.  This will increase computational time for the channel
     % mapping by about a factor of 2, for roughly a factor of 2 improvement
     % in bead center localization (that is, the mean error will go down by
@@ -81,4 +86,4 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'defaultdatadir','splitx','Acceptor','BeadSize','BeadNeighborhood',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
-    'BkgndSubSigma');
+    'BkgndSubSigma','UseCombinedImage');

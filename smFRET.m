@@ -405,51 +405,65 @@ close all
            % Step 0: subtract background:
            [imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
            
-           % Find spots in both channels, but don't double-count:
-           % Update 1/2014: finding spots in a composite image, so that
-           % mid-FRET spots don't get lost.  NOTE that the combined image
-           % will have a frame of reference of the acceptor image, which
-           % is fine because that's what I pass into UserSpotSelectionV4.
+           % Step 1: find spots
+           % Find spots in both channels, but don't double-count. Allow
+           % user to decide whether to find spots separately in each
+           % channel, or using a combined image (see notes on the
+           % UseCombinedImage parameter in smFRETsetup.m).
+           if params.UseCombinedImage
+               % Finding spots in a composite image, so that
+               % mid-FRET spots don't get lost.  NOTE that the combined image
+               % will have a frame of reference of the acceptor image, which
+               % is fine because that's what I pass into UserSpotSelectionV4.
+
+               composite = CalcCombinedImage(tformGtoRAffine,imgGMinusBkgnd,imgRMinusBkgnd);
+               % The built-in Matlab function imfuse used to create the output
+               % of CalcCombinedImage only returns unit8 images, but fminsearch
+               % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
+               % double, so convert back to doubles:
+               composite = mat2gray(composite);
+
+               % Step 1.1 Identify spots in this combined image:
+               [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
+                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
+               spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
+                   params.DNANeighborhood,params.DNASize,'default');
+               clear n xout
+
+               close all
+
+               % Step 1.2: fit a Gaussian to the spots found in the combined
+               % image to get values that will be used to refine the
+               % intensity-versus-time calculation later:
+
+               disp('Refining spot centers by 2D Gauss fit')
+
+               [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
+                   imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize);
+
+               % Some notes about this fitting process:
+               % (1) If you do this with beads instead of DNA, in which case
+               % the "right answers" are obvious, the green channel is always
+               % the best fit (which makes sense since the beads are brightest
+               % in green), and it always keeps all the beads as "good"
+               % (2) As long as you're consistent, it doesn't seem to matter
+               % whether you pass Amatlab, bmatlab or A, b into GetGaussParams.
+               % However, whichever parameter set you pass is the one you need
+               % to use to convert between channels from now on! It also
+               % doesn't seem to make a huge difference if you use A, b even if
+               % you use Amatlab,bmatlab to make composite. Again just be
+               % consistent from this point onwards.
+           else
+               [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
+                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
+               spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
+                   params.DNANeighborhood,params.DNASize,'default');
+               clear n xout
+
+               close all
+           end
            
-           composite = CalcCombinedImage(tformGtoRAffine,imgGMinusBkgnd,imgRMinusBkgnd);
-           % The built-in Matlab function imfuse used to create the output
-           % of CalcCombinedImage only returns unit8 images, but fminsearch
-           % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
-           % double, so convert back to doubles:
-           composite = mat2gray(composite);
-           
-           % Step 1: identify spots in this combined image:
-           [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
-                 'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-           spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
-               params.DNANeighborhood,params.DNASize,'default');
-           clear n xout
-           
-           close all
-           
-           % Step 2: fit a Gaussian to the spots found in the combined
-           % image to get values that will be used to refine the
-           % intensity-versus-time calculation later:
-           
-           disp('Refining spot centers by 2D Gauss fit')
-           
-           [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
-               imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize);
-           
-           % Some notes about this fitting process:
-           % (1) If you do this with beads instead of DNA, in which case
-           % the "right answers" are obvious, the green channel is always
-           % the best fit (which makes sense since the beads are brightest
-           % in green), and it always keeps all the beads as "good"
-           % (2) As long as you're consistent, it doesn't seem to matter
-           % whether you pass Amatlab, bmatlab or A, b into GetGaussParams.
-           % However, whichever parameter set you pass is the one you need
-           % to use to convert between channels from now on! It also
-           % doesn't seem to make a huge difference if you use A, b even if
-           % you use Amatlab,bmatlab to make composite. Again just be
-           % consistent from this point onwards.
-           
-           % Step 3: Load the whole movie in increments and calculate the
+           % Step 2: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
            
            disp('Calculating frame-by-frame intensities')
