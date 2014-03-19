@@ -49,7 +49,7 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
-UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
+UseCombinedImage = 1; % If this is 1, use an image of one (transformed) channel
     % overlaid on the other to find spots in real data. Otherwise, find
     % spots separately in each channel. While using a combined image has
     % the advantage of capturing mid-FRET spots, it depends heavily on the

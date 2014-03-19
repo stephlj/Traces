@@ -1,5 +1,5 @@
 % function [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgG,imgR,tformfwd...
-%       tforminv,ROIsize,Debug)
+%       tforminv,ROIsize,spotTolerance,Debug)
 %
 % Given a set of spot centers (spots) and the image they're found in
 % (composite, the single-channel image produced by CalcCombinedImage), fit 2D
@@ -22,6 +22,9 @@
 %   channels individually to best refine the spot's position and variance.
 % ROIsize: how big an area around the spot center to use for Gaussian
 %   fitting
+% spotTolerance: how close can two peaks be to be considered the same,
+%   within the error of the mapping calculation? See MappingTolerance saved
+%   with the channel mapping
 % Debug: enter 1 to show some figures to check these fits and the decision
 %   about which spots to keep
 %
@@ -34,7 +37,8 @@
 % Steph 2/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgG,imgR,tformfwd,tforminv, ROIsize,varargin)
+function [RefinedCenters,Vars] = GetGaussParams(spotsR,composite,imgG,imgR,...
+    tformfwd,tforminv, ROIsize,spotTolerance,varargin)
 
 if isempty(varargin)
     Debug=0;
@@ -43,10 +47,6 @@ elseif varargin{1}==1
 else
     Debug=0;
 end
-
-spotTolerance = 2; % How close can two peaks be to be considered the same,
-    % within the error of the mapping calculation? For us, for a good
-    % chanenl map, this is 2 pxls max
 
 RefinedCenters = zeros(2,size(spotsR,2));
 Vars = zeros(2,size(spotsR,2));

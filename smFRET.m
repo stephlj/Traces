@@ -106,6 +106,7 @@ function smFRET(rootname,debug)
             tformGtoR = Map.tformGtoR;
             tformRtoG = Map.tformRtoG;
             tformGtoRAffine = Map.tformGtoRAffine;
+            MappingTolerance = Map.MappingTolerance;
             clear Map prevmapdir
         else
             disp(strcat('Bead map not found in',Beads))
@@ -279,6 +280,7 @@ function smFRET(rootname,debug)
         tformGtoRAffine = fitgeotrans(matchRall',matchGall','Affine');
         
         % Plot the results for each movie:
+        allerrs = [];
         for i = 1:BdDir
             disp(strcat('Iterating through bead images for user to check quality (',...
                 int2str(i),' of ',int2str(BdDir),')'))
@@ -309,6 +311,8 @@ function smFRET(rootname,debug)
             CalcCombinedImage(tformGtoR,imgGreen,imgRed,1);
             title('Overlay using polynomial')
             
+            allerrs = [allerrs;min(errs,[],2)];
+            
             pause
             close
             close
@@ -334,15 +338,19 @@ function smFRET(rootname,debug)
             ylabel('Counts','Fontsize',12)
             xlabel('Distance between mapped green bead and real green bead','Fontsize',12)
             
+            allerrs = [allerrs;min(errs,[],2)];
+            
             pause
             close
             close
             clear newG matchG_abs imgRed imgGreen errs
         end
-        clear allBdImgs matchG matchR matchGall matchRall
+        
+        MappingTolerance = ceil(mean(allerrs)+3*std(allerrs))
+        clear allBdImgs matchG matchR matchGall matchRall allerrs
 
         save(fullfile(D_Beads,'ChannelMapping.mat'),'tformGtoR','tformRtoG',...
-            'tformGtoRAffine','BeadFilesInMap');
+            'tformGtoRAffine','BeadFilesInMap','MappingTolerance');
         save('PathToRecentMap','MostRecentMapDir');
     end
 
@@ -437,39 +445,39 @@ close all
                close all
            else
                % Step 1.1 Identify spots in acceptor channel
-               [spotsR,n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
+               [spotsR,n,xout] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
                      'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-               spotsR = SptFindUserThresh(spotsR,imgRed,n,xout,'Red Channel',...
+               spotsR = SptFindUserThresh(spotsR,imgRMinusBkgnd,n,xout,'Red Channel',...
                    params.DNANeighborhood,params.DNASize,'default');
                clear n xout
 
                close
                
                % And in donor channel
-               [spotsG,n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+               [spotsG,n,xout] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
                      'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-               spotsG = SptFindUserThresh(spotsG,imgGreen,n,xout,'Green Channel',...
+               spotsG = SptFindUserThresh(spotsG,imgGMinusBkgnd,n,xout,'Green Channel',...
                    params.DNANeighborhood,params.DNASize,'default');
                clear n xout
 
                close
                
-               % For right now, instead of this, using the GetGaussParams
-               % function below
-%                % Step 1.2: Convert green channel spot locations to red
-%                % channel locations, and check that no spots are double
-%                % counted and/or too close to other spots:
-%                spotsGinR = transpose(transformPointsInverse(tformGtoR,spotsG'));
-%                Dists = FindSpotDists(spotsR,spotsGinR);
-%                spotnottooclose = Dists>params.DNASize;
-%                % As in FindSpotsV5, each column of spotnottooclose will be all 1's if the 
-%                % spotG represented by the column is more than params.DNASize away from 
-%                % the spotR represented by each row. If there's already a spotR too
-%                % close, one or more elements of the column will be zero.  So now
-%                % ask if the sum of each column is equal to the length of the
-%                % column. If so, add it to spots:
-%                spots = spotsGinR(:,sum(spotnottooclose,2)==size(spotnottooclose,2));
-%                spots(:,end+1:end+size(spotsR,2)) = spotsR;
+               % Step 1.2: Convert green channel spot locations to red
+               % channel locations, and check that no spots are double
+               % counted. Based on the MappingTolerance parameter saved 
+               % during the mapping procedure, we know spots that are truly 
+               % the same will have their centers at most MappingTolerance apart
+               spotsGinR = transpose(transformPointsInverse(tformGtoR,spotsG'));
+               Dists = FindSpotDists(spotsR,spotsGinR);
+               spotnottooclose = Dists>MappingTolerance;
+               % As in FindSpotsV5, each column of spotnottooclose will be all 1's if the 
+               % spotG represented by the column is more than params.DNASize away from 
+               % the spotR represented by each row. If there's already a spotR too
+               % close, one or more elements of the column will be zero.  So now
+               % ask if the sum of each column is equal to the length of the
+               % column. If so, add it to spots:
+               spots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+               spots(:,end+1:end+size(spotsR,2)) = spotsR;
            end
            
            disp(sprintf('Found %d total spots',size(spots,2)))
@@ -480,7 +488,7 @@ close all
            disp('Refining spot centers by 2D Gauss fit')
 
            [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
-               imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize);
+               imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize,MappingTolerance);
            % NOTE: USE GetGaussParamsAffine if the Affine transformation,
            % rather than polynomial, is a better transformation to use!
 
@@ -493,6 +501,8 @@ close all
            % polynomial, mine vs matlab's, etc) is the one you need
            % to use to convert between channels from now on! Though it
            % doesn't matter what you used for the composite image.
+           
+           disp(sprintf('Kept %d of %d spots',size(RefinedCenters,2),size(spots,2)))
            
            % Step 3: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
