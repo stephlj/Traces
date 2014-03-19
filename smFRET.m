@@ -305,9 +305,12 @@ function smFRET(rootname,debug)
             % Show an overlay of one channel on the other:
             [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
             CalcCombinedImage(tformGtoRAffine,imgGreen,imgRed,1);
-            %CalcCombinedImage(tformGtoR,imgGreen,imgRed,1);
+            title('Overlay using affine')
+            CalcCombinedImage(tformGtoR,imgGreen,imgRed,1);
+            title('Overlay using polynomial')
             
             pause
+            close
             close
             close
             close
