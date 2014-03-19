@@ -49,7 +49,7 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
-UseCombinedImage = 1; % If this is 1, use an image of one (transformed) channel
+UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % overlaid on the other to find spots in real data. Otherwise, find
     % spots separately in each channel. While using a combined image has
     % the advantage of capturing mid-FRET spots, it depends heavily on the
@@ -58,7 +58,13 @@ Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead cent
     % position.  This will increase computational time for the channel
     % mapping by about a factor of 2, for roughly a factor of 2 improvement
     % in bead center localization (that is, the mean error will go down by
-    % a factor of 2). Doesn't really change the map much.
+    % a factor of 2).
+IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
+    % in each frame by a Gaussian whose center and variance are determined
+    % from a fit to the spot's first 10 frames. Note that if this is 0, it
+    % will calculate intensities over a 5 pxl diameter circle.  That's
+    % hard-wired into the code--see CalcSpotIntensityNoGauss.m to change
+    % the size.
 BeadSize = 8; % Diameter of a circle that defines a bead (used for the channel
     % mapping procedure); beads whose centers are closer than BeadSize will 
     % not be included, and found beads will be circled by a circle of radius BeadSize.  
@@ -86,4 +92,4 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'defaultdatadir','splitx','Acceptor','BeadSize','BeadNeighborhood',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
-    'BkgndSubSigma','UseCombinedImage');
+    'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight');

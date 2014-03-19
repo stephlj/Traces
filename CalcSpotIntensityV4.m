@@ -5,7 +5,7 @@
 % spotcen, with x-variance spotvar(1) and y-variance spotvar(2).
 %
 % Note this assumes background has been subtracted already, that is, the
-% Gaussian that is fit does not have a background offset.
+% Gaussian that is used does not have a background offset.
 %
 % Inputs:
 % img: x-by-y-by-frames for a REGION OF INTEREST of a movie. The Gaussian

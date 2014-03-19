@@ -411,7 +411,9 @@ close all
            [imgRed,imgGreen] = SplitImg(TotImg,params);
            
            % Step 0: subtract background:
-           [imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
+           %[imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
+           imgRMinusBkgnd = imgRed;
+           imgGMinusBkgnd = imgGreen;
            
            % Even if the user doesn't want to find spots in the composite
            % image, the composite is still used as a guess as to which
@@ -483,26 +485,33 @@ close all
            disp(sprintf('Found %d total spots',size(spots,2)))
            
            % Step 2: fit a Gaussian to each spot to get values that will be 
-           % used to refine the intensity-versus-time calculation later:
-
-           disp('Refining spot centers by 2D Gauss fit')
-
-           [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
-               imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize,MappingTolerance);
-           % NOTE: USE GetGaussParamsAffine if the Affine transformation,
-           % rather than polynomial, is a better transformation to use!
-
-           % Some notes about this fitting process:
-           % (1) If you do this with beads instead of DNA, in which case
-           % the "right answers" are obvious, the green channel is always
-           % the best fit (which makes sense since the beads are brightest
-           % in green), and it always keeps all the beads as "good"
-           % (2) Whichever parameter set you pass GetGaussParams (affine vs
-           % polynomial, mine vs matlab's, etc) is the one you need
-           % to use to convert between channels from now on! Though it
-           % doesn't matter what you used for the composite image.
+           % used to refine the intensity-versus-time calculation later, 
+           % if the user selected that option in smFRETsetup.m:
            
-           disp(sprintf('Kept %d of %d spots',size(RefinedCenters,2),size(spots,2)))
+           if params.IntensityGaussWeight
+
+               disp('Refining spot centers by 2D Gauss fit')
+
+               [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
+                   imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize,MappingTolerance);
+               % NOTE: USE GetGaussParamsAffine if the Affine transformation,
+               % rather than polynomial, is a better transformation to use!
+
+               % Some notes about this fitting process:
+               % (1) If you do this with beads instead of DNA, in which case
+               % the "right answers" are obvious, the green channel is always
+               % the best fit (which makes sense since the beads are brightest
+               % in green), and it always keeps all the beads as "good"
+               % (2) Whichever parameter set you pass GetGaussParams (affine vs
+               % polynomial, mine vs matlab's, etc) is the one you need
+               % to use to convert between channels from now on! Though it
+               % doesn't matter what you used for the composite image.
+
+               disp(sprintf('Kept %d of %d spots',size(RefinedCenters,2),size(spots,2)))
+           else
+               RefinedCenters = spots;
+               Vars = -1;
+           end
            
            % Step 3: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.

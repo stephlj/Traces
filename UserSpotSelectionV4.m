@@ -46,7 +46,7 @@ Rbkgnd = zeros(size(spots,2),1);
 Gbkgnd = zeros(size(spots,2),1);
 xlims = zeros(size(spots,2),2);
 ends = zeros(size(spots,2),1); % Where the end of the FRET signal should be (zero after this point)
-offset = 10;
+offset = 0.1;
 
 h2 = figure('Position',params.Fig2Pos);
 h1 = figure('Position',params.Fig1Pos);
