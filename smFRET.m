@@ -401,6 +401,7 @@ close all
             
            % Load the first FramesToAvg frames for finding spots
            TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 params.FramesToAvg]);
+           %TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[2000-params.FramesToAvg 2000]);
            
            if size(TotImg,3) > 1
                TotImg = mean(TotImg,3);
@@ -411,9 +412,9 @@ close all
            [imgRed,imgGreen] = SplitImg(TotImg,params);
            
            % Step 0: subtract background:
-           %[imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
-           imgRMinusBkgnd = imgRed;
-           imgGMinusBkgnd = imgGreen;
+           [imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
+           %imgRMinusBkgnd = imgRed;
+           %imgGMinusBkgnd = imgGreen;
            
            % Even if the user doesn't want to find spots in the composite
            % image, the composite is still used as a guess as to which

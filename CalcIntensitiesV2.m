@@ -1,4 +1,5 @@
-% function [RedI,GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, tform,params)
+% function [RedI,GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars,...
+%       tform,params)
 %
 % Calculates intensities for all spots in a movie.
 %
@@ -16,7 +17,8 @@
 % Steph 2/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [RedI, GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, tform,params)
+function [RedI, GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, ...
+    tform,params)
 
 % Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
@@ -41,7 +43,31 @@ for jj = 1:100:length(alltifs)
     % each channel separately, or as one image.  Right now ScaleMovie
     % returns only one min and one max so scaling the image globally:
     moviebit = mat2gray(moviebit,[overallMin overallMax]); % This also converts it to double precision
-    [imgR,imgG] = SplitImg(moviebit,params);
+    [imgRraw,imgGraw] = SplitImg(moviebit,params);
+    
+    % Subtract time-local background:
+    % For debugging:
+    %[imgRbkgnd,imgGbkgnd,imgR,imgG] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params,1);
+    [~,~,imgR,imgG] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params);
+    
+    % For debugging:
+%     temp = reshape(imgRraw,1,size(imgRraw,1)*size(imgRraw,2)*size(imgRraw,3));
+%     hist(temp,1000)
+%     xlim([0 1])
+%     title('Red, Raw')
+%     clear temp
+%     temp = reshape(imgRbkgnd,1,size(imgRbkgnd,1)*size(imgRbkgnd,2));
+%     figure,hist(temp,1000)
+%     xlim([0 1])
+%     title('Red, Bkgnd')
+%     clear temp
+%     temp = reshape(imgR,1,size(imgR,1)*size(imgR,2)*size(imgR,3));
+%     figure,hist(temp,1000)
+%     xlim([0 1])
+%     title('Red, Minus bkgnd')
+%     clear temp
+%     pause 
+%     close all
     
     for kk = 1:size(Rspots,2)
         % Get ROI in red channel

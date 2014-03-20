@@ -3,7 +3,7 @@
 % Steph 3/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgR,imgG,params,varargin)
+function [imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgR,imgG,params,varargin)
 
 % Medfilt2 works best with doubles:
 if ~strcmpi(class(imgR),'double') || ~strcmpi(class(imgG),'double')
@@ -20,8 +20,8 @@ imgGsmooth = imfilter(imgG,h);
 
 % (2) IDL code uses either a median or min filt next (_brief uses med filt); 
 % Matlab has a built-in median filter so using that:
-imgRmedians = medfilt2(imgRsmooth,[params.DNASize, params.DNASize]);
-imgGmedians = medfilt2(imgGsmooth,[params.DNASize, params.DNASize]);
+imgRmedians = medfilt2(imgRsmooth,[params.DNASize*2, params.DNASize*2]);
+imgGmedians = medfilt2(imgGsmooth,[params.DNASize*2, params.DNASize*2]);
 
 % (3) Boxcar smooth again with window of 30 or 60 pixels (depending on
 % whether you use _brief); again here going with a Gaussian filter:
