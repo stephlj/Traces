@@ -24,9 +24,9 @@ end
 %%%Setting up some stuff
 % subfunction for putting circles around a spot:
     function boxfun(currspot)
-        % CalcSpotIntensityV2 puts a circle of radius 5 around each spot:
+        % CalcSpotIntensityNoGauss puts a circle of diameter 5 around each spot:
         t = 0:pi/100:2*pi;
-        plot(currspot(2)+10/2.*cos(t),currspot(1)+10/2.*sin(t),'-g')
+        plot(currspot(2)+5/2.*cos(t),currspot(1)+5/2.*sin(t),'-g')
         clear t
     end
 
@@ -118,13 +118,33 @@ CurrDisplayFrame = 0;
        subplot('Position',[0.13 0.05 0.2 .18])
        imshow(imgRzoom)
        hold on
-       boxfun([size(imgRzoom)/2,size(imgRzoom)/2]);
+       if round(spots(1,k))<=spots(1,k)
+           zoomcenR(1) = size(imgRzoom,2)/2+(spots(1,k)-round(spots(1,k)));
+       else
+           zoomcenR(1) = size(imgRzoom,2)/2-(round(spots(1,k))-spots(1,k));
+       end
+       if round(spots(2,k))<=spots(2,k)
+           zoomcenR(2) = size(imgRzoom,1)/2+(spots(2,k)-round(spots(2,k)));
+       else
+           zoomcenR(2) = size(imgRzoom,1)/2-(round(spots(2,k))-spots(2,k));
+       end
+       boxfun(zoomcenR);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
        imshow(imgGzoom)
        hold on
-       boxfun([size(imgGzoom)/2,size(imgGzoom)/2]);
+       if round(GrSpots(1,k))<=GrSpots(1,k)
+           zoomcenG(1) = size(imgGzoom,2)/2+(GrSpots(1,k)-round(GrSpots(1,k)));
+       else
+           zoomcenG(1) = size(imgGzoom,2)/2-(round(GrSpots(1,k))-GrSpots(1,k));
+       end
+       if round(GrSpots(2,k))<=GrSpots(2,k)
+           zoomcenG(2) = size(imgGzoom,1)/2+(GrSpots(2,k)-round(GrSpots(2,k)));
+       else
+           zoomcenG(2) = size(imgGzoom,1)/2-(round(GrSpots(2,k))-GrSpots(2,k));
+       end
+       boxfun(zoomcenG);
        hold off
        
        figure(h1)
