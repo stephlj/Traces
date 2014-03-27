@@ -109,7 +109,7 @@ function smFRET(rootname,debug)
             MappingTolerance = Map.MappingTolerance;
             clear Map prevmapdir
         else
-            disp(strcat('Bead map not found in',Beads))
+            disp(strcat('Bead map not found in',D_Beads))
             return
         end
     else

@@ -15,10 +15,16 @@
 
 function UserSpotSelectionV4(allRedI,allGrI,spots,PathToMovie,params,tform,savedir,fps,setnum)
 
+zoomsize = 10; % How many pixels across (and high) should the zoomed-in image around
+    % a spot be
+if params.DNASize>=zoomsize
+    zoomsize = params.DNASize+1;
+end
+
 %%%Setting up some stuff
 % subfunction for putting circles around a spot:
     function boxfun(currspot)
-        % CalcSpotIntensityV2 puts a circle of diameter 5 around each spot:
+        % CalcSpotIntensityV2 puts a circle of radius 5 around each spot:
         t = 0:pi/100:2*pi;
         plot(currspot(2)+10/2.*cos(t),currspot(1)+10/2.*sin(t),'-g')
         clear t
@@ -55,6 +61,8 @@ disp('Fig. 2 must be current.')
 disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom; o=adjust black offset;')
 disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
 
+CurrDisplayFrame = 0;
+
     while k <= size(spots,2)
        RedI = allRedI(k,:)-Rbkgnd(k);
        GrI = allGrI(k,:)-Gbkgnd(k);
@@ -85,23 +93,39 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
         
        xvect = ((1:length(RedI))./fps)*10^-3; % fps is actually frames per ms
        
+        imgRzoom = ExtractROI(imgRinit,zoomsize,spots(:,k));
+        imgGzoom = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
+       
        % Show plots
        figure(h2)
-       % plot time-averaged red channel with box around spot
-       subplot(1,2,1)
+       % plot red channel with circle around spot
+       %subplot('Position',[0.05 0.3 0.45 0.65])
+       subplot('Position',[0.08 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
        imshow(imgRinit)
        hold on
        boxfun(spots(:,k));
        hold off
        title('Red','Fontsize',12)
-       % plot time-averaged green channel with box around spot
-       subplot(1,2,2)
+       % plot green channel with circle around spot
+       subplot('Position',[0.54 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
        imshow(imgGinit)
        hold on
        boxfun(GrSpots(:,k));
        hold off
        title('Green','Fontsize',12)
-       % TODO: Allow user to watch video
+       % Show zoom in of the red spot, with the fitted Gaussian or a circle
+       % around it to show how and where the spot intensity was calculated
+       subplot('Position',[0.13 0.05 0.2 .18])
+       imshow(imgRzoom)
+       hold on
+       boxfun([size(imgRzoom)/2,size(imgRzoom)/2]);
+       hold off
+       % Same for green
+       subplot('Position',[0.63 0.05 0.2 .18])
+       imshow(imgGzoom)
+       hold on
+       boxfun([size(imgGzoom)/2,size(imgGzoom)/2]);
+       hold off
        
        figure(h1)
        subplot(2,1,1)

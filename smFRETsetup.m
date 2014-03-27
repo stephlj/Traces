@@ -27,7 +27,7 @@ codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
 % will show up; adjust the Fig2Pos vector elements as necessary.  Note: Macs
 % and PC's have a different (0,0) for the monitor I think.
 % Fig2Pos = [650,800,700,550];
-Fig2Pos = [650,800,400,600];
+Fig2Pos = [650,800,500,650];
 % Fig1Pos = [0,400,600,500];
 Fig1Pos = [25,400,600,500];
 

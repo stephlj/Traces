@@ -70,6 +70,11 @@ for jj = 1:100:length(alltifs)
 %     clear temp
 %     pause 
 %     close all
+
+    % Save the background-subtracted, scaled image for later use in
+    % UserSpotSelection:
+    save(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
+        'to',int2str(jj+99),'.mat')),'imgR','imgG')
     
     for kk = 1:size(Rspots,2)
         % Get ROI in red channel
