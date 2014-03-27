@@ -108,7 +108,7 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('Intensity (a.u.)','Fontsize',12)
-       title(strcat('Bead',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)
+       title(strcat('Spot',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)
        if xlims(k,1)~=0
            xlim([xlims(k,1) xlims(k,2)])
        end
