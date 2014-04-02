@@ -155,7 +155,14 @@ function smFRET(rootname,debug)
 
             % Step 1: Find spots in red and green channels separately, so split the
             % image up into the two channels:
-            [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
+            [imgRedRaw,imgGreenRaw] = SplitImg(allBdImgs(:,:,i),params);
+            
+            % subtract background:
+            [~,~,imgRed,imgGreen] = SubBkgnd(imgRedRaw,imgGreenRaw,params);
+            % If you don't want to subtract background, uncomment these
+            % lines:
+            %imgRedsubB = imgRedRaw;
+            %imgGreensubB = imgGreenRaw;
 
             % Find spots in green channel
             if params.Refine_Bd_Cen
@@ -413,6 +420,8 @@ close all
            
            % Step 0: subtract background:
            [imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
+           % If you don't want to subtract background, uncomment these
+            % lines:
            %imgRMinusBkgnd = imgRed;
            %imgGMinusBkgnd = imgGreen;
            

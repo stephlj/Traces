@@ -80,7 +80,7 @@ DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % DNASize only determines how close two spots can be and still be
     % included in the analysis.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
-BkgndSubSigma = 2; % For background subtraction: variance of the Gaussian filter that is applied
+BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
 SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
