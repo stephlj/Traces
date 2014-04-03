@@ -3,6 +3,18 @@
 % Loads the scaled and background-subtracted movie frames saved by
 % CalcIntensities.m. 
 %
+% Inputs:
+% PathToMovie: Full path to folder with the "ScaledMovieFrames..." files
+% frames: [start end] vector of frames to return. End-start must be <=100,
+%   else it will return only the first 100 frames specified by the interval
+%   [start start+99];
+%
+% Outputs:
+% movRed, movGreen: x-by-y-by-frames matrix of intensities for the red and
+%   green channels
+% lastframe: The last frame returned.  This is frames(2) if the user asked
+%   for fewer than 100 frames to be returned; else this is start+99.
+%
 % Stephanie 4/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
