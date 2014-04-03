@@ -39,9 +39,9 @@ end
 GrSpots = transpose(transformPointsInverse(tform,spots'));
 
 % Get an average image of the first 10 frames to display:
-moviebit = LoadUManagerTifsV5(PathToMovie,[1 1+params.FramesToAvg]);
-moviebit = mat2gray(mean(moviebit,3));
-[imgRinit,imgGinit] = SplitImg(moviebit,params);
+[imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg]);
+imgRinit=mat2gray(mean(imgRinit,3));
+imgGinit=mat2gray(mean(imgGinit,3));
 
 %%%Interactive section
 k = 1; % Indexes current spot being plotted
