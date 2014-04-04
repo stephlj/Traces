@@ -25,6 +25,9 @@ function [movRed,movGreen,lastframe] = LoadScaledMovie(PathToMovie,frames)
     if frames(1)<=0
         frames(1)=1;
     end
+    if frames(1)==frames(2)
+        frames(2)=frames(1)+1;
+    end
     % My laptop can't handle more than 100 frames at a time
     if frames(2)-frames(1)>100
         frames(2)=frames(1)+99;

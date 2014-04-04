@@ -20,11 +20,16 @@
 %       'subplot(blah)' must also be passed for where to plot the zoomed
 %       movie in the red channel
 %   varargin{7}: same as {6} but for green channel
+%   varargin{8}: size of the ROI to extract (one side of a square)
+%
+% Outputs:
+% LastRedFrame = last frame of the red channel that was played
+% LastGreenFrame = last frame of the green channel
 %
 % Stephanie 4/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function PlayMovie(PathToMovie,frames,varargin)
+function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
 
     % Input error handling
     frames = sort(frames);
@@ -34,8 +39,10 @@ function PlayMovie(PathToMovie,frames,varargin)
     if isempty(varargin)
         h2 = figure('Position',[650,800,500,650]);
     else 
-        if length(varargin)~=3 || length(varargin)~=7
-            disp('PlayMovie: Optional input must contain either 3 or 7 elements.');
+        if length(varargin)~=3 && length(varargin)~=8
+            disp('PlayMovie: Optional input must contain either 3 or 8 elements.');
+            LastRedFrame=-1;
+            LastGreenFrame = -1;
             return
         else
             h2 = varargin{1};
@@ -64,7 +71,7 @@ function PlayMovie(PathToMovie,frames,varargin)
     
     lastframe = frames(1);
     
-    while lastframe<frames(2)
+    while lastframe<=frames(2)
         disp('Loading movie part ... ')
         [movRed,movGreen,lastframe] = LoadScaledMovie(PathToMovie,...
             [lastframe frames(2)]);
@@ -90,8 +97,8 @@ function PlayMovie(PathToMovie,frames,varargin)
                 hold off
                 title('Green','Fontsize',12)
                 if length(varargin)>3
-                    imgRzoom = ExtractROI(movRed(:,:,i),zoomsize,varargin{4});
-                    imgGzoom = ExtractROI(movGreen(:,:,i),zoomsize,varargin{5});
+                    imgRzoom = ExtractROI(movRed(:,:,i),varargin{8},varargin{4});
+                    imgGzoom = ExtractROI(movGreen(:,:,i),varargin{8},varargin{5});
                     eval(varargin{6})
                     imshow(imgRzoom,[])
                     hold on
@@ -111,6 +118,9 @@ function PlayMovie(PathToMovie,frames,varargin)
         end
             
         lastframe = lastframe+1;
+        LastRedFrame = movRed(:,:,end);
+        LastGreenFrame = movGreen(:,:,end);
         clear movRed movGreen
         
     end
+end

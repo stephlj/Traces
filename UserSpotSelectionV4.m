@@ -72,9 +72,8 @@ h1 = figure('Position',params.Fig1Pos);
 
 disp('Fig. 2 must be current.') 
 disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom; o=adjust black offset;')
+disp('f=select frame to display; m = play movie between two points;')
 disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
-
-CurrDisplayFrame = 0;
 
     while k <= size(spots,2)
        RedI = allRedI(k,:)-Rbkgnd(k);
@@ -114,14 +113,14 @@ CurrDisplayFrame = 0;
        % plot red channel with circle around spot
        %subplot('Position',[0.05 0.3 0.45 0.65])
        subplot('Position',[0.08 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
-       imshow(imgRinit)
+       imshow(imgRinit,[])
        hold on
        boxfun(spots(:,k));
        hold off
        title('Red','Fontsize',12)
        % plot green channel with circle around spot
        subplot('Position',[0.54 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
-       imshow(imgGinit)
+       imshow(imgGinit,[])
        hold on
        boxfun(GrSpots(:,k));
        hold off
@@ -129,14 +128,14 @@ CurrDisplayFrame = 0;
        % Show zoom in of the red spot, with the fitted Gaussian or a circle
        % around it to show how and where the spot intensity was calculated
        subplot('Position',[0.13 0.05 0.2 .18])
-       imshow(imgRzoom)
+       imshow(imgRzoom,[])
        hold on
        zoomcenR = FindLocalCen(imgRzoom,spots(:,k));
        boxfun(zoomcenR);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
-       imshow(imgGzoom)
+       imshow(imgGzoom,[])
        hold on
        zoomcenG = FindLocalCen(imgGzoom,GrSpots(:,k));
        boxfun(zoomcenG);
@@ -238,6 +237,35 @@ CurrDisplayFrame = 0;
                 % Don't let extra "enters" build up:
                 elseif isequal(cc,char(13)) %13 is the ascii code for the return key
                     cc=13;
+                %Show a specific frame in figure 2
+                elseif cc=='f'
+                    [x,~] = ginput(1);
+                    [imgRinit,imgGinit] = PlayMovie(PathToMovie,[round(x) round(x)],h2,...
+                        strcat('subplot(',char(39),'Position',char(39),...
+                            ',[0.08 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
+                        strcat('subplot(',char(39),'Position',char(39),...
+                            ',[0.54 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
+                        spots(:,k),GrSpots(:,k),...
+                        strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
+                        strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
+                        zoomsize);
+                    clear x
+                    cc = 13;
+                %Play a section of the movie in figure 2
+                elseif cc=='m'
+                    [x,~] = ginput(2);
+                    x = round(sort(x));
+                    [imgRinit,imgGinit] = PlayMovie(PathToMovie,[x(1) x(2)],h2,...
+                        strcat('subplot(',char(39),'Position',char(39),...
+                            ',[0.08 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
+                        strcat('subplot(',char(39),'Position',char(39),...
+                            ',[0.54 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
+                        spots(:,k),GrSpots(:,k),...
+                        strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
+                        strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
+                        zoomsize);
+                    clear x
+                    cc = 13;
                 end
             end
        % end interactive section
