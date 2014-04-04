@@ -29,6 +29,19 @@ end
         plot(currspot(2)+5/2.*cos(t),currspot(1)+5/2.*sin(t),'-g')
         clear t
     end
+    % subfunction for finding the local spot center in an ROI
+    function localcen = FindLocalCen(ROI,currspot)
+        if round(currspot(1))<=currspot(1)
+            localcen(1) = size(ROI,2)/2+(currspot(1)-round(currspot(1)));
+        else
+            localcen(1) = size(ROI,2)/2-(round(currspot(1))-currspot(1));
+        end
+        if round(currspot(2))<=currspot(2)
+            localcen(2) = size(ROI,1)/2+(currspot(2)-round(currspot(2)));
+        else
+            localcen(2) = size(ROI,1)/2-(round(currspot(2))-currspot(2));
+        end
+    end
 
 % Make spots 2-by-numspots matrices, if it's not already
 if size(spots,1)~=2
@@ -93,8 +106,8 @@ CurrDisplayFrame = 0;
         
        xvect = ((1:length(RedI))./fps)*10^-3; % fps is actually frames per ms
        
-        imgRzoom = ExtractROI(imgRinit,zoomsize,spots(:,k));
-        imgGzoom = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
+       imgRzoom = ExtractROI(imgRinit,zoomsize,spots(:,k));
+       imgGzoom = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
        
        % Show plots
        figure(h2)
@@ -118,32 +131,14 @@ CurrDisplayFrame = 0;
        subplot('Position',[0.13 0.05 0.2 .18])
        imshow(imgRzoom)
        hold on
-       if round(spots(1,k))<=spots(1,k)
-           zoomcenR(1) = size(imgRzoom,2)/2+(spots(1,k)-round(spots(1,k)));
-       else
-           zoomcenR(1) = size(imgRzoom,2)/2-(round(spots(1,k))-spots(1,k));
-       end
-       if round(spots(2,k))<=spots(2,k)
-           zoomcenR(2) = size(imgRzoom,1)/2+(spots(2,k)-round(spots(2,k)));
-       else
-           zoomcenR(2) = size(imgRzoom,1)/2-(round(spots(2,k))-spots(2,k));
-       end
+       zoomcenR = FindLocalCen(imgRzoom,spots(:,k));
        boxfun(zoomcenR);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
        imshow(imgGzoom)
        hold on
-       if round(GrSpots(1,k))<=GrSpots(1,k)
-           zoomcenG(1) = size(imgGzoom,2)/2+(GrSpots(1,k)-round(GrSpots(1,k)));
-       else
-           zoomcenG(1) = size(imgGzoom,2)/2-(round(GrSpots(1,k))-GrSpots(1,k));
-       end
-       if round(GrSpots(2,k))<=GrSpots(2,k)
-           zoomcenG(2) = size(imgGzoom,1)/2+(GrSpots(2,k)-round(GrSpots(2,k)));
-       else
-           zoomcenG(2) = size(imgGzoom,1)/2-(round(GrSpots(2,k))-GrSpots(2,k));
-       end
+       zoomcenG = FindLocalCen(imgGzoom,GrSpots(:,k));
        boxfun(zoomcenG);
        hold off
        

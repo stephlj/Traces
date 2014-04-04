@@ -7,6 +7,19 @@
 % Inputs:
 % PathToMovie: Full path to folder with the "ScaledMovieFrames..." files
 % frames: [start end] vector of frames to show
+% Optional inputs: must have either the first three only, or all seven
+%   varargin{1}: handle to a figure to play the movie into
+%   varargin{2}: a string containing 'subplot(blah)' to play the red
+%       channel into
+%   varargin{3}: same as {2} but for green channel
+%   varargin{4}: If a movie of a zoom-in on a particular spot is also
+%       desired, this must contain an [x;y] vector of the spot's location
+%       in the red channel
+%   varargin{5}: same as {4} but for green channel
+%   varargin{6}: If {4} and {5} are passed, then a string of
+%       'subplot(blah)' must also be passed for where to plot the zoomed
+%       movie in the red channel
+%   varargin{7}: same as {6} but for green channel
 %
 % Stephanie 4/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
@@ -18,9 +31,35 @@ function PlayMovie(PathToMovie,frames,varargin)
     if frames(1)<=0
         frames(1)=1;
     end
-    
     if isempty(varargin)
         h2 = figure('Position',[650,800,500,650]);
+    else 
+        if length(varargin)~=3 || length(varargin)~=7
+            disp('PlayMovie: Optional input must contain either 3 or 7 elements.');
+            return
+        else
+            h2 = varargin{1};
+            figure(h2)
+        end
+    end
+    % subfunction for putting circles around a spot:
+    function boxfun(currspot)
+        t = 0:pi/100:2*pi;
+        plot(currspot(2)+5/2.*cos(t),currspot(1)+5/2.*sin(t),'-g')
+        clear t
+    end
+    % subfunction for finding the local spot center in an ROI
+    function localcen = FindLocalCen(ROI,currspot)
+        if round(currspot(1))<=currspot(1)
+            localcen(1) = size(ROI,2)/2+(currspot(1)-round(currspot(1)));
+        else
+            localcen(1) = size(ROI,2)/2-(round(currspot(1))-currspot(1));
+        end
+        if round(currspot(2))<=currspot(2)
+            localcen(2) = size(ROI,1)/2+(currspot(2)-round(currspot(2)));
+        else
+            localcen(2) = size(ROI,1)/2-(round(currspot(2))-currspot(2));
+        end
     end
     
     lastframe = frames(1);
@@ -37,7 +76,38 @@ function PlayMovie(PathToMovie,frames,varargin)
                 subplot('Position',[0.54 0.23 0.39 0.39*512/256])
                 imshow(movGreen(:,:,i),[])
                 drawnow
+            else
+                eval(varargin{2})
+                imshow(movRed(:,:,i),[])
+                hold on
+                boxfun(varargin{4});
+                hold off
+                title('Red','Fontsize',12)
+                eval(varargin{3})
+                imshow(movGreen(:,:,i),[])
+                hold on
+                boxfun(varargin{5});
+                hold off
+                title('Green','Fontsize',12)
+                if length(varargin)>3
+                    imgRzoom = ExtractROI(movRed(:,:,i),zoomsize,varargin{4});
+                    imgGzoom = ExtractROI(movGreen(:,:,i),zoomsize,varargin{5});
+                    eval(varargin{6})
+                    imshow(imgRzoom,[])
+                    hold on
+                    zoomcenR = FindLocalCen(imgRzoom,varargin{4});
+                    boxfun(zoomcenR);
+                    hold off
+                    eval(varargin{7})
+                    imshow(imgGzoom,[])
+                    hold on
+                    zoomcenG = FindLocalCen(imgGzoom,varargin{5});
+                    boxfun(zoomcenG);
+                    hold off
+                end
+                drawnow
             end
+            clear imgRzoom imgGzoom zoomcenR zoomcenG
         end
             
         lastframe = lastframe+1;
