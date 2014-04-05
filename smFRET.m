@@ -425,17 +425,6 @@ close all
            %imgRMinusBkgnd = imgRed;
            %imgGMinusBkgnd = imgGreen;
            
-           % Even if the user doesn't want to find spots in the composite
-           % image, the composite is still used as a guess as to which
-           % channel is best to use for fitting a Gaussian, for refining
-           % centers.
-           composite = CalcCombinedImage(tformGtoRAffine,imgGMinusBkgnd,imgRMinusBkgnd);
-           % The built-in Matlab function imfuse used to create the output
-           % of CalcCombinedImage only returns unit8 images, but fminsearch
-           % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
-           % double, so convert back to doubles:
-           composite = mat2gray(composite);
-           
            % Step 1: find spots
            % Find spots in both channels, but don't double-count. Allow
            % user to decide whether to find spots separately in each
@@ -446,13 +435,30 @@ close all
                % mid-FRET spots don't get lost.  NOTE that the combined image
                % will have a frame of reference of the acceptor image, which
                % is fine because that's what I pass into UserSpotSelectionV4.
+               
+               % Step 1.1 Create a combined image
+               composite = CalcCombinedImage(tformGtoRAffine,imgGMinusBkgnd,imgRMinusBkgnd);
+               % The built-in Matlab function imfuse used to create the output
+               % of CalcCombinedImage only returns unit8 images, but fminsearch
+               % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
+               % double, so convert back to doubles:
+               composite = mat2gray(composite);
 
-               % Step 1.1 Identify spots in this combined image:
+               % Step 1.2 Identify spots in this combined image:
                [spotsR,n,xout] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                      'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
                spots = SptFindUserThresh(spotsR,composite,n,xout,'Composite Image',...
                    params.DNANeighborhood,params.DNASize,'default');
                clear n xout
+               
+               %if params.IntensityGaussWeight
+                    disp('Refining spot centers by 2D Gauss fit')
+                    [RefinedCenters,Vars,bkgnd] = RefineCensByGauss(spots,composite,params.DNASize,0);
+%                else
+%                    RefinedCenters = spots;
+%                    Vars = -1;
+%                    bkgnd = -1;
+%                end
 
                close all
            else
@@ -465,6 +471,15 @@ close all
 
                close
                
+               %if params.IntensityGaussWeight
+                    disp('Refining red spot centers by 2D Gauss fit')
+                    [RefinedCentersR,VarsR,bkgndR] = RefineCensByGauss(spotsR,imgRMinusBkgnd,params.DNASize,0);
+%                else
+%                    RefinedCentersR = spots;
+%                    VarsR = -1;
+%                    bkgndR = -1;
+%                end
+               
                % And in donor channel
                [spotsG,n,xout] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
                      'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
@@ -474,13 +489,22 @@ close all
 
                close
                
+               %if params.IntensityGaussWeight
+                    disp('Refining green spot centers by 2D Gauss fit')
+                    [RefinedCentersG,VarsG,bkgndG] = RefineCensByGauss(spotsG,imgGMinusBkgnd,params.DNASize,0);
+%                else
+%                    RefinedCentersG = spotsG;
+%                    VarsG = -1;
+%                    bkgndG = -1;
+%                end
+               
                % Step 1.2: Convert green channel spot locations to red
                % channel locations, and check that no spots are double
                % counted. Based on the MappingTolerance parameter saved 
                % during the mapping procedure, we know spots that are truly 
                % the same will have their centers at most MappingTolerance apart
-               spotsGinR = transpose(transformPointsInverse(tformGtoR,spotsG'));
-               Dists = FindSpotDists(spotsR,spotsGinR);
+               spotsGinR = transpose(transformPointsInverse(tformGtoR,RefinedCentersG'));
+               Dists = FindSpotDists(RefinedCentersR,RefinedCentersG);
                spotnottooclose = Dists>MappingTolerance;
                % As in FindSpotsV5, each column of spotnottooclose will be all 1's if the 
                % spotG represented by the column is more than params.DNASize away from 
@@ -489,47 +513,27 @@ close all
                % ask if the sum of each column is equal to the length of the
                % column. If so, add it to spots:
                spots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-               spots(:,end+1:end+size(spotsR,2)) = spotsR;
+               spots(:,end+1:end+size(RefinedCentersR,2)) = RefinedCentersR;
+               if params.IntensityGaussWeight
+                   Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                   Vars(:,end+1:end+size(VarsR,2)) = VarsR;
+                   bkgnd = bkgndG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                   bkgnd(:,end+1:end+size(bkgndR,2)) = bkgndR;
+               else
+                   Vars = -1;
+                   bkgnd = -1;
+               end
            end
            
            disp(sprintf('Found %d total spots',size(spots,2)))
            
-           % Step 2: fit a Gaussian to each spot to get values that will be 
-           % used to refine the intensity-versus-time calculation later, 
-           % if the user selected that option in smFRETsetup.m:
-           
-           if params.IntensityGaussWeight
-
-               disp('Refining spot centers by 2D Gauss fit')
-
-               [RefinedCenters,Vars] = GetGaussParams(spots,composite,imgGMinusBkgnd,...
-                   imgRMinusBkgnd,tformRtoG,tformGtoR,params.DNASize,MappingTolerance);
-               % NOTE: USE GetGaussParamsAffine if the Affine transformation,
-               % rather than polynomial, is a better transformation to use!
-
-               % Some notes about this fitting process:
-               % (1) If you do this with beads instead of DNA, in which case
-               % the "right answers" are obvious, the green channel is always
-               % the best fit (which makes sense since the beads are brightest
-               % in green), and it always keeps all the beads as "good"
-               % (2) Whichever parameter set you pass GetGaussParams (affine vs
-               % polynomial, mine vs matlab's, etc) is the one you need
-               % to use to convert between channels from now on! Though it
-               % doesn't matter what you used for the composite image.
-
-               disp(sprintf('Kept %d of %d spots',size(RefinedCenters,2),size(spots,2)))
-           else
-               RefinedCenters = spots;
-               Vars = -1;
-           end
-           
-           % Step 3: Load the whole movie in increments and calculate the
+           % Step 2: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
            
            disp('Calculating frame-by-frame intensities')
            
            [RedI, GrI] = CalcIntensitiesV2(fullfile(D_Data,ToAnalyze(i).name),...
-               RefinedCenters, Vars, tformRtoG,params);
+               spots, Vars, tformRtoG,params);
            
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.
@@ -538,7 +542,7 @@ close all
            % add params.PxlsToExclude to get spots into the right
            % coordinates (unlike with the beads)
            
-           SpotsInR = RefinedCenters;
+           SpotsInR = spots;
            SpotVars = Vars;
            save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'SpotsInR',...
                'SpotVars','RedI','GrI')
@@ -552,12 +556,12 @@ close all
                save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
            end
            
-           % Step 4: Display a trace of intensity-vs-time for each spot,
+           % Step 3: Display a trace of intensity-vs-time for each spot,
            % with an interactive section for the user to select spots that
            % are true FRET, etc
 
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           UserSpotSelectionV4(RedI,GrI,RefinedCenters,...
+           UserSpotSelectionV4(RedI,GrI,spots,...
                fullfile(D_Data,ToAnalyze(i).name),params,tformRtoG,savedir,fps,i);
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
