@@ -48,9 +48,11 @@ for jj = 1:100:length(alltifs)
     % Subtract time-local background:
     % For debugging:
     %[imgRbkgnd,imgGbkgnd,imgR,imgG] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params,1);
-    [imgRbkgnd,imgGbkgnd,~,~] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params);
-    imgR = imgRraw-repmat(imgRbkgnd,1,1,size(imgRraw,3));
-    imgG = imgGraw-repmat(imgGbkgnd,1,1,size(imgRraw,3));
+%     [imgRbkgnd,imgGbkgnd,~,~] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params);
+%     imgR = imgRraw-repmat(imgRbkgnd,1,1,size(imgRraw,3));
+%     imgG = imgGraw-repmat(imgGbkgnd,1,1,size(imgRraw,3));
+    imgR = imgRraw;
+    imgG = imgGraw;
     
     % For debugging:
 %     temp = reshape(imgRraw,1,size(imgRraw,1)*size(imgRraw,2)*size(imgRraw,3));

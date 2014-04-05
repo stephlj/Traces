@@ -53,8 +53,10 @@ GrSpots = transpose(transformPointsInverse(tform,spots'));
 
 % Get an average image of the first 10 frames to display:
 [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg]);
-imgRinit=mat2gray(mean(imgRinit,3));
-imgGinit=mat2gray(mean(imgGinit,3));
+imgRinitavg = mat2gray(mean(imgRinit,3));
+imgGinitavg = mat2gray(mean(imgGinit,3));
+imgRinit = imgRinitavg;
+imgGinit = imgGinitavg;
 
 %%%Interactive section
 k = 1; % Indexes current spot being plotted
@@ -128,14 +130,14 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        % Show zoom in of the red spot, with the fitted Gaussian or a circle
        % around it to show how and where the spot intensity was calculated
        subplot('Position',[0.13 0.05 0.2 .18])
-       imshow(imgRzoom)
+       imshow(imgRzoom,[])
        hold on
        zoomcenR = FindLocalCen(imgRzoom,spots(:,k));
        boxfun(zoomcenR);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
-       imshow(imgGzoom)
+       imshow(imgGzoom,[])
        hold on
        zoomcenG = FindLocalCen(imgGzoom,GrSpots(:,k));
        boxfun(zoomcenG);
@@ -170,11 +172,15 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                 % Go forward to the next bead
                 if cc=='.'
                     k = k+1;
+                    imgRinit = imgRinitavg;
+                    imgGinit = imgGinitavg;
                     cc = 13;
                 % Go back one bead
                 elseif cc==',' 
                     if k>1
                         k=k-1;
+                        imgRinit = imgRinitavg;
+                        imgGinit = imgGinitavg;
                     end
                     cc=13;
                 % go to the next movie:

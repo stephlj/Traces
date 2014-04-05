@@ -100,13 +100,13 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
                     imgRzoom = ExtractROI(movRed(:,:,i),varargin{8},varargin{4});
                     imgGzoom = ExtractROI(movGreen(:,:,i),varargin{8},varargin{5});
                     eval(varargin{6})
-                    imshow(imgRzoom)
+                    imshow(imgRzoom,[])
                     hold on
                     zoomcenR = FindLocalCen(imgRzoom,varargin{4});
                     boxfun(zoomcenR);
                     hold off
                     eval(varargin{7})
-                    imshow(imgGzoom)
+                    imshow(imgGzoom,[])
                     hold on
                     zoomcenG = FindLocalCen(imgGzoom,varargin{5});
                     boxfun(zoomcenG);
