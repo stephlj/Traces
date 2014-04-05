@@ -60,7 +60,7 @@ Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead cent
     % mapping by about a factor of 2, for roughly a factor of 2 improvement
     % in bead center localization (that is, the mean error will go down by
     % a factor of 2).
-IntensityGaussWeight = 0; % If this is 1, weight the intensity of each spot  
+IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
     % in each frame by a Gaussian whose center and variance are determined
     % from a fit to the spot's first 10 frames. Note that if this is 0, it
     % will calculate intensities over a 5 pxl diameter circle.  That's
