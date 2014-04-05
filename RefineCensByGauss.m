@@ -28,7 +28,7 @@ cen_tolerance = 2; % To judge the goodness of Gaussian fit, don't let the
     % refined center position differ from the maximum pixel by more than
     % this value. Realistically 1 is probably fine too, the refinement is
     % usually within 1 pixel.
-defaultXvar = 0.8; %If the fit fails, set the spot variance to this value
+defaultXvar = 0.3; %If the fit fails, set the spot variance to this value
     % For now taking this value from the Ha lab IDL code, but it's probably
     % system (camera, microscope, etc) specific
 defaultYvar = defaultXvar;
