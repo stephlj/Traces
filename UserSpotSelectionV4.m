@@ -113,14 +113,14 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        % plot red channel with circle around spot
        %subplot('Position',[0.05 0.3 0.45 0.65])
        subplot('Position',[0.08 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
-       imshow(imgRinit,[])
+       imshow(imgRinit)
        hold on
        boxfun(spots(:,k));
        hold off
        title('Red','Fontsize',12)
        % plot green channel with circle around spot
        subplot('Position',[0.54 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
-       imshow(imgGinit,[])
+       imshow(imgGinit)
        hold on
        boxfun(GrSpots(:,k));
        hold off
@@ -128,14 +128,14 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        % Show zoom in of the red spot, with the fitted Gaussian or a circle
        % around it to show how and where the spot intensity was calculated
        subplot('Position',[0.13 0.05 0.2 .18])
-       imshow(imgRzoom,[])
+       imshow(imgRzoom)
        hold on
        zoomcenR = FindLocalCen(imgRzoom,spots(:,k));
        boxfun(zoomcenR);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
-       imshow(imgGzoom,[])
+       imshow(imgGzoom)
        hold on
        zoomcenG = FindLocalCen(imgGzoom,GrSpots(:,k));
        boxfun(zoomcenG);

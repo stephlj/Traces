@@ -79,19 +79,19 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
         for i=1:size(movRed,3)
             if isempty(varargin)
                 subplot('Position',[0.08 0.23 0.39 0.39*512/256])
-                imshow(movRed(:,:,i),[])
+                imshow(movRed(:,:,i))
                 subplot('Position',[0.54 0.23 0.39 0.39*512/256])
-                imshow(movGreen(:,:,i),[])
+                imshow(movGreen(:,:,i))
                 drawnow
             else
                 eval(varargin{2})
-                imshow(movRed(:,:,i),[])
+                imshow(movRed(:,:,i))
                 hold on
                 boxfun(varargin{4});
                 hold off
                 title('Red','Fontsize',12)
                 eval(varargin{3})
-                imshow(movGreen(:,:,i),[])
+                imshow(movGreen(:,:,i))
                 hold on
                 boxfun(varargin{5});
                 hold off
@@ -100,13 +100,13 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
                     imgRzoom = ExtractROI(movRed(:,:,i),varargin{8},varargin{4});
                     imgGzoom = ExtractROI(movGreen(:,:,i),varargin{8},varargin{5});
                     eval(varargin{6})
-                    imshow(imgRzoom,[])
+                    imshow(imgRzoom)
                     hold on
                     zoomcenR = FindLocalCen(imgRzoom,varargin{4});
                     boxfun(zoomcenR);
                     hold off
                     eval(varargin{7})
-                    imshow(imgGzoom,[])
+                    imshow(imgGzoom)
                     hold on
                     zoomcenG = FindLocalCen(imgGzoom,varargin{5});
                     boxfun(zoomcenG);
