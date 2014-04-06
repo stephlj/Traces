@@ -542,7 +542,7 @@ close all
                    % all spots; bkgnd(2,:) will be RED channel
                    % Background value from Gaussian fit for green channel
                    % spots:
-                   bkgnd = zeros(2,size(spots,2)+size(bkgndR));
+                   bkgnd = zeros(2,size(spots,2)+length(bkgndR));
                    bkgnd(1,1:size(spots,2)) = bkgndG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                    % Find background values in the red channel: can I avoid
                    % a for-loop here?
@@ -550,7 +550,7 @@ close all
                        % Right now spots only contains spotsGinR that are
                        % unique and being kept:
                        ROI = ExtractROI(imgRbkgnd,params.DNASize,spots(:,y));
-                       bkgnd(2,y) = mean(ROI);
+                       bkgnd(2,y) = mean(mean(ROI));
                        clear ROI
                    end
                    % Now, for all spots in the red channel:
@@ -560,7 +560,7 @@ close all
                    spotsRinG = transpose(transformPointsInverse(tformRtoG,RefinedCentersR'));
                    for yy = 1:size(spotsRinG,2)
                        ROI = ExtractROI(imgGbkgnd,params.DNASize,spotsRinG(:,yy));
-                       bkgnd(1,size(spots,2)+yy) = mean(ROI);
+                       bkgnd(1,size(spots,2)+yy) = mean(mean(ROI));
                        clear ROI
                    end
                else
