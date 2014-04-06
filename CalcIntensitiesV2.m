@@ -37,58 +37,47 @@ RedI = zeros(size(Rspots,2),length(alltifs));
 GrI = zeros(size(Rspots,2),length(alltifs));
 % Find the spots in the coordinate system of the other (green) channel:
 Gspots = transpose(transformPointsInverse(tform,Rspots'));
-    
-% Updated 2/2014: scaling the entire movie such that the brightest pixel is
-% 1 and the dimmest is 0.  This is equivalent to mat2gray(), but I can't
-% load all frames into memory at once.  So, ScaleMovie() loads in 100
-% frames at a time, calculates the min and max for the whole movie, then
-% below each 100-frame chunk is again loaded and scaled to the min and max
-% of the whole movie.
+  
+% Update 4/2014: doing all the scaling in ScaleMovieV2, called by smFRET
+% before CalcIntensities is called.
+    % % Updated 2/2014: scaling the entire movie such that the brightest pixel is
+    % % 1 and the dimmest is 0.  This is equivalent to mat2gray(), but I can't
+    % % load all frames into memory at once.  So, ScaleMovie() loads in 100
+    % % frames at a time, calculates the min and max for the whole movie, then
+    % % below each 100-frame chunk is again loaded and scaled to the min and max
+    % % of the whole movie.
+    % 
+    % [overallMin,overallMax] = ScaleMovie(PathToMovie,length(alltifs));
 
-[overallMin,overallMax] = ScaleMovie(PathToMovie,length(alltifs));
+% HACK see below
+totIR = zeros(1,length(alltifs));
+totIG = zeros(1,length(alltifs));
 
 for jj = 1:100:length(alltifs)
-    moviebit = LoadUManagerTifsV5(PathToMovie,[jj jj+99]);
-    % As noted in ScaleMovie, it's not clear to me if I should be scaling
-    % each channel separately, or as one image.  Right now ScaleMovie
-    % returns only one min and one max so scaling the image globally:
-    moviebit = mat2gray(moviebit,[overallMin overallMax]); % This also converts it to double precision
-    [imgRraw,imgGraw] = SplitImg(moviebit,params);
-    
-    % Subtract time-local background: not actually sure this is the right
-    % thing to do. And if I do this I should probably scale movie after?
-    % Commenting out for now.
-    % For debugging:
-    %[imgRbkgnd,imgGbkgnd,imgR,imgG] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params,1);
-%     [imgRbkgnd,imgGbkgnd,~,~] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params);
-%     imgR = imgRraw-repmat(imgRbkgnd,1,1,size(imgRraw,3));
-%     imgG = imgGraw-repmat(imgGbkgnd,1,1,size(imgRraw,3));
-    imgR = imgRraw;
-    imgG = imgGraw;
-    
-    % For debugging the background subtraction:
-%     temp = reshape(imgRraw,1,size(imgRraw,1)*size(imgRraw,2)*size(imgRraw,3));
-%     hist(temp,1000)
-%     xlim([0 1])
-%     title('Red, Raw')
-%     clear temp
-%     temp = reshape(imgRbkgnd,1,size(imgRbkgnd,1)*size(imgRbkgnd,2));
-%     figure,hist(temp,1000)
-%     xlim([0 1])
-%     title('Red, Bkgnd')
-%     clear temp
-%     temp = reshape(imgR,1,size(imgR,1)*size(imgR,2)*size(imgR,3));
-%     figure,hist(temp,1000)
-%     xlim([0 1])
-%     title('Red, Minus bkgnd')
-%     clear temp
-%     pause 
-%     close all
+    % Update 4/2014: using ScaleMovieV2 which does all the scaling itself,
+    % so I just need to load the results
+%     moviebit = LoadUManagerTifsV5(PathToMovie,[jj jj+99]);
+%     % As noted in ScaleMovie, it's not clear to me if I should be scaling
+%     % each channel separately, or as one image.  Right now ScaleMovie
+%     % returns only one min and one max so scaling the image globally:
+%     moviebit = mat2gray(moviebit,[overallMin overallMax]); % This also converts it to double precision
+%     [imgRraw,imgGraw] = SplitImg(moviebit,params);
+%     
+%     % Background subtraction doesn't work well (see ScaleMovieV2 for how
+%     I was doing it)
+      % imgR = imgRraw;
+      % imgG = imgGraw;
+%     
+%     % Save the background-subtracted, scaled image for later use in
+%     % UserSpotSelection:
+%     save(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
+%         'to',int2str(jj+99),'.mat')),'imgR','imgG')
 
-    % Save the background-subtracted, scaled image for later use in
-    % UserSpotSelection:
-    save(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
-        'to',int2str(jj+99),'.mat')),'imgR','imgG')
+    temp = load(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
+        'to',int2str(jj+99),'.mat')));
+    imgR = temp.imgR;
+    imgG = temp.imgG;
+    clear temp
     
     for kk = 1:size(Rspots,2)
         % Get ROI in red channel
@@ -108,6 +97,15 @@ for jj = 1:100:length(alltifs)
        end
        clear spotimgG spotimgR
     end
-   clear imgR imgG moviebit
+    
+    % HACK added so that I can plot total intensities to try to figure out
+    % what's going on with my wiggly donor and acceptor intensities ... 
+    totIR(jj:jj+99) = sum(sum(imgR,2),1);
+    totIG(jj:jj+99) = sum(sum(imgG,2),1);
+    
+   clear imgR imgG 
    disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))
 end
+
+% HACK saving this info
+save(fullfile(PathToMovie,'MovieTotIntensities.mat'),'totIR','totIG')

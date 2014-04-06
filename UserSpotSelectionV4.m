@@ -58,6 +58,11 @@ imgGinitavg = mat2gray(mean(imgGinit,3));
 imgRinit = imgRinitavg;
 imgGinit = imgGinitavg;
 
+% HACK load total intensities for each frame
+temp = load(fullfile(PathToMovie,'MovieTotIntensities.mat'));
+totIR = temp.totIR;
+totIG = temp.totIG;
+
 %%%Interactive section
 k = 1; % Indexes current spot being plotted
 
@@ -146,6 +151,8 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        figure(h1)
        subplot(2,1,1)
        plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k')
+       % HACK plot total intensities
+       %plot(xvect,RedI./totIR,'-r',xvect,GrI./totIG,'-g')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('Intensity (a.u.)','Fontsize',12)
        title(strcat('Spot',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)

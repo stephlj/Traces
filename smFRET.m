@@ -405,20 +405,33 @@ close all
             
         if strcmpi(useoldspots,'n')
            % Finding spots and local background values
+           
+           % Update 4/2014: Scaling the movie first, before finding spots,
+           % so that the background value calculated when the spot centers
+           % are refined by a GaussFit are meaningful:
+           alltifs = dir(fullfile(D_Data,ToAnalyze(i).name,'img*.tif'));
+           disp('Scaling movie ...')
+           ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),length(alltifs),params);
             
            % Load the first FramesToAvg frames for finding spots
-           TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 params.FramesToAvg]);
-           %TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[2000-params.FramesToAvg 2000]);
-           
-           if size(TotImg,3) > 1
-               TotImg = mean(TotImg,3);
-           end
-            
-           TotImg = mat2gray(TotImg);
-           
-           [imgRed,imgGreen] = SplitImg(TotImg,params);
+    %            % Using the old version of ScaleMovie:
+    %            TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[1 params.FramesToAvg]);
+    %            %TotImg = LoadUManagerTifsV5(fullfile(D_Data,ToAnalyze(i).name),[2000-params.FramesToAvg 2000]);
+    %            
+    %            if size(TotImg,3) > 1
+    %                TotImg = mean(TotImg,3);
+    %            end
+    %             
+    %            TotImg = mat2gray(TotImg);
+    %            
+    %            [imgRed,imgGreen] = SplitImg(TotImg,params);
+    
+           [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),[1 1+params.FramesToAvg]);
+           imgRed = mat2gray(mean(imgRed,3)); %Do I want to do mat2gray here?
+           imgGreen = mat2gray(mean(imgGreen,3));
            
            % Step 0: subtract background:
+           % Do I want to do this with the newly scaled image?
            [imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
            % If you don't want to subtract background, uncomment these
             % lines:
