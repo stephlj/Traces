@@ -1,5 +1,5 @@
 % function [RedI,GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars,...
-%       tform,params)
+%       tform,params,varargin)
 %
 % Calculates intensities for all spots in a movie.
 %
@@ -10,15 +10,25 @@
 %   performed by CalcSpotIntensityV4
 % tform: mapping information for finding spots in the donor channel
 % params: file saved by smFRETsetup
+% optional last input: 2xnumspots matrix of background values for
+%   Gaussian-weighted intensities. Top row should be green channel, bottom
+%   red channel.
 %
 % Outputs:
 % RedI, GrI: Intensity-vs-time information for each spot
 %
-% Steph 2/2014
+% Steph 2/2014, updated 4/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
 function [RedI, GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, ...
-    tform,params)
+    tform,params,varargin)
+
+% Input error handling
+if params.IntensityGaussWeight==1 && isempty(varargin{1})
+    bkgnd = zeros(2,size(Rspots,2));
+else
+    bkgnd = varargin{1};
+end
 
 % Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
@@ -45,7 +55,9 @@ for jj = 1:100:length(alltifs)
     moviebit = mat2gray(moviebit,[overallMin overallMax]); % This also converts it to double precision
     [imgRraw,imgGraw] = SplitImg(moviebit,params);
     
-    % Subtract time-local background:
+    % Subtract time-local background: not actually sure this is the right
+    % thing to do. And if I do this I should probably scale movie after?
+    % Commenting out for now.
     % For debugging:
     %[imgRbkgnd,imgGbkgnd,imgR,imgG] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params,1);
 %     [imgRbkgnd,imgGbkgnd,~,~] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params);
@@ -54,7 +66,7 @@ for jj = 1:100:length(alltifs)
     imgR = imgRraw;
     imgG = imgGraw;
     
-    % For debugging:
+    % For debugging the background subtraction:
 %     temp = reshape(imgRraw,1,size(imgRraw,1)*size(imgRraw,2)*size(imgRraw,3));
 %     hist(temp,1000)
 %     xlim([0 1])
@@ -86,8 +98,10 @@ for jj = 1:100:length(alltifs)
        spotimgG = ExtractROI(imgG,params.DNASize,Gspots(:,kk));
        localcenG = Gspots(:,kk)-(round(Gspots(:,kk))-[floor(params.DNASize)/2; floor(params.DNASize)/2]);
        if params.IntensityGaussWeight==1
-            RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityV4(spotimgR,localcenR,spotVars(:,kk));
-            GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityV4(spotimgG,localcenG,spotVars(:,kk));
+            RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityV4(spotimgR,...
+                localcenR,spotVars(:,kk),bkgnd(2,kk));
+            GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityV4(spotimgG,...
+                localcenG,spotVars(:,kk),bkgnd(1,kk));
        else
            RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityNoGauss(imgR,Rspots(:,kk));
            GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityNoGauss(imgG,Gspots(:,kk));

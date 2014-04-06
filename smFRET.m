@@ -431,6 +431,9 @@ close all
            % channel, or using a combined image (see notes on the
            % UseCombinedImage parameter in smFRETsetup.m).
            if params.UseCombinedImage
+               disp('smFRET: CombinedImage option is not currently functional!')
+               return
+               
                % Finding spots in a composite image, so that
                % mid-FRET spots don't get lost.  NOTE that the combined image
                % will have a frame of reference of the acceptor image, which
@@ -471,6 +474,9 @@ close all
 
                close
                
+               % Refine these centers by fitting to a Gaussian.  Do this
+               % regardless of whether the user wants to weight intensities
+               % by a Gaussian.
                %if params.IntensityGaussWeight
                     disp('Refining red spot centers by 2D Gauss fit')
                     [RefinedCentersR,VarsR,bkgndR] = RefineCensByGauss(spotsR,imgRMinusBkgnd,params.DNASize,0);
@@ -513,16 +519,55 @@ close all
                % ask if the sum of each column is equal to the length of the
                % column. If so, add it to spots:
                spots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-               spots(:,end+1:end+size(RefinedCentersR,2)) = RefinedCentersR;
+               % Before adding the unique spots found in the red channel:
                if params.IntensityGaussWeight
+                   % As in the Ha lab IDL code, assume the variances of the
+                   % spots is the same in the donor and acceptor channels
+                   % (they actually hard-code a number for all spots,
+                   % period)
                    Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                    Vars(:,end+1:end+size(VarsR,2)) = VarsR;
-                   bkgnd = bkgndG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                   bkgnd(:,end+1:end+size(bkgndR,2)) = bkgndR;
+                   % In the case of the background, for spots found in the
+                   % green channel, want to use the bkgnd parameter from
+                   % the Gaussian fit in that channel.  For their cognate
+                   % spots in the red channel, use the average value of the
+                   % imgRbkgnd matrix over a local square as the background
+                   % value. Similarly for spots found in red, and their
+                   % cognate in green.
+                   % The Ha lab code only uses the average local background
+                   % value at the spot's brightest pixel. 
+                   % TODO: if fit a Gaussian to the same spot in both R and G
+                   % channels, use those background values
+                   % bkgnd(1,:) will be GREEN channel background values for
+                   % all spots; bkgnd(2,:) will be RED channel
+                   % Background value from Gaussian fit for green channel
+                   % spots:
+                   bkgnd = zeros(2,size(spots,2)+size(bkgndR));
+                   bkgnd(1,1:size(spots,2)) = bkgndG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                   % Find background values in the red channel: can I avoid
+                   % a for-loop here?
+                   for y = 1:size(spots,2)
+                       % Right now spots only contains spotsGinR that are
+                       % unique and being kept:
+                       ROI = ExtractROI(imgRbkgnd,params.DNASize,spots(:,y));
+                       bkgnd(2,y) = mean(ROI);
+                       clear ROI
+                   end
+                   % Now, for all spots in the red channel:
+                   % From the Gaussian fit:
+                   bkgnd(2,size(spots,2)+1:size(spots,2)+size(bkgndR,2)) = bkgndR;
+                   % Find their cognates in the green channel:
+                   spotsRinG = transpose(transformPointsInverse(tformRtoG,RefinedCentersR'));
+                   for yy = 1:size(spotsRinG,2)
+                       ROI = ExtractROI(imgGbkgnd,params.DNASize,spotsRinG(:,yy));
+                       bkgnd(1,size(spots,2)+yy) = mean(ROI);
+                       clear ROI
+                   end
                else
                    Vars = -1;
                    bkgnd = -1;
                end
+               spots(:,end+1:end+size(RefinedCentersR,2)) = RefinedCentersR;
            end
            
            disp(sprintf('Found %d total spots',size(spots,2)))
@@ -533,7 +578,7 @@ close all
            disp('Calculating frame-by-frame intensities')
            
            [RedI, GrI] = CalcIntensitiesV2(fullfile(D_Data,ToAnalyze(i).name),...
-               spots, Vars, tformRtoG,params);
+               spots, Vars, tformRtoG,params,bkgnd);
            
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.
@@ -545,7 +590,7 @@ close all
            SpotsInR = spots;
            SpotVars = Vars;
            save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'SpotsInR',...
-               'SpotVars','RedI','GrI')
+               'SpotVars','bkgnd','RedI','GrI')
            clear SpotsInR SpotVars
            
            if i==1

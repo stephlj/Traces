@@ -1,4 +1,4 @@
-% function I = CalcSpotIntensityV4(img,spotcen,spotvar)
+% function I = CalcSpotIntensityV4(img,spotcen,spotvar,bkgnd)
 %
 % Calculates the total intensity of a fluorescent spot for every frame in a
 % movie. The intensity at every pixel is weighted by a Gaussian centered at
