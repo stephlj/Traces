@@ -49,10 +49,6 @@ Gspots = transpose(transformPointsInverse(tform,Rspots'));
     % 
     % [overallMin,overallMax] = ScaleMovie(PathToMovie,length(alltifs));
 
-% HACK see below
-totIR = zeros(1,length(alltifs));
-totIG = zeros(1,length(alltifs));
-
 for jj = 1:100:length(alltifs)
     % Update 4/2014: using ScaleMovieV2 which does all the scaling itself,
     % so I just need to load the results
@@ -98,14 +94,6 @@ for jj = 1:100:length(alltifs)
        clear spotimgG spotimgR
     end
     
-    % HACK added so that I can plot total intensities to try to figure out
-    % what's going on with my wiggly donor and acceptor intensities ... 
-    totIR(jj:jj+99) = sum(sum(imgR,2),1);
-    totIG(jj:jj+99) = sum(sum(imgG,2),1);
-    
    clear imgR imgG 
    disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))
 end
-
-% HACK saving this info
-save(fullfile(PathToMovie,'MovieTotIntensities.mat'),'totIR','totIG')

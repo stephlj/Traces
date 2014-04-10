@@ -365,7 +365,7 @@ function smFRET(rootname,debug)
 close all
     D_Data = uigetdir(D_Beads,'Select directory with data to analyze');
     % Figure out how many bead files to analyze there are:
-    ToAnalyze = dir(fullfile(D_Data,strcat(rootname,'_*')));
+    ToAnalyze = dir(fullfile(D_Data,strcat(rootname,'*')));
     % Get framerate for plotting:
     if isempty(ToAnalyze)
         disp('Did not find data to analyze; remember not to include _<number> at the end of rootname!') %error handling
@@ -393,6 +393,7 @@ close all
     end
 
     for i = 1:length(ToAnalyze)
+        disp(strcat('Analyzing:',ToAnalyze(i).name))
         % Update 12/2013: If this movie has already been analyzed, provide
         % the option to use the previously found spots, instead of
         % re-finding them

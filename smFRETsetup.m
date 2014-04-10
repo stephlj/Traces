@@ -60,12 +60,17 @@ Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead cent
     % mapping by about a factor of 2, for roughly a factor of 2 improvement
     % in bead center localization (that is, the mean error will go down by
     % a factor of 2).
-IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
+IntensityGaussWeight = 0; % If this is 1, weight the intensity of each spot  
     % in each frame by a Gaussian whose center and variance are determined
     % from a fit to the spot's first 10 frames. Note that if this is 0, it
     % will calculate intensities over a 5 pxl diameter circle.  That's
     % hard-wired into the code--see CalcSpotIntensityNoGauss.m to change
     % the size.
+NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
+    % in each frame, to the total intensity of the (512x512) image at that
+    % frame. We've been observing large fluctuations in total image
+    % intensity over time, which may be due to laser power fluctuations;
+    % this is an attempt to correct for that.
 BeadSize = 8; % Diameter of a circle that defines a bead (used for the channel
     % mapping procedure); beads whose centers are closer than BeadSize will 
     % not be included, and found beads will be circled by a circle of radius BeadSize.  
@@ -93,4 +98,4 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'defaultdatadir','splitx','Acceptor','BeadSize','BeadNeighborhood',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
-    'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight');
+    'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage');
