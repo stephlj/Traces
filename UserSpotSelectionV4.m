@@ -253,6 +253,8 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                 %Show a specific frame in figure 2
                 elseif cc=='f'
                     [x,~] = ginput(1);
+                    % x will be in seconds, not frames. Convert to frame:
+                    x = x*fps/10^-3; % fps is actually frames per ms
                     [imgRinit,imgGinit] = PlayMovie(PathToMovie,[round(x) round(x)],h2,...
                         strcat('subplot(',char(39),'Position',char(39),...
                             ',[0.08 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
@@ -267,6 +269,8 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                 %Play a section of the movie in figure 2
                 elseif cc=='m'
                     [x,~] = ginput(2);
+                    % x will be in seconds, not frames. Convert to frame:
+                    x = x*fps/10^-3; % fps is actually frames per ms
                     x = round(sort(x));
                     [imgRinit,imgGinit] = PlayMovie(PathToMovie,[x(1) x(2)],h2,...
                         strcat('subplot(',char(39),'Position',char(39),...
