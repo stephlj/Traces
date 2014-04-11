@@ -58,11 +58,6 @@ imgGinitavg = mat2gray(mean(imgGinit,3));
 imgRinit = imgRinitavg;
 imgGinit = imgGinitavg;
 
-% HACK load total intensities for each frame
-temp = load(fullfile(PathToMovie,'MovieTotIntensities.mat'));
-totIR = temp.totIR;
-totIG = temp.totIG;
-
 %%%Interactive section
 k = 1; % Indexes current spot being plotted
 
@@ -79,7 +74,7 @@ h1 = figure('Position',params.Fig1Pos);
 
 disp('Fig. 2 must be current.') 
 disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom; o=adjust black offset;')
-disp('f=select frame to display; m = play movie between two points;')
+disp('f=select frame to display; m = play movie between two points; g=go to spot number;')
 disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
 
     while k <= size(spots,2)
@@ -186,6 +181,15 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                 elseif cc==',' 
                     if k>1
                         k=k-1;
+                        imgRinit = imgRinitavg;
+                        imgGinit = imgGinitavg;
+                    end
+                    cc=13;
+                % Go to specific bead
+                elseif cc=='g'
+                    newk = input('Go to bead number:');
+                    if newk<=size(spots,2) && newk>=1
+                        k=newk;
                         imgRinit = imgRinitavg;
                         imgGinit = imgGinitavg;
                     end

@@ -364,7 +364,7 @@ function smFRET(rootname,debug)
 %%%%%%SECOND PART: Analyze data:
 close all
     D_Data = uigetdir(D_Beads,'Select directory with data to analyze');
-    % Figure out how many bead files to analyze there are:
+    % Figure out how many DNA files to analyze there are:
     ToAnalyze = dir(fullfile(D_Data,strcat(rootname,'*')));
     % Get framerate for plotting:
     if isempty(ToAnalyze)
@@ -394,6 +394,7 @@ close all
 
     for i = 1:length(ToAnalyze)
         disp(strcat('Analyzing:',ToAnalyze(i).name))
+
         % Update 12/2013: If this movie has already been analyzed, provide
         % the option to use the previously found spots, instead of
         % re-finding them
@@ -401,18 +402,30 @@ close all
         useoldspots = 'n';
         
         if exist(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'file')
-            useoldspots = input('Load previous analysis? (y/n)','s');
+            useoldspots = input('Load previously found spots and their intensities? (y/n)','s');
         end
             
         if strcmpi(useoldspots,'n')
            % Finding spots and local background values
            
-           % Update 4/2014: Scaling the movie first, before finding spots,
-           % so that the background value calculated when the spot centers
-           % are refined by a GaussFit are meaningful:
-           alltifs = dir(fullfile(D_Data,ToAnalyze(i).name,'img*.tif'));
-           disp('Scaling movie ...')
-           ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),length(alltifs),params);
+           % Update 4/2014: Since the movie scaling now takes a while, provide
+           % the option to load the previously scaled movie, but a separate
+           % option to re-find spots
+        
+           UseScaledMov = 'n';
+        
+           if exist(fullfile(D_Data,ToAnalyze(i).name,'ScaledMovieFrames1to100.mat'),'file')
+               UseScaledMov = input('Load scaled movie? (y/n)','s');
+           end
+           
+           if strcmpi(UseScaledMov,'n')
+               % Update 4/2014: Scaling the movie first, before finding spots,
+               % so that the background value calculated when the spot centers
+               % are refined by a GaussFit are meaningful:
+               alltifs = dir(fullfile(D_Data,ToAnalyze(i).name,'img*.tif'));
+               disp('Scaling movie ...')
+               ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),length(alltifs),params);
+           end
             
            % Load the first FramesToAvg frames for finding spots
     %            % Using the old version of ScaleMovie:

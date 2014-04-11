@@ -90,7 +90,7 @@ SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal.  At some
+SmoothFRET = 3; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
     
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%

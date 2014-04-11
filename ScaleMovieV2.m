@@ -27,10 +27,11 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     
     allMedians = zeros(1,numframes);
     allMaxes = zeros(1,numframes);
+    % Just for visualization:
+    allMins = zeros(1,numframes);
         
     % For debugging
     %totI = zeros(1,numframes);
-    %allMins = zeros(1,numframes);
     %allMeans = zeros(1,numframes);
 
     for jj = 1:100:numframes
@@ -43,7 +44,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         % Update 4/2014: Allowing a normalization option--see note about
         % NormImage in smFRETsetup.m. (The real normalization is done
         % below, this just makes sure MovieMax and MovieMin are
-        % appropriately scaled if necessary:
+        % appropriately scaled if necessary):
         allMedians(jj:jj+99) = median(median(moviebit,2),1);
         if params.NormImage
             moviebit = moviebit./repmat(median(median(moviebit,2),1),...
@@ -54,10 +55,10 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         MovieMin = min(MovieMin,double(min(min(min(moviebit)))));
 
         allMaxes(jj:jj+99) = max(max(moviebit,[],2),[],1);
+        allMins(jj:jj+99) = min(min(moviebit,[],2),[],1);
         
         % For debugging: 
         %totIR(jj:jj+99) = sum(sum(moviebit,2),1);
-        %allMins(jj:jj+99) = min(min(moviebit,[],2),[],1);
         %allMeans(jj:jj+99) = sum(sum(moviebit,2),1)./(size(moviebit,1)+size(moviebit,2));
         
         clear moviebit
@@ -68,7 +69,8 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     MaxDiffs = sortedMaxes(2:end)-sortedMaxes(1:end-1);
     meanDiff = mean(MaxDiffs);
     stdDiff = std(MaxDiffs);
-    while (sortedMaxes(end)-sortedMaxes(end-1))>(meanDiff+3*stdDiff)
+    while (sortedMaxes(end)-sortedMaxes(end-1))>(meanDiff+3*stdDiff) ||...
+            MovieMax>(mean(allMaxes)+6*std(allMaxes))
         MovieMax = sortedMaxes(end-1);
         sortedMaxes = sortedMaxes(1:end-1);
         if length(sortedMaxes)<(length(allMaxes)-5)
@@ -77,6 +79,27 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         end
     end
     clear sortedMaxes MaxDiffs meanDiff stdDiff
+    
+    % Plot a figure so the user can check whether normalization was
+    % necessary or not:
+    disp(sprintf('Using max=%d, min=%d',MovieMax,MovieMin))
+    figure
+    subplot(2,1,1)
+    plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
+    legend('Maxes','Mins')
+    xlabel('Frame')
+    if params.NormImage
+        ylabel('Normalized Intensity (a.u.)')
+    else
+        ylabel('Raw intensity (a.u.)')
+    end
+    subplot(2,1,2)
+    plot(1:numframes,allMedians,'.g')
+    legend('Median')
+    xlabel('Frame')
+    ylabel('Raw Intensity (a.u.)')
+    pause
+    close
     
     % Re-load everything and actually do the scaling:
     for jj = 1:100:numframes
