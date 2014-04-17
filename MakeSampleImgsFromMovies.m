@@ -6,7 +6,7 @@ imshow(mean(allimgs,3),[])
 temp = reshape(allimgs,1,size(allimgs,1)*size(allimgs,2)*size(allimgs,3));
 hist(temp,1000)
 %%
-allimgs2 = mat2gray(allimgs,[0 800]);
+allimgs2 = mat2gray(allimgs,[0 900]);
 imshow(mean(allimgs2,3))
 %%
 hold on

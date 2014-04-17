@@ -42,8 +42,8 @@ function [A,b] = CalcChannelMapping(points1,points2)
 if size(points1,1)~=2
     points1 = transpose(points1);
 end
-if size(points1,1)~=2
-    points1 = transpose(points1);
+if size(points2,1)~=2
+    points2 = transpose(points2);
 end
 
 x = [points1; ones(1,size(points1,2))];

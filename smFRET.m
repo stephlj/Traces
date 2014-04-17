@@ -261,33 +261,14 @@ function smFRET(rootname,debug)
 
         % Step three: calculate the transformation using all pairs of beads,
         % from all bead movies or snapshots that were loaded.
-        % Update 2/2014: An affine transformation (using my CalcChannelMapping),
-        % does ok at channel mapping--the vast majority of spots will be
-        % mapped to within 1.5 pixels of their true center. Matlab's
-        % fitgeotrans with the affine option doesn't do well at mapping
-        % points, but does better at getting overlaid channels.
-        % However, in order to fit Gaussians to each spot in real data
-        % (below), the mapping really needs to be good to within 0.5 pixel
-        % or less.  For that we need a 3rd-degree polynomial, not an
-        % affine.  So using Matlab's cp2tform:
-        % tform = cp2tform(matchRall',matchGall','polynomial',3); % Note different input order than my CalcChannelMapping
-        % But that does really horribly, and is really annoying, for making
-        % overlaid/composite images, which I need for the second half of
-        % this code. So also doing an affine transformation using
-        % fitgeotrans.
-        % Hey wait a sec, even though polynomial isn't listed as an option
-        % for fitgeotrans, it can do it!  sheesh
-        tformGtoR = fitgeotrans(matchRall',matchGall','polynomial',3);
-        % Unlike an affine transformation, I believe this is not
-        % invertible, so need to also calculate the other direction:
-        tformRtoG = fitgeotrans(matchGall',matchRall','polynomial',3);
-        % Ok actually the polynomial transformation does a terrible job of
-        % overlaying the two channels to make a combined image. So, lastly,
-        % also using fitgeotrans to get an affine transformation:
-        tformGtoRAffine = fitgeotrans(matchRall',matchGall','Affine');
+        % Update 4/2014 to use my FRETmap class
+        tformPoly = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
+            params.TformMaxDeg,params.TformTotDeg);
+        % Affine tends to do better for overlay images using imwarp, so
+        % also calculating:
+        tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
         
         % Plot the results for each movie:
-        allerrs = [];
         for i = 1:BdDir
             disp(strcat('Iterating through bead images for user to check quality (',...
                 int2str(i),' of ',int2str(BdDir),')'))
@@ -295,69 +276,57 @@ function smFRET(rootname,debug)
             [matchG_abs,~] = SpotsIntoAbsCoords(matchG{i},...
                 matchR{i},params,size(allBdImgs(:,:,i),2)/2);
             % Use tform to map to where they should be in the red channel:
-            newR = transpose(transformPointsInverse(tformGtoR,matchG{i}'));
+            newR = tformPoly.FRETmapFwd(matchG{i});
             PutBoxesOnImageV4(allBdImgs(:,:,i),[newR';matchG_abs'],params.BeadSize);
             title('Spots found in green, mapped to red','Fontsize',12)
-            figure
-            errs = FindSpotDists(matchR{i},newR);
-            hist(min(errs,[],2),[0:0.1:10])
-            hold on
-            plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
-            hold off
+            tformPoly.HistResdiuals('fwd');
+            ResidualsGtoR = tformPoly.ResidualsFwd
             % TODO: If the mean error is bigger than, say, 1 pxl, redo the
             % mapping excluding points with too-large errors. 
             % Update 2/2014: it's possible fitgeotrans does this already?
             % The older version, cp2tform, does, I believe
-            ylabel('Counts','Fontsize',12)
-            xlabel('Distance between mapped red bead and real red bead','Fontsize',12)
             
             % Show an overlay of one channel on the other:
             [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
-            CalcCombinedImage(tformGtoRAffine,imgGreen,imgRed,1);
+            tform = affine2d(inv(transpose(tformAffine.A)));
+            CalcCombinedImage(tform,imgGreen,imgRed,1);
             title('Overlay using affine')
-            CalcCombinedImage(tformGtoR,imgGreen,imgRed,1);
+            clear tform
+            tform = images.geotrans.PolynomialTransformation2D(tformPoly.A(1,:),tformPoly.A(2,:));
+            CalcCombinedImage(tform,imgGreen,imgRed,1);
             title('Overlay using polynomial')
-            
-            allerrs = [allerrs;min(errs,[],2)];
+            clear tform
             
             pause
             close
             close
             close
             close
-            clear newR errs
+            clear newR imgRed imgGreen
             
             % Because I explicitly calculated the transformation both ways,
             % check also that the inverse transformation looks ok:
             % Use tform to map to where they should be in the red channel:
-            newG = transpose(transformPointsInverse(tformRtoG,matchR{i}'));
+            newG = tformPoly.FRETmapInv(matchR{i});
             % Get green points in absolute coordinates
             [newG_abs,~] = SpotsIntoAbsCoords(newG,...
                 matchR{i},params,size(allBdImgs(:,:,i),2)/2);
             PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR{i}';newG_abs'],params.BeadSize);
             title('Spots found in red, mapped to green','Fontsize',12)
-            figure
-            errs = FindSpotDists(matchG{i},newG);
-            hist(min(errs,[],2),[0:0.1:10])
-            hold on
-            plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
-            hold off
-            ylabel('Counts','Fontsize',12)
-            xlabel('Distance between mapped green bead and real green bead','Fontsize',12)
-            
-            allerrs = [allerrs;min(errs,[],2)];
+            tformPoly.HistResdiuals('inv');
+            ResidualsRtoG = tformPoly.ResidualsInv
             
             pause
             close
             close
-            clear newG matchG_abs imgRed imgGreen errs
+            clear newG matchG_abs imgRed imgGreen
         end
         
-        MappingTolerance = ceil(mean(allerrs)+3*std(allerrs))
-        clear allBdImgs matchG matchR matchGall matchRall allerrs
+        MappingTolerance = ceil(max(tformPoly.ResidualsFwd,tformPoly.ResidualsInv))
+        clear allBdImgs matchG matchR matchGall matchRall
 
-        save(fullfile(D_Beads,'ChannelMapping.mat'),'tformGtoR','tformRtoG',...
-            'tformGtoRAffine','BeadFilesInMap','MappingTolerance');
+        save(fullfile(D_Beads,'ChannelMapping.mat'),'tformPoly','tformAffine',...
+            'BeadFilesInMap','MappingTolerance');
         save('PathToRecentMap','MostRecentMapDir');
     end
 
@@ -394,6 +363,10 @@ close all
 
     for i = 1:length(ToAnalyze)
         disp(strcat('Analyzing:',ToAnalyze(i).name))
+        
+        % Reset parameters in case user had loaded an old one, then changed
+        % smFRET and wants to use new parameters for this set
+        smFRETsetup;
 
         % Update 12/2013: If this movie has already been analyzed, provide
         % the option to use the previously found spots, instead of

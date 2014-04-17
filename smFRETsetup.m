@@ -43,6 +43,12 @@ Acceptor = 0; % This means the acceptor channel is the one on the left
 % from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
+TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
+    % (caps insensitive)
+TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
+    % (note if using built-in Matlab functions, this should equal TformTotDeg)
+TformTotDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
+    % (note if using built-in Matlab functions, this must be 2, 3, or 4)
 FramesToAvg = 10; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted
 PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
@@ -90,7 +96,7 @@ SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 3; % Same as SmoothIntensities but for the FRET signal.  At some
+SmoothFRET = 6; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
     
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%
@@ -98,4 +104,5 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'defaultdatadir','splitx','Acceptor','BeadSize','BeadNeighborhood',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
-    'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage');
+    'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage',...
+    'TransformToCalc','TformMaxDeg','TformTotDeg');
