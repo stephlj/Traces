@@ -301,8 +301,13 @@ classdef FRETmap < handle
                 return
             end
             if strcmpi(self.Kind,'Affine') || strcmpi(self.Kind,'MatlabAffine')
+                % Due to small numerical errors, the last column of
+                % Atouse might not be [0;0;1] exactly like it needs to
+                % be.
+                Atouse = inv(transpose(Atouse));
+                Atouse(:,3) = [0;0;1];
                 try 
-                    temptform = affine2d(inv(transpose(self.Atouse)));
+                    temptform = affine2d(Atouse);
                     if strcmpi(direction,'fwd')
                         MatlabTform = temptform;
                         clear temptform
@@ -320,14 +325,14 @@ classdef FRETmap < handle
                 end
             elseif strcmpi(self.Kind,'MatlabPoly')
                 try 
-                    MatlabTform = images.geotrans.PolynomialTransformation2D(self.Atouse(1,:),self.Atouse(2,:));
+                    MatlabTform = images.geotrans.PolynomialTransformation2D(Atouse(1,:),Atouse(2,:));
                 catch
                     % This is so silly, but it's the only way I could
                     % figure out how to use maketform with a polynomial:
                     tempdata1 = rand(2,10);
                     tempdata2 = rand(2,10);
                     temptform = cp2tform(tempdata1',tempdata2','polynomial',2);
-                    MatlabTform = maketform('custom',2,2,[],temptform.inverse_fcn,transpose([self.Atouse(1,:);self.Atouse(2,:)]));
+                    MatlabTform = maketform('custom',2,2,[],temptform.inverse_fcn,transpose([Atouse(1,:);Atouse(2,:)]));
                     clear tempdata1 tempdata2 temptform
                 end
             else

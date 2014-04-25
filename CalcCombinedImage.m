@@ -11,6 +11,9 @@
 % spotfinding algorithm that only looks for spots in green and spots in red
 % separately.
 %
+% NOTE this currently uses the built-in Matlab function imwarp, which was
+% released with R2012a. Older Matlab versions cannot run this function.
+%
 % Steph 2/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
@@ -18,9 +21,17 @@ function composite = CalcCombinedImage(tform,StartImg,EndImg,ShowResults)
 
 if ~exist('ShowResults','var') ShowResults = 0; end
 
-Rfixed = imref2d(size(EndImg));
-
-alignedimgG = imwarp(StartImg,tform,'OutputView',Rfixed);
+try 
+    Rfixed = imref2d(size(EndImg));
+    alignedimgG = imwarp(StartImg,tform,'OutputView',Rfixed);
+catch
+    %alignedimgG = imtransform(StartImg,tform); % With R2011b and older, you
+        %can use imtransform instead of imwarp, but there's no imfuse
+        %equivalent (or imshowpair).
+    disp('CalcCombinedImage: Your version of Matlab does not support this function.')
+    composite = -1;
+    return
+end
 
 composite = imfuse(EndImg,alignedimgG,'blend');
 

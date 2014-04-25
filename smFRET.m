@@ -288,13 +288,17 @@ function smFRET(rootname,debug)
             % Show an overlay of one channel on the other:
             [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
             tform = tformAffine.ReturnMatlabTform('fwd');
-            CalcCombinedImage(tform,imgGreen,imgRed,1);
-            title('Overlay using affine')
-            clear tform
+            CombineErr = CalcCombinedImage(tform,imgGreen,imgRed,1);
+            if CombineErr ~= -1
+                title('Overlay using affine')
+            end
+            clear tform CombineErr
             tform = tformPoly.ReturnMatlabTform('fwd');
-            CalcCombinedImage(tform,imgGreen,imgRed,1);
-            title('Overlay using polynomial')
-            clear tform
+            CombineErr = CalcCombinedImage(tform,imgGreen,imgRed,1);
+            if CombineErr ~= -1
+                title('Overlay using polynomial')
+            end
+            clear tform CombineErr
             
             pause
             close
