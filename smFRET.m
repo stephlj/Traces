@@ -92,6 +92,13 @@ function smFRET(rootname,debug)
     if round(params.PxlsToExclude)~=params.PxlsToExclude
         params.PxlsToExclude = round(params.PxlsToExclude);
     end
+    MatlabVer = ver;
+    MatlabDate = MatlabVer(1).Date;
+    if params.UseCombinedImage == 1 && str2double(MatlabDate(end-1:end))<=11 % Testing for Matlab versions older than 2012
+        disp('Warning: This version of Matlab does not support creation of a combined image.')
+        params.UseCombinedImage = 0;
+    end
+    clear MatlabVer MatlabDate
 
 %%%%%%FIRST PART: Channel mapping:
     % Load an old channel mapping, or perform a new one:
@@ -263,6 +270,8 @@ function smFRET(rootname,debug)
         % Update 4/2014 to use my FRETmap class
         tformPoly = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
             params.TformMaxDeg,params.TformTotDeg);
+        ResidualsGtoR = tformPoly.ResidualsFwd
+        ResidualsRtoG = tformPoly.ResidualsInv
         % Affine tends to do better for overlay images using imwarp, so
         % also calculating:
         tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
@@ -278,8 +287,12 @@ function smFRET(rootname,debug)
             newR = tformPoly.FRETmapFwd(matchG{i});
             PutBoxesOnImageV4(allBdImgs(:,:,i),[newR';matchG_abs'],params.BeadSize);
             title('Spots found in green, mapped to red','Fontsize',12)
-            tformPoly.HistResdiuals('fwd');
-            ResidualsGtoR = tformPoly.ResidualsFwd
+            tformPoly.PlotTform(newR,matchR{i})
+            legend('Green spots mapped to red','Red spots')
+            ylim([-512 0])
+            xlim([0 256])
+            tformPoly.TformResiduals(matchG{i},matchR{i},'fwd')
+            xlabel('Distance between green spots mapped to red channel, and real red spots','Fontsize',12)
             % TODO: If the mean error is bigger than, say, 1 pxl, redo the
             % mapping excluding points with too-large errors. 
             % Update 2/2014: it's possible fitgeotrans does this already?
@@ -301,10 +314,7 @@ function smFRET(rootname,debug)
             clear tform CombineErr
             
             pause
-            close
-            close
-            close
-            close
+            close all
             clear newR imgRed imgGreen
             
             % Because I explicitly calculated the transformation both ways,
@@ -316,12 +326,15 @@ function smFRET(rootname,debug)
                 matchR{i},params,size(allBdImgs(:,:,i),2)/2);
             PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR{i}';newG_abs'],params.BeadSize);
             title('Spots found in red, mapped to green','Fontsize',12)
-            tformPoly.HistResdiuals('inv');
-            ResidualsRtoG = tformPoly.ResidualsInv
+            tformPoly.PlotTform(newG,matchG{i})
+            ylim([-512 0])
+            xlim([0 256])
+            legend('Green spots mapped to red','Red spots')
+            tformPoly.TformResiduals(matchR{i},matchG{i},'inv')
+            xlabel('Distance between red spots mapped to green channel, and real green spots','Fontsize',12)
             
             pause
-            close
-            close
+            close all
             clear newG matchG_abs imgRed imgGreen
         end
         

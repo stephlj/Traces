@@ -38,11 +38,12 @@
 % MapObj.HistResiduals(direction)
 %       Histograms the residuals from the transformation. Direction is a
 %       string and is either 'fwd' or 'inv'
-% MapObj.TformResiduals(self,Data1,Data2)
+% MapObj.TformResiduals(self,Data1,Data2,direction)
 %       Same as HistResiduals but done for new data (not the
 %       data that generated the object's transformation). Note that this
-%       method always uses the forward transformation!--so Data1 should be
-%       in StartChannel, Data2 in the other channel.
+%       method always transforms Data1 in the direction
+%       indicated by the string direction (either 'fwd' or 'inv'), and histograms
+%       the differences from Data2.
 % TformMatrix = CalcAffineTform(pointsStart,pointsEnd)
 %       Static method. Calculates an affine transformation without calling
 %       any of Matlab's built-in functions.
@@ -292,12 +293,13 @@ classdef FRETmap < handle
         % Return a tform structure or affine2d/polynomial class object in
         % Matlab's format, for use with other Matlab functions like imwarp
         function MatlabTform = ReturnMatlabTform(self,direction)
-            if strcmpi(direction,'fwd')
+            if strcmpi(direction,'fwd') || (strcmpi(direction,'inv') && ...
+                    (strcmpi(self.Kind,'Affine') || strcmpi(self.Kind,'MatlabAffine')))
                 Atouse = self.A;
-            elseif strcmpi(direction,'rev')
+            elseif strcmpi(direction,'inv')
                 Atouse = self.Ainv;
             else
-                disp(strcat('FRETmap class: method ReturnMatlabTform undefined for input ',direction))
+                disp(strcat('Direction: ',direction,' not defined for FRETmap class method HistResiduals.'))
                 return
             end
             if strcmpi(self.Kind,'Affine') || strcmpi(self.Kind,'MatlabAffine')
@@ -363,6 +365,25 @@ classdef FRETmap < handle
             else
                 xlabel('Distance between mapped start-channel spot and real start-channel spot','Fontsize',12)
             end
+        end
+        % Histogram the differences between a transformed set of points and
+        % their real positions
+        function TformResiduals(self,Data1,Data2,direction)
+            figure
+            if strcmpi(direction,'fwd')
+                newspots = self.FRETmapFwd(Data1);
+            elseif strcmpi(direction,'inv')
+                newspots = self.FRETmapInv(Data1);
+            else 
+                disp(strcat('Direction: ',direction,' not defined for FRETmap class method TformResiduals.'))
+                return
+            end
+            errs = FindSpotDists(Data2,newspots);
+            hist(min(errs,[],2),[0:0.1:10])
+            hold on
+            plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
+            hold off
+            ylabel('Counts','Fontsize',12)
         end
     end
     
@@ -431,19 +452,6 @@ classdef FRETmap < handle
             hold off
             % ylim([-512 0])
             % xlim([0 256])
-        end
-        % Histogram the differences between a transformed set of points and
-        % their real positions
-        function TformResiduals(self,Data1,Data2)
-            figure
-            newspots = self.FRETmapFwd(Data1);
-            errs = FindSpotDists(newspots,Data2);
-            hist(min(errs,[],2),[0:0.1:10])
-            hold on
-            plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
-            hold off
-            ylabel('Counts','Fontsize',12)
-            xlabel('Distance between mapped end-channel spot and real end-channel spot','Fontsize',12)
         end
     end
 end
