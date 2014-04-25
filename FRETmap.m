@@ -30,13 +30,19 @@
 %       Performs forward transformation
 % newspots = MapObj.FRETmapInv(oldspots)
 %       Performs inverse transformation
-% tform = MapObj.ReturnMatlabTform()
+% tform = MapObj.ReturnMatlabTform(direction)
 %       Returns the MapObj information as a Matlab tform (either a tform
 %       object, if using a version of Matlab with fitgeotrans; or a tform
-%       structure for older Matlab versions, which goes with cp2tform)
+%       structure for older Matlab versions, which goes with cp2tform).
+%       Direction is a string and is either 'fwd' or 'inv'
 % MapObj.HistResiduals(direction)
 %       Histograms the residuals from the transformation. Direction is a
 %       string and is either 'fwd' or 'inv'
+% MapObj.TformResiduals(self,Data1,Data2)
+%       Same as HistResiduals but done for new data (not the
+%       data that generated the object's transformation). Note that this
+%       method always uses the forward transformation!--so Data1 should be
+%       in StartChannel, Data2 in the other channel.
 % TformMatrix = CalcAffineTform(pointsStart,pointsEnd)
 %       Static method. Calculates an affine transformation without calling
 %       any of Matlab's built-in functions.
@@ -110,9 +116,6 @@ classdef FRETmap < handle
             
             % If Kind is Affine or MatlabAffine:
             if strcmpi(Kind,'affine') || strcmpi(Kind,'MatlabAffine')
-                %self.MaxDegree = 1;
-                %self.TotalDegree = 1;
-                
                 % Calculate the transformation:
                 % Embed in a linear space
                 if strcmpi(Kind,'affine')
@@ -227,13 +230,20 @@ classdef FRETmap < handle
             elseif strcmpi(self.Kind,'poly')
                 OldMonomials = self.EnumerateMonomials(oldspots,self.MaxDegree,self.TotalDegree);
                 newspots = self.A*OldMonomials;
-            else
+            else % Matlab poly
                 try 
                     tform = images.geotrans.PolynomialTransformation2D(self.A(1,:),self.A(2,:));
                     newspots = transpose(transformPointsInverse(tform,oldspots'));
                     clear tform
                 catch
-                    disp('Need to implement tform creation for cp2tform.');
+                    % This is so silly, but it's the only way I could
+                    % figure out how to use maketform with a polynomial:
+                    tempdata1 = rand(2,10);
+                    tempdata2 = rand(2,10);
+                    temptform = cp2tform(tempdata1',tempdata2','polynomial',2);
+                    tform = maketform('custom',2,2,[],temptform.inverse_fcn,transpose([self.A(1,:);self.A(2,:)]));
+                    newspots = transpose(tforminv(tform,oldspots'));
+                    clear tform tempdata1 tempdata2 temptform
                 end
                         
             end
@@ -264,20 +274,70 @@ classdef FRETmap < handle
                     newspots = transpose(transformPointsInverse(tform,oldspots'));
                     clear tform
                 catch
-                    disp('Need to implement tform creation for cp2tform.');
+                    % This is so silly, but it's the only way I could
+                    % figure out how to use maketform with a polynomial:
+                    tempdata1 = rand(2,10);
+                    tempdata2 = rand(2,10);
+                    temptform = cp2tform(tempdata1',tempdata2','polynomial',2);
+                    tform = maketform('custom',2,2,[],temptform.inverse_fcn,transpose([self.Ainv(1,:);self.Ainv(2,:)]));
+                    newspots = transpose(tforminv(tform,oldspots'));
+                    clear tform tempdata1 tempdata2 temptform
                 end
             end
             if flipoutput
                 newspots = transpose(newspots);
             end
         end
-        function MatlabTform = ReturnMatlabTform(self)
-            try 
-                MatlabTform = images.geotrans.PolynomialTransformation2D(self.A(1,:),self.A(2,:));
-            catch
-                MatlabTform = affine2d(inv(transpose(self.A)));
+        
+        % Return a tform structure or affine2d/polynomial class object in
+        % Matlab's format, for use with other Matlab functions like imwarp
+        function MatlabTform = ReturnMatlabTform(self,direction)
+            if strcmpi(direction,'fwd')
+                Atouse = self.A;
+            elseif strcmpi(direction,'rev')
+                Atouse = self.Ainv;
+            else
+                disp(strcat('FRETmap class: method ReturnMatlabTform undefined for input ',direction))
+                return
+            end
+            if strcmpi(self.Kind,'Affine') || strcmpi(self.Kind,'MatlabAffine')
+                try 
+                    temptform = affine2d(inv(transpose(self.Atouse)));
+                    if strcmpi(direction,'fwd')
+                        MatlabTform = temptform;
+                        clear temptform
+                    else
+                        MatlabTform = invert(temptform);
+                    end
+                catch
+                    temptform = maketform('affine',Atouse);
+                    if strcmpi(direction,'fwd')
+                        MatlabTform = temptform;
+                        clear temptform
+                    else
+                        MatlabTform = fliptform(temptform);
+                    end
+                end
+            elseif strcmpi(self.Kind,'MatlabPoly')
+                try 
+                    MatlabTform = images.geotrans.PolynomialTransformation2D(self.Atouse(1,:),self.Atouse(2,:));
+                catch
+                    % This is so silly, but it's the only way I could
+                    % figure out how to use maketform with a polynomial:
+                    tempdata1 = rand(2,10);
+                    tempdata2 = rand(2,10);
+                    temptform = cp2tform(tempdata1',tempdata2','polynomial',2);
+                    MatlabTform = maketform('custom',2,2,[],temptform.inverse_fcn,transpose([self.Atouse(1,:);self.Atouse(2,:)]));
+                    clear tempdata1 tempdata2 temptform
+                end
+            else
+                disp('Class FRETmap: method ReturnMatlabTform not defined for Kind = Poly.')
+                return
             end
         end
+        
+        % Plot the residuals from the fit that produced the mapping
+        % contained in this object
         function HistResdiuals(self,direction)
             figure
             if strcmpi(direction,'fwd')
@@ -302,6 +362,7 @@ classdef FRETmap < handle
     end
     
     methods(Static)
+        % Homemade affine transformation calculator:
         function TformMatrix = CalcAffineTform(pointsStart,pointsEnd)
             % Redundant, but static methods can be called without an
             % instance of the class object:
@@ -315,6 +376,8 @@ classdef FRETmap < handle
             y = [pointsEnd; ones(1,size(pointsEnd,2))];
             TformMatrix = y*x'/(x*x');
         end
+        % Homemade affine inverter, with my own notation that differs from
+        % Matlab's
         function TformInv = CalcAffineInv(TformFwd)
             % pretty sure I have to extract M and b, and can't do something
             % fancy with A?
@@ -323,6 +386,8 @@ classdef FRETmap < handle
             b = TformFwd(1:2,3);
             TformInv = [inv(M) b];
         end
+        % For making homemade polynomials: enumerate all the monomials the
+        % user wants in the polynomial fit
         function newStart = EnumerateMonomials(StartVec,MaxDeg,TotDeg)
             i=0; % Indexes the power of x_1 (first variable of the polynomial)
             j=0; % Indexes the power of x_2 (second variable of the polynomial)
@@ -345,11 +410,14 @@ classdef FRETmap < handle
                 j=0;
             end
         end
+        % Homemade polynomial transformation calculator
         function TformPoly = CalcPolyTform(StartMonomials,EndPts)
             x = StartMonomials;
             y = EndPts; % EndPts doesn't change to embed polynomial in a linear space
             TformPoly = y*x'/(x*x');
         end
+        % Plot, as a scatter plot, a set of data points and their
+        % transformation
         function PlotTform(Data1,Data2)
             figure('Position',[200 200 325 625])
             plot(Data1(2,:),0-Data1(1,:),'xg')
@@ -358,6 +426,19 @@ classdef FRETmap < handle
             hold off
             % ylim([-512 0])
             % xlim([0 256])
+        end
+        % Histogram the differences between a transformed set of points and
+        % their real positions
+        function TformResiduals(self,Data1,Data2)
+            figure
+            newspots = self.FRETmapFwd(Data1);
+            errs = FindSpotDists(newspots,Data2);
+            hist(min(errs,[],2),[0:0.1:10])
+            hold on
+            plot([mean(min(errs,[],2)) mean(min(errs,[],2))], [0 size(errs,1)/4],'--k');
+            hold off
+            ylabel('Counts','Fontsize',12)
+            xlabel('Distance between mapped end-channel spot and real end-channel spot','Fontsize',12)
         end
     end
 end

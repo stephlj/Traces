@@ -103,9 +103,8 @@ function smFRET(rootname,debug)
         D_Beads = uigetdir(prevmapdir.MostRecentMapDir,'Select directory with old map');
         if exist(fullfile(D_Beads,'ChannelMapping.mat'),'file')
             Map = load(fullfile(D_Beads,'ChannelMapping.mat'));
-            tformGtoR = Map.tformGtoR;
-            tformRtoG = Map.tformRtoG;
-            tformGtoRAffine = Map.tformGtoRAffine;
+            tformPoly = Map.tformPoly;
+            tformAffine = Map.tformAffine;
             MappingTolerance = Map.MappingTolerance;
             clear Map prevmapdir
         else
@@ -288,11 +287,11 @@ function smFRET(rootname,debug)
             
             % Show an overlay of one channel on the other:
             [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
-            tform = affine2d(inv(transpose(tformAffine.A)));
+            tform = tformAffine.ReturnMatlabTform('fwd');
             CalcCombinedImage(tform,imgGreen,imgRed,1);
             title('Overlay using affine')
             clear tform
-            tform = images.geotrans.PolynomialTransformation2D(tformPoly.A(1,:),tformPoly.A(2,:));
+            tform = tformPoly.ReturnMatlabTform('fwd');
             CalcCombinedImage(tform,imgGreen,imgRed,1);
             title('Overlay using polynomial')
             clear tform
