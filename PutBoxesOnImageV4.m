@@ -36,7 +36,7 @@ hold on
 
 t = 0:pi/100:2*pi;
 
-for j = 1:length(spots)
+for j = 1:size(spots,1)
     plot(spots(j,2)+boxdim/2*cos(t),spots(j,1)+boxdim/2*sin(t),strcat('-',boxcolor))
 end
 

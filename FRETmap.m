@@ -345,7 +345,7 @@ classdef FRETmap < handle
         
         % Plot the residuals from the fit that produced the mapping
         % contained in this object
-        function HistResdiuals(self,direction)
+        function HistResiduals(self,direction)
             figure
             if strcmpi(direction,'fwd')
                 errs = FindSpotDists(self.EndData,self.FRETmapFwd(self.StartData));

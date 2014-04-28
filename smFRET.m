@@ -157,7 +157,7 @@ function smFRET(rootname,debug)
             
             allBdImgs(:,:,i) = mat2gray(TotImg2);
             
-            disp(strcat('Analyzing beads: ',int2str(i)',' of ',int2str(BdDir)))
+            disp(sprintf('Analyzing beads %d of %d',i,BdDir))
 
             % Step 1: Find spots in red and green channels separately, so split the
             % image up into the two channels:
@@ -268,13 +268,72 @@ function smFRET(rootname,debug)
         % Step three: calculate the transformation using all pairs of beads,
         % from all bead movies or snapshots that were loaded.
         % Update 4/2014 to use my FRETmap class
+       
         tformPoly = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
             params.TformMaxDeg,params.TformTotDeg);
+        disp(sprintf('Residuals for %d spots:',size(matchGall,2)))
         ResidualsGtoR = tformPoly.ResidualsFwd
         ResidualsRtoG = tformPoly.ResidualsInv
         % Affine tends to do better for overlay images using imwarp, so
         % also calculating:
         tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
+        
+        % Update 4/2014: Any mis-pairings of spots has a big effect on the
+        % quality of the fitted transform, even for ~750 spots. With
+        % perfect matching and our current alignment, the residuals should
+        % be <0.008 per spot (note that the residuals will increase with more spots!):
+        InitBdNum = size(matchGall,2);
+        PrevResid = ResidualsGtoR;
+        steps = 0;
+        while ResidualsGtoR/size(matchGall,2)>=params.ResidTolerance ||...
+                ResidualsRtoG/size(matchGall,2)>=params.ResidTolerance || ...
+                abs(ResidualsGtoR-PrevResid)/PrevResid > 0.05 % Stop if residuals stop changing much
+            PrevResid = ResidualsGtoR;
+            tempRs = tformPoly.FRETmapFwd(matchGall);
+            CurrErrors = sqrt((matchRall(1,:)-tempRs(1,:)).^2+(matchRall(2,:)-tempRs(2,:)).^2);
+            % I'm not sure why the above two lines aren't identical to:
+            %CurrDists = FindSpotDists(tformPoly.FRETmapFwd(matchGall),matchRall);
+            %CurrErrors = min(CurrDists,[],2);
+            % Using a threshold based only on the G to R transformation,
+            % because while the residuals for the two directions do usually
+            % differ, it's not usaully by much
+            MismatchThresh = mean(CurrErrors)+5*std(CurrErrors);
+            clear tempRs
+            
+            matchGall = [];
+            matchRall = [];
+            for p = 1:length(matchG)
+                tempG = matchG{p};
+                tempR = matchR{p};
+                newRs = tformPoly.FRETmapFwd(tempG);
+                tempG = tempG(:,sqrt((tempR(1,:)-newRs(1,:)).^2+(tempR(2,:)-newRs(2,:)).^2)<=MismatchThresh);
+                tempR = tempR(:,sqrt((tempR(1,:)-newRs(1,:)).^2+(tempR(2,:)-newRs(2,:)).^2)<=MismatchThresh);
+                matchG{p} = tempG;
+                matchR{p} = tempR;
+                matchGall = [matchGall, matchG{p}];
+                matchRall = [matchRall, matchR{p}];
+                clear newRs tempR tempG
+            end
+            
+            tformPoly = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
+                params.TformMaxDeg,params.TformTotDeg);
+            disp(sprintf('Residuals for %d spots:',size(matchGall,2)))
+            ResidualsGtoR = tformPoly.ResidualsFwd
+            ResidualsRtoG = tformPoly.ResidualsInv
+            tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
+            if size(matchGall,2)<0.75*InitBdNum || steps>5
+                tformPoly.HistResiduals('fwd');
+                disp('Channel mapping: having to exclude lots of beads to get residuals down.')
+                keyboard
+                % If the histogram looks ok, best thing to do is just to
+                % manually increase the tolerance:
+                % params.ResidTolerance = ResidualsGtoR/size(matchGall,2)+0.001;
+                % or something like that
+            end
+            clear CurrDists CurrErrors
+            steps = steps+1;
+        end
+        clear steps
         
         % Plot the results for each movie:
         for i = 1:BdDir
@@ -293,10 +352,6 @@ function smFRET(rootname,debug)
             xlim([0 256])
             tformPoly.TformResiduals(matchG{i},matchR{i},'fwd')
             xlabel('Distance between green spots mapped to red channel, and real red spots','Fontsize',12)
-            % TODO: If the mean error is bigger than, say, 1 pxl, redo the
-            % mapping excluding points with too-large errors. 
-            % Update 2/2014: it's possible fitgeotrans does this already?
-            % The older version, cp2tform, does, I believe
             
             % Show an overlay of one channel on the other:
             [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
@@ -338,8 +393,15 @@ function smFRET(rootname,debug)
             clear newG matchG_abs imgRed imgGreen
         end
         
-        MappingTolerance = ceil(max(tformPoly.ResidualsFwd,tformPoly.ResidualsInv))
-        clear allBdImgs matchG matchR matchGall matchRall
+        % The mapping tolerance is the maximal distance away a spot center
+        % could be in the other channel, and still possibly be the same as
+        % the spot you're looking at:
+        tempRs = tformPoly.FRETmapFwd(matchGall);
+        tempGs = tformPoly.FRETmapInv(matchRall);
+        DistsG = sqrt((matchRall(1,:)-tempRs(1,:)).^2+(matchRall(2,:)-tempRs(2,:)).^2);
+        DistsR = sqrt((matchGall(1,:)-tempGs(1,:)).^2+(matchGall(2,:)-tempGs(2,:)).^2);
+        MappingTolerance = ceil(max(mean(DistsG)+5*std(DistsG),mean(DistsR)+5*std(DistsR)))
+        clear allBdImgs matchG matchR matchGall matchRall Dists tempGs tempRs
 
         save(fullfile(D_Beads,'ChannelMapping.mat'),'tformPoly','tformAffine',...
             'BeadFilesInMap','MappingTolerance');

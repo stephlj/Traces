@@ -150,7 +150,7 @@ for i=1:size(Dists,1)
             end
         end
     end
-    if length(find(matched1(1,:)))~=size(matched1,2)
+    if ~isempty(matched1) && length(find(matched1(1,:)))~=size(matched1,2)
         keyboard
     end
 end

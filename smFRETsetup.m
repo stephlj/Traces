@@ -92,6 +92,8 @@ DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % included in the analysis.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
 BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
+ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
+    % by total number of spots allowable.
 SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
@@ -105,4 +107,4 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
     'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage',...
-    'TransformToCalc','TformMaxDeg','TformTotDeg');
+    'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance');
