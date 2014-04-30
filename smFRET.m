@@ -124,21 +124,33 @@ function smFRET(rootname,debug)
         MostRecentMapDir = D_Beads;
         % Figure out how many bead files to analyze there are:
         AllBeads = dir(fullfile(D_Beads,'Bead*'));
-        num_BeadDir = input(strcat('How many bead files to analyze? Max:',...
+        num_BeadDir = input(strcat('How many bead files to use for transformation? Max:',...
             int2str(length(AllBeads)),' (Enter to use max)'));
-        if isempty(num_BeadDir)
+        if isempty(num_BeadDir) || num_BeadDir >= length(AllBeads)
             BdDir = length(AllBeads);
-        else
-            BdDir = num_BeadDir;
+            num_BeadDir = length(AllBeads);
+        elseif num_BeadDir < length(AllBeads)
+            checkTform = input(strcat('Use remaining ',int2str(length(AllBeads)-num_BeadDir),...
+                ' movies to check transform? (y/n)'),'s');
+            if strcmpi(checkTform,'y')
+                BdDir = length(AllBeads); % But num_BeadDir will still be the 
+                    % number of movie files the user wants to include in
+                    % the transform
+            else
+                BdDir = num_BeadDir;
+            end
         end
 
         matchGall = [];
         matchRall = [];
         allBdImgs = [];
-        BeadFilesInMap = cell(BdDir,1);
+        BeadFilesInMap = cell(num_BeadDir,1);
 
         for i = 1:BdDir
-            BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); % Keeps a record of which bead files went into the map
+            if i<=num_BeadDir
+                BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); % Keeps a record of which bead files went into the map
+            end
+            
             TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 params.FramesToAvg]);
             
             % Updated 2/2014 to account for LoadUManagerTifs returning an
@@ -157,7 +169,7 @@ function smFRET(rootname,debug)
             
             allBdImgs(:,:,i) = mat2gray(TotImg2);
             
-            disp(sprintf('Analyzing beads %d of %d',i,BdDir))
+            disp(sprintf('Spotfinding in movies %d of %d',i,BdDir))
 
             % Step 1: Find spots in red and green channels separately, so split the
             % image up into the two channels:
@@ -230,8 +242,10 @@ function smFRET(rootname,debug)
             % than acceptor channel, the matching works best if you match spots
             % in donor to spots in acceptor:
             [matchG{i},matchR{i}] = FindSpotMatches(spotsG{i},spotsR{i});
-            matchGall = [matchGall, matchG{i}];
-            matchRall = [matchRall, matchR{i}];
+            if i<=num_BeadDir
+                matchGall = [matchGall, matchG{i}];
+                matchRall = [matchRall, matchR{i}];
+            end
 
             if debug
                 % Box in green the ones that were matched:
@@ -268,15 +282,14 @@ function smFRET(rootname,debug)
         % Step three: calculate the transformation using all pairs of beads,
         % from all bead movies or snapshots that were loaded.
         % Update 4/2014 to use my FRETmap class
-       
         tformPoly = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
             params.TformMaxDeg,params.TformTotDeg);
-        disp(sprintf('Residuals for %d spots:',size(matchGall,2)))
-        ResidualsGtoR = tformPoly.ResidualsFwd
-        ResidualsRtoG = tformPoly.ResidualsInv
         % Affine tends to do better for overlay images using imwarp, so
         % also calculating:
         tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
+        disp(sprintf('Residuals for %d spots:',size(matchGall,2)))
+        ResidualsGtoR = tformPoly.ResidualsFwd
+        ResidualsRtoG = tformPoly.ResidualsInv
         
         % Update 4/2014: Any mis-pairings of spots has a big effect on the
         % quality of the fitted transform, even for ~750 spots. With
@@ -302,7 +315,7 @@ function smFRET(rootname,debug)
             
             matchGall = [];
             matchRall = [];
-            for p = 1:length(matchG)
+            for p = 1:num_BeadDir
                 tempG = matchG{p};
                 tempR = matchR{p};
                 newRs = tformPoly.FRETmapFwd(tempG);
@@ -336,9 +349,9 @@ function smFRET(rootname,debug)
         clear steps
         
         % Plot the results for each movie:
-        for i = 1:BdDir
+        for i = 1:num_BeadDir
             disp(strcat('Iterating through bead images for user to check quality (',...
-                int2str(i),' of ',int2str(BdDir),')'))
+                int2str(i),' of ',int2str(num_BeadDir),')'))
             % Get green points in absolute coordinates
             [matchG_abs,~] = SpotsIntoAbsCoords(matchG{i},...
                 matchR{i},params,size(allBdImgs(:,:,i),2)/2);
@@ -401,7 +414,23 @@ function smFRET(rootname,debug)
         DistsG = sqrt((matchRall(1,:)-tempRs(1,:)).^2+(matchRall(2,:)-tempRs(2,:)).^2);
         DistsR = sqrt((matchGall(1,:)-tempGs(1,:)).^2+(matchGall(2,:)-tempGs(2,:)).^2);
         MappingTolerance = ceil(max(mean(DistsG)+5*std(DistsG),mean(DistsR)+5*std(DistsR)))
+        
+        % Lastly, check the transformation, if the user wishes:
+        if checkTform
+            GforChecking = [];
+            RforChecking = [];
+            for j = num_BeadDir:length(AllBeads)
+                GforChecking = [GforChecking,matchG{j}];
+                RforChecking = [RforChecking,matchR{j}];
+            end
+            tformPoly.TformResiduals(GforChecking,RforChecking,'fwd');
+            title('Residuals after applying the calculated transform to remaining bead movies')
+            pause
+            close
+        end
+            
         clear allBdImgs matchG matchR matchGall matchRall Dists tempGs tempRs
+        clear num_BeadDir BdDir checkTform
 
         save(fullfile(D_Beads,'ChannelMapping.mat'),'tformPoly','tformAffine',...
             'BeadFilesInMap','MappingTolerance');
