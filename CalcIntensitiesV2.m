@@ -36,7 +36,7 @@ alltifs = dir(fullfile(PathToMovie,'img*.tif'));
 RedI = zeros(size(Rspots,2),length(alltifs));
 GrI = zeros(size(Rspots,2),length(alltifs));
 % Find the spots in the coordinate system of the other (green) channel:
-Gspots = transpose(transformPointsInverse(tform,Rspots'));
+Gspots = tform.FRETmapInv(Rspots);
   
 % Update 4/2014: doing all the scaling in ScaleMovieV2, called by smFRET
 % before CalcIntensities is called.

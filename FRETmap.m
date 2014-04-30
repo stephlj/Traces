@@ -27,9 +27,9 @@
 % MapObj = FRETmap(StartData,EndData,StartChannel,Kind,MaxDegree,TotalDegree)
 %       Constructor method
 % newspots = MapObj.FRETmapFwd(oldspots)
-%       Performs forward transformation
+%       Performs forward transformation (StartChannel->EndChannel)
 % newspots = MapObj.FRETmapInv(oldspots)
-%       Performs inverse transformation
+%       Performs inverse transformation (EndChannel->StartChannel)
 % tform = MapObj.ReturnMatlabTform(direction)
 %       Returns the MapObj information as a Matlab tform (either a tform
 %       object, if using a version of Matlab with fitgeotrans; or a tform
@@ -38,7 +38,7 @@
 % MapObj.HistResiduals(direction)
 %       Histograms the residuals from the transformation. Direction is a
 %       string and is either 'fwd' or 'inv'
-% MapObj.TformResiduals(self,Data1,Data2,direction)
+% MapObj.TformResiduals(Data1,Data2,direction)
 %       Same as HistResiduals but done for new data (not the
 %       data that generated the object's transformation). Note that this
 %       method always transforms Data1 in the direction

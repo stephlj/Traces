@@ -49,7 +49,7 @@ if size(spots,1)~=2
 end
 
 % Find spots in green channel:
-GrSpots = transpose(transformPointsInverse(tform,spots'));
+GrSpots = tform.FRETmapInv(spots);
 
 % Get an average image of the first 10 frames to display:
 [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg]);

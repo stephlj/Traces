@@ -616,21 +616,28 @@ close all
                % counted. Based on the MappingTolerance parameter saved 
                % during the mapping procedure, we know spots that are truly 
                % the same will have their centers at most MappingTolerance apart
-               spotsGinR = transpose(transformPointsInverse(tformGtoR,RefinedCentersG'));
-               Dists = FindSpotDists(RefinedCentersR,RefinedCentersG);
+               spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
+               Dists = FindSpotDists(RefinedCentersR,spotsGinR);
                spotnottooclose = Dists>MappingTolerance;
                % As in FindSpotsV5, each column of spotnottooclose will be all 1's if the 
-               % spotG represented by the column is more than params.DNASize away from 
+               % spotGinR represented by the column is more than MappingTolerance away from 
                % the spotR represented by each row. If there's already a spotR too
                % close, one or more elements of the column will be zero.  So now
                % ask if the sum of each column is equal to the length of the
-               % column. If so, add it to spots:
+               % column. If so, add it to spots. Note that FindSpots has
+               % already checked that no spot in either channel is too
+               % close to another spot in that same channel (where "too close" is
+               % defined as params.DNASize); but it's possible that there's a high-FRET
+               % spot only in the red channel, and a low-FRET spot only in
+               % the green channel, which are truly different DNAs but are
+               % too close to get FRET out of.  So far I don't deal with
+               % that possibility.
                spots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                % Before adding the unique spots found in the red channel:
                if params.IntensityGaussWeight
                    % As in the Ha lab IDL code, assume the variances of the
-                   % spots is the same in the donor and acceptor channels
-                   % (they actually hard-code a number for all spots,
+                   % spots are the same in the donor and acceptor channels
+                   % (Ha lab code actually hard-codes a number for all spots,
                    % period)
                    Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                    Vars(:,end+1:end+size(VarsR,2)) = VarsR;
@@ -664,7 +671,7 @@ close all
                    % From the Gaussian fit:
                    bkgnd(2,size(spots,2)+1:size(spots,2)+size(bkgndR,2)) = bkgndR;
                    % Find their cognates in the green channel:
-                   spotsRinG = transpose(transformPointsInverse(tformRtoG,RefinedCentersR'));
+                   spotsRinG = tformPoly.FRETmapInv(RefinedCentersR);
                    for yy = 1:size(spotsRinG,2)
                        ROI = ExtractROI(imgGbkgnd,params.DNASize,spotsRinG(:,yy));
                        bkgnd(1,size(spots,2)+yy) = mean(mean(ROI));
@@ -685,7 +692,7 @@ close all
            disp('Calculating frame-by-frame intensities')
            
            [RedI, GrI] = CalcIntensitiesV2(fullfile(D_Data,ToAnalyze(i).name),...
-               spots, Vars, tformRtoG,params,bkgnd);
+               spots, Vars, tformPoly,params,bkgnd);
            
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.
@@ -714,14 +721,14 @@ close all
 
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            UserSpotSelectionV4(RedI,GrI,spots,...
-               fullfile(D_Data,ToAnalyze(i).name),params,tformRtoG,savedir,fps,i);
+               fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
            params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
            params = params.params;
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
-               fullfile(D_Data,ToAnalyze(i).name),params,tformRtoG,savedir,fps,i);
+               fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp
     end
