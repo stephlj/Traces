@@ -63,9 +63,7 @@ UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % quality of the channel mapping.
 Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead center
     % position.  This will increase computational time for the channel
-    % mapping by about a factor of 2, for roughly a factor of 2 improvement
-    % in bead center localization (that is, the mean error will go down by
-    % a factor of 2).
+    % mapping by about a factor of 2, but is a good idea to do anyway.
 IntensityGaussWeight = 0; % If this is 1, weight the intensity of each spot  
     % in each frame by a Gaussian whose center and variance are determined
     % from a fit to the spot's first 10 frames. Note that if this is 0, it
@@ -85,11 +83,12 @@ BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in
     % neighborhood (area, in square pixels) for the beads.  Needs to be a perfect
     % square, and best if sqrt(BeadNeighborhood) is odd.  Should be a little 
     % bigger than we expect beads to be.
-DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
-    % the code that actually calculates the intensity of a DNA spot is
-    % currently hard-coded to integrate over a circle of diameter 5 pixels;
-    % DNASize only determines how close two spots can be and still be
-    % included in the analysis.
+DNASize = 6; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
+    % if IntensityGaussWeight=1, this is also the side of a square over which
+    % a Gaussian is fit and the intensity calculated. However, if IntensityGaussWeight=0,
+    % the intensity is summed over a 5-pixel diameter circle and this parameter
+    % has no effect.  In both cases DNASize also determines how close two 
+    % spots can be and still be included in the analysis.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
 BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
 ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided

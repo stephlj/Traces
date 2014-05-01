@@ -521,11 +521,13 @@ close all
     %            [imgRed,imgGreen] = SplitImg(TotImg,params);
     
            [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),[1 1+params.FramesToAvg]);
-           imgRed = mat2gray(mean(imgRed,3)); %Do I want to do mat2gray here?
+           imgRed = mat2gray(mean(imgRed,3)); %Do I want to do mat2gray here? Update 4/2014:
+                % since I'm going to treat spotfinding as totally separate
+                % from Gauss fitting for intensity smoothing, it is best
+                % that I do mat2gray here
            imgGreen = mat2gray(mean(imgGreen,3));
            
            % Step 0: subtract background:
-           % Do I want to do this with the newly scaled image?
            [imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
            % If you don't want to subtract background, uncomment these
             % lines:
@@ -572,50 +574,36 @@ close all
 
                close all
            else
-               % Step 1.1 Identify spots in acceptor channel
-               [spotsR,n,xout] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
-                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-               spotsR = SptFindUserThresh(spotsR,imgRMinusBkgnd,n,xout,'Red Channel',...
-                   params.DNANeighborhood,params.DNASize,'default');
+               % Step 1.1 Identify spots in acceptor channel, and refine centers by
+               % fitting to a Gaussian, regardless of whether or not user
+               % wants to weight intensities by a Gaussian:
+               [RefinedCentersR,n,xout] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
+                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
+                     'Method','GaussFit');
+               RefinedCentersR = SptFindUserThresh(RefinedCentersR,imgRMinusBkgnd,n,xout,'Red Channel',...
+                   params.DNANeighborhood,params.DNASize,'GaussFit');
                clear n xout
 
                close
-               
-               % Refine these centers by fitting to a Gaussian.  Do this
-               % regardless of whether the user wants to weight intensities
-               % by a Gaussian.
-               %if params.IntensityGaussWeight
-                    disp('Refining red spot centers by 2D Gauss fit')
-                    [RefinedCentersR,VarsR,bkgndR] = RefineCensByGauss(spotsR,imgRMinusBkgnd,params.DNASize,0);
-%                else
-%                    RefinedCentersR = spots;
-%                    VarsR = -1;
-%                    bkgndR = -1;
-%                end
                
                % And in donor channel
-               [spotsG,n,xout] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
-                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize);
-               spotsG = SptFindUserThresh(spotsG,imgGMinusBkgnd,n,xout,'Green Channel',...
-                   params.DNANeighborhood,params.DNASize,'default');
+               [RefinedCentersG,n,xout] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
+                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
+                     'Method','GaussFit');
+               RefinedCentersG = SptFindUserThresh(RefinedCentersG,imgGMinusBkgnd,n,xout,'Green Channel',...
+                   params.DNANeighborhood,params.DNASize,'GaussFit');
                clear n xout
 
                close
                
-               %if params.IntensityGaussWeight
-                    disp('Refining green spot centers by 2D Gauss fit')
-                    [RefinedCentersG,VarsG,bkgndG] = RefineCensByGauss(spotsG,imgGMinusBkgnd,params.DNASize,0);
-%                else
-%                    RefinedCentersG = spotsG;
-%                    VarsG = -1;
-%                    bkgndG = -1;
-%                end
-               
-               % Step 1.2: Convert green channel spot locations to red
+               % Step 1.2: Check that no spots are double counted, and get
+               % rid of spots that are too close together.
+               % First convert green channel spot locations to red
                % channel locations, and check that no spots are double
                % counted. Based on the MappingTolerance parameter saved 
                % during the mapping procedure, we know spots that are truly 
-               % the same will have their centers at most MappingTolerance apart
+               % the same will have their centers at most MappingTolerance
+               % apart.
                spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
                Dists = FindSpotDists(RefinedCentersR,spotsGinR);
                spotnottooclose = Dists>MappingTolerance;
@@ -635,6 +623,17 @@ close all
                spots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                % Before adding the unique spots found in the red channel:
                if params.IntensityGaussWeight
+                   % Here, fit to a Gaussian again (first time is in
+                   % spotfinding routine, to find centers to sub-pixel
+                   % resolution); but this time want the variances and the
+                   % background value
+                   
+                    disp('Fitting red spot centers to 2D Gauss')
+                    [~,VarsR,bkgndR] = RefineCensByGauss(spotsR,imgRMinusBkgnd,params.DNASize,0);
+
+                    disp('Fitting green spot centers to 2D Gauss')
+                    [~,VarsG,bkgndG] = RefineCensByGauss(spotsG,imgGMinusBkgnd,params.DNASize,0);
+                   
                    % As in the Ha lab IDL code, assume the variances of the
                    % spots are the same in the donor and acceptor channels
                    % (Ha lab code actually hard-codes a number for all spots,
