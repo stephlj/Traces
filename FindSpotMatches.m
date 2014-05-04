@@ -79,7 +79,21 @@ for i=1:size(Dists,1)
                 
                 % Figure out which matched1 spot is the spot1 spot to be
                 % removed:
-                toremove = find(matched1(1,:)==spots1(1,samespots2(1)));
+                for p=1:length(samespots2)-1 % since samespots2 was selected from only the spot indices
+                        % up through the one we're currently looking at,
+                        % the last element of samespots2 will be ind = i,
+                        % which hasn't been added to matched1 yet. So only
+                        % examine any spots whose indices are less than i
+                    toremove = find(matched1(1,:)==spots1(1,samespots2(p)));
+                    if ~isempty(toremove)
+                        break
+                    end
+                end
+                
+                if isempty(toremove)
+                    keyboard;
+                end
+                
                 if length(toremove)>1 % on the off chance two spots1 spots that have been added
                         % to matched have exactly identical x-coordinates
                         % (unlikely ... )

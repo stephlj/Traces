@@ -712,7 +712,7 @@ close all
                % you know what analysis parameters were used to analyze the
                % data:
                params.fps = fps;
-               save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
+               save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params','tformPoly','tformAffine');
            end
            
            % Step 3: Display a trace of intensity-vs-time for each spot,
@@ -724,8 +724,9 @@ close all
                fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
-           params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
-           params = params.params;
+           oldparams = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
+           params = oldparams.params;
+           tformPoly = oldparams.tformPoly;
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
                fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
