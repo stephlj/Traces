@@ -726,7 +726,7 @@ close all
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
            oldparams = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
            useoldparams = input('Use previous analysis parameters? (y/n):','s');
-           if useoldparams
+           if strcmpi(useoldparams,'y')
                params = oldparams.params;
            end
            tformPoly = oldparams.tformPoly;

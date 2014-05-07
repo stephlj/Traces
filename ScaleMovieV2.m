@@ -75,6 +75,8 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         sortedMaxes = sortedMaxes(1:end-1);
         if length(sortedMaxes)<(length(allMaxes)-5)
             disp('ScaleMovieV2: A lot of max outliers?')
+            figure
+            plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
             keyboard
         end
     end
