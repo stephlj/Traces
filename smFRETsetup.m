@@ -73,7 +73,7 @@ IntensityGaussWeight = 0; % If this is 1, weight the intensity of each spot
     % hard-wired into the code--see CalcSpotIntensityNoGauss.m to change
     % the size.
 NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
-    % in each frame, to the total intensity of the (512x512) image at that
+    % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
     % intensity over time, which may be due to laser power fluctuations;
     % this is an attempt to correct for that.
@@ -94,7 +94,7 @@ DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
 BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
 ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
     % by total number of spots allowable.
-SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 6; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
