@@ -4,8 +4,17 @@
 % nominally contains a single fluorescent spot, find the parameters of the
 % 2D Gaussian that best fits that spot.
 %
-% Input:
+% Inputs:
 % spotimg: image of a single spot
+% mode: 'full','vars',background' (case insensitive)
+%   Use mode = 'full' to fit all 6 variables (5, for a symmetric Gauss)
+%   Use mode = 'vars' to fit only the variances and the background (and
+%       amplitude), but not the center position
+%   Use mode = 'background' to fit only the background (and amplitude), but
+%       not the variances or center position.
+%   Default is 'full'. If mode is 'vars' or 'background', the optional
+%       'StartParams' input must also be passed, and the values for the
+%       parameters not to be fit will be used from StartParams.
 %
 % Optional inputs: enter these as pairs ('<paraname>',<value>)
 % 'Debug', 1: display a set of images of the fit
@@ -26,8 +35,12 @@
 % Steph 2/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [Xcen, Ycen, Xvar, Yvar, bkgnd, A] = Fit2DGaussToSpot(spotimg,varargin)
+function [Xcen, Ycen, Xvar, Yvar, bkgnd, A] = Fit2DGaussToSpot(spotimg,mode,varargin)
 
+% Set mode to default of 'full' if only a spotimg was passed
+if ~exist('mode','var') mode = 'full'; end
+
+% Handle optional inputs before dealing further with mode
 debug = 0;
 symGauss = 0;
 
@@ -58,6 +71,40 @@ if ~isempty(varargin)
     end
 end
 
+switch mode
+    case {'full','Full','FULL'}
+        fixedparams = [];
+        if symGauss
+            startparams = [Xcen_init,Ycen_init,Xvar_init,bkgnd_init,A_init];
+        else
+            startparams = [Xcen_init,Ycen_init,Xvar_init,Yvar_init,bkgnd_init,A_init];
+        end
+    case {'vars','Vars','VARS'}
+        Xcen = Xcen_init;
+        Ycen = Ycen_init;
+        fixedparams = [Xcen,Ycen];
+        if symGauss
+            startparams = [Xvar_init,bkgnd_init,A_init];
+        else
+            startparams = [Xvar_init,Yvar_init,bkgnd_init,A_init];
+        end
+    case {'background','Background','BACKGROUND'}
+        Xcen = Xcen_init;
+        Ycen = Ycen_init;
+        Xvar = Xvar_init;
+        startparams = [bkgnd_init,A_init];
+        if symGauss
+            Yvar = Xvar;
+            fixedparams = [Xcen,Ycen,Xvar];
+        else
+            Yvar = Yvar_init;
+            fixedparams = [Xcen,Ycen,Xvar,Yvar];
+        end
+    otherwise
+        disp('Fit2DGaussToSpot: Mode not recognized.')
+        return
+end
+
 % Find parameters that minimize the difference between a 2D Gaussian and
 % the actual image.  This "minimize the difference" problem is encapsulated
 % in the Gauss2DCost function.
@@ -71,47 +118,46 @@ end
 opts = optimset('Display','off'); % Don't display a warning if the fit doesn't converge
 
 if symGauss
-    [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCostSym(params,spotimg),...
-        [Xcen_init,Ycen_init,Xvar_init,bkgnd_init,A_init],opts);
-    if exitflag==0
-        % If the fit fails, return the default parameters. Sometimes the
-        % parameters it gets from a failed fit are pretty whacky. Return a
-        % very low amplitude as indication that this is not a good Gaussian.
-        A = 0.0001;
-        bkgnd = bkgnd_init;
-        Xcen = Xcen_init;
-        Ycen = Ycen_init;
-        Xvar = Xvar_init;
-        Yvar = Xvar; 
-    else
-        A = fitparams(5);
-        bkgnd = fitparams(4);
-        Xcen = fitparams(1);
-        Ycen = fitparams(2);
-        Xvar = fitparams(3);
-        Yvar = Xvar;
-    end
+    [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCostSym(params,spotimg,fixedparams),...
+        startparams,opts);
 else
-    [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCost(params,spotimg),...
-        [Xcen_init,Ycen_init,Xvar_init,Yvar_init,bkgnd_init,A_init],opts);
-    if exitflag==0
-        % If the fit fails, return the default parameters. Sometimes the
-        % parameters it gets from a failed fit are pretty whacky. Return a
-        % very low amplitude as indication that this is not a good Gaussian.
-        A = 0.0001;
-        bkgnd = bkgnd_init;
-        Xcen = Xcen_init;
-        Ycen = Ycen_init;
-        Xvar = Xvar_init;
-        Yvar = Yvar_init; 
-    else 
-        A = fitparams(6);
-        bkgnd = fitparams(5);
-        Xcen = fitparams(1);
-        Ycen = fitparams(2);
-        Xvar = fitparams(3);
-        Yvar = fitparams(4);
+    [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCost(params,spotimg,fixedparams),...
+        startparams,opts);
+end
+
+% Define output parameters:
+if exitflag==0
+    % If the fit fails, return the default parameters. Sometimes the
+    % parameters it gets from a failed fit are pretty whacky. Return a
+    % very low amplitude as indication that this is not a good Gaussian.
+    A = 0.0001;
+    bkgnd = bkgnd_init;
+    Xcen = Xcen_init;
+    Ycen = Ycen_init;
+    Xvar = Xvar_init;
+    Yvar = Xvar_init; 
+else
+    A = fitparams(end);
+    bkgnd = fitparams(end-1);
+    switch mode
+        case {'full','Full','FULL'}
+            Xcen = fitparams(1);
+            Ycen = fitparams(2);
+            Xvar = fitparams(3);
+            if symGauss
+                Yvar = Xvar;
+            else
+                Yvar = fitparams(4);
+            end
+        case {'vars','Vars','VARS'}
+            Xvar = fitparams(1);
+            if symGauss
+                Yvar = Xvar;
+            else
+                Yvar = fitparams(2);
+            end
     end
+
 end
 
 if debug

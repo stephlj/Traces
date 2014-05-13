@@ -23,7 +23,7 @@
 
 function cost = Gauss2DCost(params,data,varargin)
 
-    if length(params)==6 && isempty(varargin)
+    if length(params)==6
         A = params(6);
         B = params(5);
         x0 = params(1);
