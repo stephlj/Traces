@@ -61,6 +61,12 @@ end
 % Find parameters that minimize the difference between a 2D Gaussian and
 % the actual image.  This "minimize the difference" problem is encapsulated
 % in the Gauss2DCost function.
+% Note if you have the Optimization toolbox, it would be better (faster and
+% more accurate) to use lsqnonlin rather than fminsearch. However,
+% fminsearch is used here to reduce this software suite's dependance on
+% Matlab toolboxes.
+%%%% TODO: use a try/catch block to use lsqnonlin if the Optimization
+%%%% toolbox is installed.
 
 opts = optimset('Display','off'); % Don't display a warning if the fit doesn't converge
 
