@@ -161,6 +161,13 @@ else
 end
 
 if debug
+    clear fitparams
+    if symGauss
+        fitparams = [Xcen,Ycen,Xvar,bkgnd,A];
+    else
+        fitparams = [Xcen,Ycen,Xvar,Yvar,bkgnd,A];
+    end
+    
     % Debugging: plot a surface map of the spot versus the fit:
     figure('Position',[200,0,900,700])
     subplot(2,2,1)

@@ -521,18 +521,18 @@ close all
     %            [imgRed,imgGreen] = SplitImg(TotImg,params);
     
            [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),[1 1+params.FramesToAvg]);
-           imgRed = mat2gray(mean(imgRed,3)); %Do I want to do mat2gray here? Update 4/2014:
+           imgRedavg = mat2gray(mean(imgRed,3)); %Do I want to do mat2gray here? Update 4/2014:
                 % since I'm going to treat spotfinding as totally separate
                 % from Gauss fitting for intensity smoothing, it is best
                 % that I do mat2gray here
-           imgGreen = mat2gray(mean(imgGreen,3));
+           imgGreenavg = mat2gray(mean(imgGreen,3));
            
            % Step 0: subtract background:
-           [imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRed,imgGreen,params);
+           [imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRedavg,imgGreenavg,params);
            % If you don't want to subtract background, uncomment these
             % lines:
-           %imgRMinusBkgnd = imgRed;
-           %imgGMinusBkgnd = imgGreen;
+           %imgRMinusBkgnd = imgRedavg;
+           %imgGMinusBkgnd = imgGreenavg;
            
            % Step 1: find spots
            % Find spots in both channels, but don't double-count. Allow
@@ -596,7 +596,18 @@ close all
 
                close
                
-               % Step 1.2: Check that no spots are double counted, and get
+               % Step 1.2: If the user wants to refine spot intensities by
+               % a Gaussian, fit variances for those Gaussian weights:
+               if params.IntensityGaussWeight
+                   disp('Fitting Gaussians to find spot variances')
+                   VarsR = FindSpotVars(imgRed,RefinedCentersR,params);
+                   VarsG = FindSpotVars(imgRed,RefinedCentersR,params);
+               else
+                   VarsR = -1;
+                   VarsG = -1;
+               end
+               
+               % Step 1.3: Check that no spots are double counted, and get
                % rid of spots that are too close together.
                % First convert green channel spot locations to red
                % channel locations, and check that no spots are double
@@ -623,62 +634,20 @@ close all
                spots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                % Before adding the unique spots found in the red channel:
                if params.IntensityGaussWeight
-                   % Here, fit to a Gaussian again (first time is in
-                   % spotfinding routine, to find centers to sub-pixel
-                   % resolution); but this time want the variances and the
-                   % background value
-                   
-                    disp('Fitting red spot centers to 2D Gauss')
-                    [~,VarsR,bkgndR] = RefineCensByGauss(spotsR,imgRMinusBkgnd,params.DNASize,0);
-
-                    disp('Fitting green spot centers to 2D Gauss')
-                    [~,VarsG,bkgndG] = RefineCensByGauss(spotsG,imgGMinusBkgnd,params.DNASize,0);
-                   
-                   % As in the Ha lab IDL code, assume the variances of the
-                   % spots are the same in the donor and acceptor channels
-                   % (Ha lab code actually hard-codes a number for all spots,
-                   % period)
+                   % Problems I haven't really resolved yet:
+                    % (1) Assume variance is same in green and red channels?
+                    % This is what the Ha lab IDL code does (actually they
+                    % hard-code a value for both channels, for all spots)
+                    % (2) If spot is found in both channels (e.g. mid-FRET), 
+                    % which channel to use for vars? Right now I'm
+                    % automatically using red channel. FindSpotVars can
+                    % also output the amplitudes of the fits, so I could
+                    % also choose based on which channel had a larger
+                    % amplitude or something.
                    Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                    Vars(:,end+1:end+size(VarsR,2)) = VarsR;
-                   % In the case of the background, for spots found in the
-                   % green channel, want to use the bkgnd parameter from
-                   % the Gaussian fit in that channel.  For their cognate
-                   % spots in the red channel, use the average value of the
-                   % imgRbkgnd matrix over a local square as the background
-                   % value. Similarly for spots found in red, and their
-                   % cognate in green.
-                   % The Ha lab code only uses the average local background
-                   % value at the spot's brightest pixel. 
-                   % TODO: if fit a Gaussian to the same spot in both R and G
-                   % channels, use those background values
-                   % bkgnd(1,:) will be GREEN channel background values for
-                   % all spots; bkgnd(2,:) will be RED channel
-                   % Background value from Gaussian fit for green channel
-                   % spots:
-                   bkgnd = zeros(2,size(spots,2)+length(bkgndR));
-                   bkgnd(1,1:size(spots,2)) = bkgndG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                   % Find background values in the red channel: can I avoid
-                   % a for-loop here?
-                   for y = 1:size(spots,2)
-                       % Right now spots only contains spotsGinR that are
-                       % unique and being kept:
-                       ROI = ExtractROI(imgRbkgnd,params.DNASize,spots(:,y));
-                       bkgnd(2,y) = mean(mean(ROI));
-                       clear ROI
-                   end
-                   % Now, for all spots in the red channel:
-                   % From the Gaussian fit:
-                   bkgnd(2,size(spots,2)+1:size(spots,2)+size(bkgndR,2)) = bkgndR;
-                   % Find their cognates in the green channel:
-                   spotsRinG = tformPoly.FRETmapInv(RefinedCentersR);
-                   for yy = 1:size(spotsRinG,2)
-                       ROI = ExtractROI(imgGbkgnd,params.DNASize,spotsRinG(:,yy));
-                       bkgnd(1,size(spots,2)+yy) = mean(mean(ROI));
-                       clear ROI
-                   end
                else
                    Vars = -1;
-                   bkgnd = -1;
                end
                spots(:,end+1:end+size(RefinedCentersR,2)) = RefinedCentersR;
            end

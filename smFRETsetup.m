@@ -70,6 +70,16 @@ IntensityGaussWeight = 0; % If this is 1, weight the intensity of each spot
     % will calculate intensities over a 5 pxl diameter circle.  That's
     % hard-wired into the code--see CalcSpotIntensityNoGauss.m to change
     % the size.
+UseSymGauss = 0; % If this is 1, insist that the Gaussian used if IntensityGaussWeight=1
+    % is symmetric (same variances in x and y). Does not affect the use of
+    % Gaussian fitting in spotfinding. Given the distortions at the bottom
+    % of our images I do not use a symmetric Gaussian.
+EndInjectFrame = round(27/0.15); % If doing a manual injection, which tends to bump the stage,
+    % you can set this to the value of a frame that you know is after the
+    % injection is over, and spotfinding will be done starting at this
+    % frame instead of at frame 1. I usually know when I'm done injecting
+    % in seconds (usually about 25 seconds, add a couple for safety), and I
+    % collect data at 0.15 seconds per frame.
 NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the total intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
@@ -106,4 +116,5 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
     'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage',...
-    'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance');
+    'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
+    'UseSymGauss','EndInjectFrame');
