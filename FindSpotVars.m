@@ -50,12 +50,12 @@ Amps = zeros(size(spots,2),size(imgs,3));
 for i = 1:size(imgs,3)
     for ss = 1:size(spots,2)
        % Extract an ROI over which to calculate the fit:
-       spotimg = ExtractROI(imgs(:,:,i),ROIsize,spots(:,ss));
+       [spotimg,localcen] = ExtractROI(imgs(:,:,i),ROIsize,spots(:,ss));
        % Note if the fit fails, Fit2DGaussToSpot will return the
        % StartParams, so make sure the StartParams for xvar and yvar are
        % the defaults hardcoded above
        [~,~,Vars(1,ss,i),Vars(2,ss,i),~,Amps(ss,i)] = Fit2DGaussToSpot(spotimg,'Vars',...
-           'StartParams',[spots(1,ss),spots(2,ss),defaultXvar,defaultYvar,min(spotimg(:)),max(spotimg(:))],...
+           'StartParams',[localcen(1),localcen(2),defaultXvar,defaultYvar,min(spotimg(:)),max(spotimg(:))],...
            'Debug',debug,'symGauss',symGauss);
        clear xvar yvar A
     end

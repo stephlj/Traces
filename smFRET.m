@@ -597,15 +597,20 @@ close all
                close
                
                % Step 1.2: If the user wants to refine spot intensities by
-               % a Gaussian, fit variances for those Gaussian weights:
+               % a Gaussian, fit variances for those Gaussian weights. Note
+               % that this is done on the scaled but not background
+               % subtracted, and not averaged, movie
                if params.IntensityGaussWeight
                    disp('Fitting Gaussians to find spot variances')
                    VarsR = FindSpotVars(imgRed,RefinedCentersR,params);
-                   VarsG = FindSpotVars(imgRed,RefinedCentersR,params);
+                   VarsG = FindSpotVars(imgGreen,RefinedCentersG,params);
                else
                    VarsR = -1;
                    VarsG = -1;
                end
+               
+               clear imgRed imgGreen imgRedavg imgGreenavg
+               clear imgRbkgnd imgGbkgnd imgRMinusBkgnd imgGMinusBkgnd
                
                % Step 1.3: Check that no spots are double counted, and get
                % rid of spots that are too close together.
@@ -660,7 +665,7 @@ close all
            disp('Calculating frame-by-frame intensities')
            
            [RedI, GrI] = CalcIntensitiesV2(fullfile(D_Data,ToAnalyze(i).name),...
-               spots, Vars, tformPoly,params,bkgnd);
+               spots, Vars, tformPoly,params);
            
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.
@@ -672,7 +677,7 @@ close all
            SpotsInR = spots;
            SpotVars = Vars;
            save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'SpotsInR',...
-               'SpotVars','bkgnd','RedI','GrI')
+               'SpotVars','RedI','GrI')
            clear SpotsInR SpotVars
            
            if i==1

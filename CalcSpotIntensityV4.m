@@ -7,7 +7,10 @@
 % Note this assumes background has been subtracted already, that is, the
 % Gaussian that is used does not have a background offset. Updated 4/2014
 % so it doesn't make this assumption but allows the user to decide whether
-% the background is 0 or not.
+% the background is 0 or not. Updated 5/2014 the code that calls this,
+% CalcIntensitiesV2, to subtract the background value from every pixel of
+% the img that is passed in, so therefore the bkgnd value passed to this
+% function should be 0.
 %
 % Inputs:
 % img: x-by-y-by-frames for a REGION OF INTEREST of a movie. The Gaussian
