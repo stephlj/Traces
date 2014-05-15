@@ -31,11 +31,12 @@ Gspots = tform.FRETmapInv(Rspots);
 
 for jj = 1:100:length(alltifs)
 
-    temp = load(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
-        'to',int2str(jj+99),'.mat')));
-    imgR = temp.imgR;
-    imgG = temp.imgG;
-    clear temp
+    [imgR,imgG] = LoadScaledMovie(PathToMovie,[jj jj+99]);
+%     temp = load(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
+%         'to',int2str(jj+99),'.mat')));
+%     imgR = temp.imgR;
+%     imgG = temp.imgG;
+%     clear temp
     
     for kk = 1:size(Rspots,2)
         % Get ROI in red channel

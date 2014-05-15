@@ -89,9 +89,8 @@ function smFRET(rootname,debug)
     smFRETsetup;
     params = load('AnalysisParameters.mat');
     % Error-handling: Check that the user-defined parameters are reasonable:
-    if round(params.PxlsToExclude)~=params.PxlsToExclude
-        params.PxlsToExclude = round(params.PxlsToExclude);
-    end
+    params.PxlsToExclude = round(params.PxlsToExclude);
+    params.EndInjectFrame = round(params.EndInjectFrame);
     MatlabVer = ver;
     MatlabDate = MatlabVer(1).Date;
     if params.UseCombinedImage == 1 && str2double(MatlabDate(end-1:end))<=11 % Testing for Matlab versions older than 2012
@@ -520,7 +519,13 @@ close all
     %            
     %            [imgRed,imgGreen] = SplitImg(TotImg,params);
     
-           [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),[1 1+params.FramesToAvg]);
+           % Update 5/2014: Added a parameter in smFRETsetup that allows
+           % the user to choose where to start spotfinding (in case, for
+           % example, manual flowthroughs cause distortions to early parts
+           % of the movie)
+           %[imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),[1 1+params.FramesToAvg]);
+           [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),...
+               [params.EndInjectFrame params.EndInjectFrame+params.FramesToAvg]);
            imgRedavg = mat2gray(mean(imgRed,3)); %Do I want to do mat2gray here? Update 4/2014:
                 % since I'm going to treat spotfinding as totally separate
                 % from Gauss fitting for intensity smoothing, it is best
