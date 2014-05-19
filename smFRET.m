@@ -607,8 +607,23 @@ close all
                % subtracted, and not averaged, movie
                if params.IntensityGaussWeight
                    disp('Fitting Gaussians to find spot variances')
-                   VarsR = FindSpotVars(imgRed,RefinedCentersR,params);
-                   VarsG = FindSpotVars(imgGreen,RefinedCentersG,params);
+                   % VarsR = FindSpotVars(imgRed,RefinedCentersR,params);
+                   % VarsG = FindSpotVars(imgGreen,RefinedCentersG,params);
+                   % Update 5/2014: It looks like the fits are much more
+                   % likely to be poor if I use single frames, rather than
+                   % an average of ~10 frames, to find the variances. It's
+                   % also a lot slower to do it frame by frame (probably
+                   % because of all the poor fits!).
+                   % Doesn't seem to matter a ton to use the background
+                   % subtracted image or not.
+                   % Lastly, red and green channels have on average roughly
+                   % the same variances, so I think it's probably fine to
+                   % assume the same variance for a spot in the red channel
+                   % as in the green channel.  But I should check by
+                   % finding all spots throughout the movie, pairing, and
+                   % comparing the variances of true pairs ...
+                   VarsR = FindSpotVars(imgRedavg,RefinedCentersR,params);
+                   VarsG = FindSpotVars(imgGreenavg,RefinedCentersG,params);
                else
                    VarsR = -1;
                    VarsG = -1;

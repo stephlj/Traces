@@ -196,6 +196,6 @@ if debug
     title('Difference','Fontsize',14)
     zlim([0 1])
     
-    %pause
-    %close
+    pause
+    close
 end

@@ -99,6 +99,7 @@ DNASize = 6; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % the intensity is summed over a 5-pixel diameter circle and this parameter
     % has no effect.  In both cases DNASize also determines how close two 
     % spots can be and still be included in the analysis.
+    % I have found that 6 is a good number, 8 is ok.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
 BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
 ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided

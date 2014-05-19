@@ -36,9 +36,11 @@ if ~exist('debug','var') debug = 0; end
 ROIsize = params.DNASize;
 symGauss = params.UseSymGauss;
 
-defaultXvar = 0.3; %If the fit fails, set the spot variance to this value
-    % For now taking this value from the Ha lab IDL code, but it's probably
-    % system (camera, microscope, etc) specific
+defaultXvar = 0.7; %If the fit fails, set the spot variance to this value
+    % For now taking this value (0.3) from the Ha lab IDL code, but it's probably
+    % system (camera, microscope, etc) specific.
+    % Update 5/2014: Changed default to 0.7 which is more consistent with
+    % our setup
 defaultYvar = defaultXvar;
 
 Vars = zeros(2,size(spots,2),size(imgs,3)); % Vars will be:
