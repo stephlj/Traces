@@ -29,19 +29,6 @@ end
         plot(currspot(2)+5/2.*cos(t),currspot(1)+5/2.*sin(t),'-g')
         clear t
     end
-    % subfunction for finding the local spot center in an ROI
-    function localcen = FindLocalCen(ROI,currspot)
-        if round(currspot(1))<=currspot(1)
-            localcen(1) = size(ROI,2)/2+(currspot(1)-round(currspot(1)));
-        else
-            localcen(1) = size(ROI,2)/2-(round(currspot(1))-currspot(1));
-        end
-        if round(currspot(2))<=currspot(2)
-            localcen(2) = size(ROI,1)/2+(currspot(2)-round(currspot(2)));
-        else
-            localcen(2) = size(ROI,1)/2-(round(currspot(2))-currspot(2));
-        end
-    end
 
 % Make spots 2-by-numspots matrices, if it's not already
 if size(spots,1)~=2
@@ -107,8 +94,8 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
         
        xvect = ((1:length(RedI))./fps)*10^-3; % fps is actually frames per ms
        
-       imgRzoom = ExtractROI(imgRinit,zoomsize,spots(:,k));
-       imgGzoom = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
+       [imgRzoom,zoomcenR] = ExtractROI(imgRinit,zoomsize,spots(:,k));
+       [imgGzoom,zoomcenG] = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
        
        % Show plots
        figure(h2)
@@ -132,14 +119,12 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        subplot('Position',[0.13 0.05 0.2 .18])
        imshow(imgRzoom)
        hold on
-       zoomcenR = FindLocalCen(imgRzoom,spots(:,k));
        boxfun(zoomcenR);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
        imshow(imgGzoom)
        hold on
-       zoomcenG = FindLocalCen(imgGzoom,GrSpots(:,k));
        boxfun(zoomcenG);
        hold off
        
