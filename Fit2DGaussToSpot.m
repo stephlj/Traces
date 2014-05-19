@@ -37,6 +37,12 @@
 
 function [Xcen, Ycen, Xvar, Yvar, bkgnd, A] = Fit2DGaussToSpot(spotimg,mode,varargin)
 
+% Error handling
+if size(spotimg,3)>1
+    disp('Fit2DGaussToSpot: Must pass a 2D image only, not a movie.')
+    return
+end
+
 % Set mode to default of 'full' if only a spotimg was passed
 if ~exist('mode','var') mode = 'full'; end
 
