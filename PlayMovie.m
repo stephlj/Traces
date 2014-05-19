@@ -55,19 +55,6 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
         plot(currspot(2)+5/2.*cos(t),currspot(1)+5/2.*sin(t),'-g')
         clear t
     end
-    % subfunction for finding the local spot center in an ROI
-    function localcen = FindLocalCen(ROI,currspot)
-        if round(currspot(1))<=currspot(1)
-            localcen(1) = size(ROI,2)/2+(currspot(1)-round(currspot(1)));
-        else
-            localcen(1) = size(ROI,2)/2-(round(currspot(1))-currspot(1));
-        end
-        if round(currspot(2))<=currspot(2)
-            localcen(2) = size(ROI,1)/2+(currspot(2)-round(currspot(2)));
-        else
-            localcen(2) = size(ROI,1)/2-(round(currspot(2))-currspot(2));
-        end
-    end
     
     lastframe = frames(1);
     
@@ -97,18 +84,16 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
                 hold off
                 title('Green','Fontsize',12)
                 if length(varargin)>3
-                    imgRzoom = ExtractROI(movRed(:,:,i),varargin{8},varargin{4});
-                    imgGzoom = ExtractROI(movGreen(:,:,i),varargin{8},varargin{5});
+                    [imgRzoom,zoomcenR] = ExtractROI(movRed(:,:,i),varargin{8},varargin{4});
+                    [imgGzoom,zoomcenG] = ExtractROI(movGreen(:,:,i),varargin{8},varargin{5});
                     eval(varargin{6})
                     imshow(imgRzoom)
                     hold on
-                    zoomcenR = FindLocalCen(imgRzoom,varargin{4});
                     boxfun(zoomcenR);
                     hold off
                     eval(varargin{7})
                     imshow(imgGzoom)
                     hold on
-                    zoomcenG = FindLocalCen(imgGzoom,varargin{5});
                     boxfun(zoomcenG);
                     hold off
                 end
