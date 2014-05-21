@@ -629,7 +629,7 @@ close all
                    VarsG = -1;
                end
                
-               clear imgRed imgGreen imgRedavg imgGreenavg
+               clear imgGreen imgRedavg imgGreenavg
                clear imgRbkgnd imgGbkgnd imgRMinusBkgnd imgGMinusBkgnd
                
                % Step 1.3: Check that no spots are double counted, and get
@@ -641,6 +641,29 @@ close all
                % the same will have their centers at most MappingTolerance
                % apart.
                spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
+               % First check that the transformed G spots are reasonable
+               % edges from the red channel boundaries:
+               if length(find(spotsGinR(1,:)>=1+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
+                    oldGspots = spotsGinR;
+                    clear spotsGinR
+                    spotsGinR = oldGspots(:,spotsGinR(1,:)>=1+floor(params.DNASize/2));
+                end
+                if length(find(spotsGinR(2,:)>=1+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
+                    oldGspots = spotsGinR;
+                    clear spotsGinR
+                    spotsGinR = oldGspots(:,oldGspots(2,:)>=1+floor(params.DNASize/2));   
+                end
+                if length(find(spotsGinR(1,:)<=size(imgRed,1)+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
+                    oldGspots = spotsGinR;
+                    clear spotsGinR
+                    spotsGinR = oldGspots(:,spotsGinR(1,:)<=size(imgRed,1)+floor(params.DNASize/2));
+                end
+                if length(find(spotsGinR(2,:)<=size(imgRed,2)+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
+                    oldGspots = spotsGinR;
+                    clear spotsGinR
+                    spotsGinR = oldGspots(:,spotsGinR(2,:)<=size(imgRed,2)+floor(params.DNASize/2));    
+                end
+                clear imgRed
                Dists = FindSpotDists(RefinedCentersR,spotsGinR);
                spotnottooclose = Dists>MappingTolerance;
                % As in FindSpotsV5, each column of spotnottooclose will be all 1's if the 

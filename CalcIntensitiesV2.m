@@ -28,9 +28,33 @@ RedI = zeros(size(Rspots,2),length(alltifs));
 GrI = zeros(size(Rspots,2),length(alltifs));
 % Find the spots in the coordinate system of the other (green) channel:
 Gspots = tform.FRETmapInv(Rspots);
+% It can happen that a red channel spot, when transformed to the green
+% channel, is too close to the edge to be useable.  Remove any such spots:
+[imgtogetsize,~] = LoadScaledMovie(PathToMovie,[1 1]);
+if length(find(Gspots(1,:)>=1+floor(params.DNASize/2)))~=length(Gspots(1,:))
+    oldGspots = Gspots;
+    clear Gspots
+    Gspots = oldGspots(:,Gspots(1,:)>=1+floor(params.DNASize/2));
+end
+if length(find(Gspots(2,:)>=1+floor(params.DNASize/2)))~=length(Gspots(2,:))
+    oldGspots = Gspots;
+    clear Gspots
+    Gspots = oldGspots(:,oldGspots(2,:)>=1+floor(params.DNASize/2));   
+end
+if length(find(Gspots(1,:)<=size(imgtogetsize,1)+floor(params.DNASize/2)))~=length(Gspots(1,:))
+    oldGspots = Gspots;
+    clear Gspots
+    Gspots = oldGspots(:,Gspots(1,:)<=size(imgtogetsize,1)+floor(params.DNASize/2));
+end
+if length(find(Gspots(2,:)<=size(imgtogetsize,2)+floor(params.DNASize/2)))~=length(Gspots(2,:))
+    oldGspots = Gspots;
+    clear Gspots
+    Gspots = oldGspots(:,Gspots(2,:)<=size(imgtogetsize,2)+floor(params.DNASize/2));    
+end
+clear imgtogetsize
 
 for jj = 1:100:length(alltifs)
-
+tic
     [imgR,imgG] = LoadScaledMovie(PathToMovie,[jj jj+99]);
 %     temp = load(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
 %         'to',int2str(jj+99),'.mat')));
@@ -81,4 +105,5 @@ for jj = 1:100:length(alltifs)
     
    clear imgR imgG 
    disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))
+   toc
 end
