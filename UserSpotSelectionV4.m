@@ -68,23 +68,23 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
        RedI = allRedI(k,:)-Rbkgnd(k);
        GrI = allGrI(k,:)-Gbkgnd(k);
        FRET = RedI./(RedI+GrI);
+       rawRedI = RedI; % Even if user wants to smooth intensities and/or FRET, always save the raw as well
+       rawGrI = GrI;
+       rawFRET = FRET;
        if params.SmoothIntensities>0
            % Another thing I'm not sure I should do: Smooth the intensities and FRET
            % values (see below)
            SmoothIntensities = round(params.SmoothIntensities); % User error handling
-           tempRedI = RedI;
-           tempGrI = GrI;
            clear RedI GrI
-           RedI = smooth(tempRedI,SmoothIntensities); % Moving average with span = SmoothIntensities
-           GrI = smooth(tempGrI,SmoothIntensities);
-           clear tempRedI tempGrI SmoothIntensities
+           RedI = smooth(rawRedI,SmoothIntensities); % Moving average with span = SmoothIntensities
+           GrI = smooth(rawGrI,SmoothIntensities);
+           clear SmoothIntensities
        end
        if params.SmoothFRET>0
-           tempFRET = FRET;
            SmoothFRET = round(params.SmoothFRET); % User error handling
            clear FRET
-           FRET = smooth(tempFRET,SmoothFRET);
-           clear tempFRET SmoothFRET
+           FRET = smooth(rawFRET,SmoothFRET);
+           clear SmoothFRET
        end
        
        if ends(k)~=0
@@ -205,17 +205,27 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                         RedToSave = RedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                         GrToSave = GrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                         FRETtoSave = FRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        rawRedToSave = rawRedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        rawGrToSave = rawGrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        rawFRETtoSave = rawFRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                     else
                         RedToSave = RedI;
                         GrToSave = GrI;
                         FRETtoSave = FRET;
+                        rawRedToSave = rawRedI;
+                        rawGrToSave = rawGrI;
+                        rawFRETtoSave = rawFRET;
                     end 
-                    clear RedI GrI FRET
+                    clear RedI GrI FRET rawRedI rawGrI rawFRET
                     RedI = RedToSave;
                     GrI = GrToSave;
                     FRET = FRETtoSave;
-                    save(fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k),'.mat')),'RedI','GrI','FRET','fps')
-                    clear RedToSave GrToSave FRETtoSave
+                    rawRedI = rawRedToSave;
+                    rawGrI = rawGrToSave;
+                    rawFRET = rawFRETtoSave;
+                    save(fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k),'.mat')),...
+                        'RedI','GrI','FRET','rawRedI','rawGrI','rawFRET','fps')
+                    clear RedToSave GrToSave FRETtoSave rawRedToSave rawGrToSave rawFRETtoSave
                     cc=13;
                 % Zoom
                 elseif cc=='z'
