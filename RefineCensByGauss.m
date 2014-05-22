@@ -44,7 +44,7 @@ for ss = 1:size(spots,2)
    % Fit Gaussian:
    if Debug
         disp(strcat('Composite for spot number',int2str(ss)))
-        [Xcen, Ycen, Xvar, Yvar, bkgnd(ss), Amp] = Fit2DGaussToSpot(spotimg,'Debug',1);
+        [Xcen, Ycen, Xvar, Yvar, bkgnd(ss), Amp] = Fit2DGaussToSpot(spotimg,'full','Debug',1);
         pause
         close all
    else

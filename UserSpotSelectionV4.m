@@ -29,19 +29,6 @@ end
         plot(currspot(2)+5/2.*cos(t),currspot(1)+5/2.*sin(t),'-g')
         clear t
     end
-    % subfunction for finding the local spot center in an ROI
-    function localcen = FindLocalCen(ROI,currspot)
-        if round(currspot(1))<=currspot(1)
-            localcen(1) = size(ROI,2)/2+(currspot(1)-round(currspot(1)));
-        else
-            localcen(1) = size(ROI,2)/2-(round(currspot(1))-currspot(1));
-        end
-        if round(currspot(2))<=currspot(2)
-            localcen(2) = size(ROI,1)/2+(currspot(2)-round(currspot(2)));
-        else
-            localcen(2) = size(ROI,1)/2-(round(currspot(2))-currspot(2));
-        end
-    end
 
 % Make spots 2-by-numspots matrices, if it's not already
 if size(spots,1)~=2
@@ -74,30 +61,30 @@ h1 = figure('Position',params.Fig1Pos);
 
 disp('Fig. 2 must be current.') 
 disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom; o=adjust black offset;')
-disp('f=select frame to display; m = play movie between two points; g=go to spot number;')
-disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
+disp('f=select frame to display; m = play movie between two points; a=show average around frame;')
+disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d=done with movie')
 
     while k <= size(spots,2)
        RedI = allRedI(k,:)-Rbkgnd(k);
        GrI = allGrI(k,:)-Gbkgnd(k);
        FRET = RedI./(RedI+GrI);
+       rawRedI = RedI; % Even if user wants to smooth intensities and/or FRET, always save the raw as well
+       rawGrI = GrI;
+       rawFRET = FRET;
        if params.SmoothIntensities>0
            % Another thing I'm not sure I should do: Smooth the intensities and FRET
            % values (see below)
            SmoothIntensities = round(params.SmoothIntensities); % User error handling
-           tempRedI = RedI;
-           tempGrI = GrI;
            clear RedI GrI
-           RedI = smooth(tempRedI,SmoothIntensities); % Moving average with span = SmoothIntensities
-           GrI = smooth(tempGrI,SmoothIntensities);
-           clear tempRedI tempGrI SmoothIntensities
+           RedI = smooth(rawRedI,SmoothIntensities); % Moving average with span = SmoothIntensities
+           GrI = smooth(rawGrI,SmoothIntensities);
+           clear SmoothIntensities
        end
        if params.SmoothFRET>0
-           tempFRET = FRET;
            SmoothFRET = round(params.SmoothFRET); % User error handling
            clear FRET
-           FRET = smooth(tempFRET,SmoothFRET);
-           clear tempFRET SmoothFRET
+           FRET = smooth(rawFRET,SmoothFRET);
+           clear SmoothFRET
        end
        
        if ends(k)~=0
@@ -107,8 +94,8 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
         
        xvect = ((1:length(RedI))./fps)*10^-3; % fps is actually frames per ms
        
-       imgRzoom = ExtractROI(imgRinit,zoomsize,spots(:,k));
-       imgGzoom = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
+       [imgRzoom,zoomcenR] = ExtractROI(imgRinit,zoomsize,spots(:,k));
+       [imgGzoom,zoomcenG] = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
        
        % Show plots
        figure(h2)
@@ -132,22 +119,19 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        subplot('Position',[0.13 0.05 0.2 .18])
        imshow(imgRzoom)
        hold on
-       zoomcenR = FindLocalCen(imgRzoom,spots(:,k));
        boxfun(zoomcenR);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
        imshow(imgGzoom)
        hold on
-       zoomcenG = FindLocalCen(imgGzoom,GrSpots(:,k));
        boxfun(zoomcenG);
        hold off
        
        figure(h1)
        subplot(2,1,1)
-       plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k')
-       % HACK plot total intensities
-       %plot(xvect,RedI./totIR,'-r',xvect,GrI./totIG,'-g')
+       plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k',...
+           [xvect(1) xvect(end)],[0 0],'--k')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('Intensity (a.u.)','Fontsize',12)
        title(strcat('Spot',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)
@@ -156,7 +140,8 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
        end
        
        subplot(2,1,2)
-       plot(xvect,FRET,'-b')
+       plot(xvect,FRET,'-b',[xvect(1) xvect(end)],[0 0],'--k',...
+           [xvect(1) xvect(end)],[1 1],'--k')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('FRET','Fontsize',12)
        if xlims(k,1)~=0
@@ -220,17 +205,27 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                         RedToSave = RedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                         GrToSave = GrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                         FRETtoSave = FRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        rawRedToSave = rawRedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        rawGrToSave = rawGrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        rawFRETtoSave = rawFRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                     else
                         RedToSave = RedI;
                         GrToSave = GrI;
                         FRETtoSave = FRET;
+                        rawRedToSave = rawRedI;
+                        rawGrToSave = rawGrI;
+                        rawFRETtoSave = rawFRET;
                     end 
-                    clear RedI GrI FRET
+                    clear RedI GrI FRET rawRedI rawGrI rawFRET
                     RedI = RedToSave;
                     GrI = GrToSave;
                     FRET = FRETtoSave;
-                    save(fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k),'.mat')),'RedI','GrI','FRET','fps')
-                    clear RedToSave GrToSave FRETtoSave
+                    rawRedI = rawRedToSave;
+                    rawGrI = rawGrToSave;
+                    rawFRET = rawFRETtoSave;
+                    save(fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k),'.mat')),...
+                        'RedI','GrI','FRET','rawRedI','rawGrI','rawFRET','fps')
+                    clear RedToSave GrToSave FRETtoSave rawRedToSave rawGrToSave rawFRETtoSave
                     cc=13;
                 % Zoom
                 elseif cc=='z'
@@ -285,6 +280,17 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                         strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
                         strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
                         zoomsize);
+                    clear x
+                    cc = 13;
+                % Show an average of 10 frames around where the user clicks
+                elseif cc=='a'
+                    [x,~] = ginput(1);
+                    % x will be in seconds, not frames. Convert to frame:
+                    x = x*fps/10^-3; % fps is actually frames per ms
+                    [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,...
+                        [round(x)-ceil(params.FramesToAvg/2) round(x)+ceil(params.FramesToAvg/2)]);
+                    imgRinit = mat2gray(mean(imgRinit,3));
+                    imgGinit = mat2gray(mean(imgGinit,3));
                     clear x
                     cc = 13;
                 end

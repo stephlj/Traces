@@ -63,15 +63,23 @@ UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % quality of the channel mapping.
 Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead center
     % position.  This will increase computational time for the channel
-    % mapping by about a factor of 2, for roughly a factor of 2 improvement
-    % in bead center localization (that is, the mean error will go down by
-    % a factor of 2).
-IntensityGaussWeight = 0; % If this is 1, weight the intensity of each spot  
+    % mapping by about a factor of 2, but is a good idea to do anyway.
+IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
     % in each frame by a Gaussian whose center and variance are determined
     % from a fit to the spot's first 10 frames. Note that if this is 0, it
     % will calculate intensities over a 5 pxl diameter circle.  That's
     % hard-wired into the code--see CalcSpotIntensityNoGauss.m to change
     % the size.
+UseSymGauss = 0; % If this is 1, insist that the Gaussian used if IntensityGaussWeight=1
+    % is symmetric (same variances in x and y). Does not affect the use of
+    % Gaussian fitting in spotfinding. Given the distortions at the bottom
+    % of our images I do not use a symmetric Gaussian.
+EndInjectFrame = round(27/0.15); % If doing a manual injection, which tends to bump the stage,
+    % you can set this to the value of a frame that you know is after the
+    % injection is over, and spotfinding will be done starting at this
+    % frame instead of at frame 1. I usually know when I'm done injecting
+    % in seconds (usually about 25 seconds, add a couple for safety), and I
+    % collect data at 0.15 seconds per frame.
 NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
@@ -85,11 +93,13 @@ BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in
     % neighborhood (area, in square pixels) for the beads.  Needs to be a perfect
     % square, and best if sqrt(BeadNeighborhood) is odd.  Should be a little 
     % bigger than we expect beads to be.
-DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
-    % the code that actually calculates the intensity of a DNA spot is
-    % currently hard-coded to integrate over a circle of diameter 5 pixels;
-    % DNASize only determines how close two spots can be and still be
-    % included in the analysis.
+DNASize = 6; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
+    % if IntensityGaussWeight=1, this is also the side of a square over which
+    % a Gaussian is fit and the intensity calculated. However, if IntensityGaussWeight=0,
+    % the intensity is summed over a 5-pixel diameter circle and this parameter
+    % has no effect.  In both cases DNASize also determines how close two 
+    % spots can be and still be included in the analysis.
+    % I have found that 6 is a good number, 8 is ok.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
 BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
 ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
@@ -107,4 +117,5 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'DNASize','DNANeighborhood','SmoothIntensities','SmoothFRET',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
     'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage',...
-    'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance');
+    'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
+    'UseSymGauss','EndInjectFrame');
