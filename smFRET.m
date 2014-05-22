@@ -743,8 +743,11 @@ close all
                fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
-           params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
-           params = params.params;
+           useoldparams = input('Use old parameters? (y/n)','s');
+           if strcmpi(useoldparams,'y')
+                params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
+                params = params.params;
+           end
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
                fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);

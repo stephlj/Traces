@@ -104,11 +104,11 @@ DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
 BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
 ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
     % by total number of spots allowable.
-SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 6; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal.  At some
+SmoothFRET = 6; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
     
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%
