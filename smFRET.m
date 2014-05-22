@@ -91,6 +91,9 @@ function smFRET(rootname,debug)
     % Error-handling: Check that the user-defined parameters are reasonable:
     params.PxlsToExclude = round(params.PxlsToExclude);
     params.EndInjectFrame = round(params.EndInjectFrame);
+    if params.EndInjectFrame<=0
+        params.EndInjectFrame = 1;
+    end
     MatlabVer = ver;
     MatlabDate = MatlabVer(1).Date;
     if params.UseCombinedImage == 1 && str2double(MatlabDate(end-1:end))<=11 % Testing for Matlab versions older than 2012
@@ -643,25 +646,25 @@ close all
                spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
                % First check that the transformed G spots are reasonable
                % edges from the red channel boundaries:
-               if length(find(spotsGinR(1,:)>=1+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
+               if length(find(round(spotsGinR(1,:))>=1+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
                     oldGspots = spotsGinR;
                     clear spotsGinR
-                    spotsGinR = oldGspots(:,spotsGinR(1,:)>=1+floor(params.DNASize/2));
+                    spotsGinR = oldGspots(:,round(oldGspots(1,:))>=1+floor(params.DNASize/2));
                 end
-                if length(find(spotsGinR(2,:)>=1+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
+                if length(find(round(spotsGinR(2,:))>=1+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
                     oldGspots = spotsGinR;
                     clear spotsGinR
-                    spotsGinR = oldGspots(:,oldGspots(2,:)>=1+floor(params.DNASize/2));   
+                    spotsGinR = oldGspots(:,round(oldGspots(2,:))>=1+floor(params.DNASize/2));   
                 end
-                if length(find(spotsGinR(1,:)<=size(imgRed,1)+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
+                if length(find(round(spotsGinR(1,:))<=size(imgRed,1)+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
                     oldGspots = spotsGinR;
                     clear spotsGinR
-                    spotsGinR = oldGspots(:,spotsGinR(1,:)<=size(imgRed,1)+floor(params.DNASize/2));
+                    spotsGinR = oldGspots(:,round(oldGspots(1,:))<=size(imgRed,1)+floor(params.DNASize/2));
                 end
-                if length(find(spotsGinR(2,:)<=size(imgRed,2)+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
+                if length(find(round(spotsGinR(2,:))<=size(imgRed,2)+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
                     oldGspots = spotsGinR;
                     clear spotsGinR
-                    spotsGinR = oldGspots(:,spotsGinR(2,:)<=size(imgRed,2)+floor(params.DNASize/2));    
+                    spotsGinR = oldGspots(:,round(oldGspots(2,:))<=size(imgRed,2)+floor(params.DNASize/2));    
                 end
                 clear imgRed
                Dists = FindSpotDists(RefinedCentersR,spotsGinR);

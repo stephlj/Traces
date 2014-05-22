@@ -33,9 +33,28 @@ function [movRed,movGreen,lastframe] = LoadScaledMovie(PathToMovie,frames)
         frames(2)=frames(1)+99;
     end
     totfiles = length(dir(fullfile(PathToMovie,'ScaledMovie*.mat')));
+    % If there's only one file, life is pretty easy:
+    if totfiles == 1;
+        if frames(1) > 100
+            disp('LoadScaledMovie: Movie not that long?')
+            movRed = -1;
+            movGreen = -1;
+            lastframe = -1;
+            return
+        end
+        temp = load(fullfile(PathToMovie,'ScaledMovieFrames1to100.mat'));
+        lastframe = min(frames(2),size(temp.imgR,3)); %Can't load frames that don't exist, even if the user asked for them
+        movRed = temp.imgR(:,:,frames(1):lastframe);
+        movGreen = temp.imgG(:,:,frames(1):lastframe);
+        return
+    end
     % Make sure the file exists
     if frames(2)>totfiles*100
         disp('LoadScaledMovie: Movie not that long?')
+        movRed = -1;
+        movGreen = -1;
+        lastframe = -1;
+        return
     end
     
     firstframe = frames(1);
