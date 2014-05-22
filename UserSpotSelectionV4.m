@@ -61,8 +61,8 @@ h1 = figure('Position',params.Fig1Pos);
 
 disp('Fig. 2 must be current.') 
 disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom; o=adjust black offset;')
-disp('f=select frame to display; m = play movie between two points; g=go to spot number;')
-disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
+disp('f=select frame to display; m = play movie between two points; a=show average around frame;')
+disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d=done with movie')
 
     while k <= size(spots,2)
        RedI = allRedI(k,:)-Rbkgnd(k);
@@ -270,6 +270,17 @@ disp(' d=done with movie; e=end of trace (after this point FRET set to zero)')
                         strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
                         strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
                         zoomsize);
+                    clear x
+                    cc = 13;
+                % Show an average of 10 frames around where the user clicks
+                elseif cc=='a'
+                    [x,~] = ginput(1);
+                    % x will be in seconds, not frames. Convert to frame:
+                    x = x*fps/10^-3; % fps is actually frames per ms
+                    [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,...
+                        [round(x)-ceil(params.FramesToAvg/2) round(x)+ceil(params.FramesToAvg/2)]);
+                    imgRinit = mat2gray(mean(imgRinit,3));
+                    imgGinit = mat2gray(mean(imgGinit,3));
                     clear x
                     cc = 13;
                 end
