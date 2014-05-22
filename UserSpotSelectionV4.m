@@ -130,9 +130,8 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
        
        figure(h1)
        subplot(2,1,1)
-       plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k')
-       % HACK plot total intensities
-       %plot(xvect,RedI./totIR,'-r',xvect,GrI./totIG,'-g')
+       plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k',...
+           [xvect(1) xvect(end)],[0 0],'--k')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('Intensity (a.u.)','Fontsize',12)
        title(strcat('Spot',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)
@@ -141,7 +140,8 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
        end
        
        subplot(2,1,2)
-       plot(xvect,FRET,'-b')
+       plot(xvect,FRET,'-b',[xvect(1) xvect(end)],[0 0],'--k',...
+           [xvect(1) xvect(end)],[1 1],'--k')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('FRET','Fontsize',12)
        if xlims(k,1)~=0
