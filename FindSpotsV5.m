@@ -52,6 +52,7 @@
 %   Cartesian (x,y) coordinates.
 % n,xout: outputs of the histogram of "diffs", in case the user wants to
 %   choose a better threshold for true maxima
+% truemaxthresh: The threshold that was used to choose true maxima
 %
 % NOTE if you do not have the Curve Fitting toolbox, you can set an initial
 % default threshold for "diffs" with the defaultthresh parameter at the
@@ -76,7 +77,7 @@
 % Steph 8/2013, updated 2/2014
 % Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
-function [spots,n,xout] = FindSpotsV5(img,varargin)
+function [spots,n,xout,truemaxthresh] = FindSpotsV5(img,varargin)
 
 % PARAMETERS
 

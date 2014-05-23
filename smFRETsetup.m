@@ -43,12 +43,23 @@ Acceptor = 0; % This means the acceptor channel is the one on the left
 % from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
-    % (caps insensitive)
-TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
-    % (note if using built-in Matlab functions, this should equal TformTotDeg)
-TformTotDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
-    % (note if using built-in Matlab functions, this must be 2, 3, or 4)
+SmoothIntensities = 6; % If this is zero (or negative), don't do any smoothing 
+    % of the acceptor and donor intensities; if greater than zero, moving
+    % average smoothing filter of width specified by this variable.  Must be
+    % an integer.
+SmoothFRET = 6; % Same as SmoothIntensities but for the FRET signal.  At some
+    % point should implement a Gauss filter instead
+EndInjectFrame = round(27/0.15); % If doing a manual injection, which tends to bump the stage,
+    % you can set this to the value of a frame that you know is after the
+    % injection is over, and spotfinding will be done starting at this
+    % frame instead of at frame 1. I usually know when I'm done injecting
+    % in seconds (usually about 25 seconds, add a couple for safety), and I
+    % collect data at 0.15 seconds per frame.
+NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
+    % in each frame, to the median intensity of the (512x512) image at that
+    % frame. We've been observing large fluctuations in total image
+    % intensity over time, which may be due to laser power fluctuations;
+    % this is an attempt to correct for that.
 FramesToAvg = 10; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted
 PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
@@ -56,11 +67,26 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
+FindSpotsEveryXFrames = 10; % If this is 0 (or negative), spots will be found from 
+    % EndInjectFrame:EndInjectFrame+FramesToAvg. If this is greater than 0,
+    % spots will be found every this many frames (but still averaging over
+    % FramesToAvg frames)
+TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
+    % (caps insensitive)
+TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
+    % (note if using built-in Matlab functions, this should equal TformTotDeg)
+TformTotDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
+    % (note if using built-in Matlab functions, this must be 2, 3, or 4)
+ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
+    % by total number of spots allowable.
 UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % overlaid on the other to find spots in real data. Otherwise, find
     % spots separately in each channel. While using a combined image has
     % the advantage of capturing mid-FRET spots, it depends heavily on the
-    % quality of the channel mapping.
+    % quality of the channel mapping. NOTE this does not work very well
+    % right now, depending on the fidelity of the transform. Note also that
+    % this currently uses an affine transformation only, since polynomial
+    % always does worse at creating a combined image.
 Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead center
     % position.  This will increase computational time for the channel
     % mapping by about a factor of 2, but is a good idea to do anyway.
@@ -74,17 +100,6 @@ UseSymGauss = 0; % If this is 1, insist that the Gaussian used if IntensityGauss
     % is symmetric (same variances in x and y). Does not affect the use of
     % Gaussian fitting in spotfinding. Given the distortions at the bottom
     % of our images I do not use a symmetric Gaussian.
-EndInjectFrame = round(27/0.15); % If doing a manual injection, which tends to bump the stage,
-    % you can set this to the value of a frame that you know is after the
-    % injection is over, and spotfinding will be done starting at this
-    % frame instead of at frame 1. I usually know when I'm done injecting
-    % in seconds (usually about 25 seconds, add a couple for safety), and I
-    % collect data at 0.15 seconds per frame.
-NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
-    % in each frame, to the median intensity of the (512x512) image at that
-    % frame. We've been observing large fluctuations in total image
-    % intensity over time, which may be due to laser power fluctuations;
-    % this is an attempt to correct for that.
 BeadSize = 8; % Diameter of a circle that defines a bead (used for the channel
     % mapping procedure); beads whose centers are closer than BeadSize will 
     % not be included, and found beads will be circled by a circle of radius BeadSize.  
@@ -102,14 +117,7 @@ DNASize = 6; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % I have found that 6 is a good number, 8 is ok.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
 BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
-ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
-    % by total number of spots allowable.
-SmoothIntensities = 6; % If this is zero (or negative), don't do any smoothing 
-    % of the acceptor and donor intensities; if greater than zero, moving
-    % average smoothing filter of width specified by this variable.  Must be
-    % an integer.
-SmoothFRET = 6; % Same as SmoothIntensities but for the FRET signal.  At some
-    % point should implement a Gauss filter instead
+gamma = 0; % Crosstalk between channels. Not implemented yet.
     
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%
 save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
@@ -118,4 +126,4 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
     'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage',...
     'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
-    'UseSymGauss','EndInjectFrame');
+    'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','gamma');
