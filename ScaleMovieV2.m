@@ -103,6 +103,8 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     pause
     close
     
+    disp('Continuing with the scaling ...')
+    
     % Re-load everything and actually do the scaling:
     for jj = 1:100:numframes
         moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));

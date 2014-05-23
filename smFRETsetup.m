@@ -43,13 +43,13 @@ Acceptor = 0; % This means the acceptor channel is the one on the left
 % from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-SmoothIntensities = 6; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 6; % Same as SmoothIntensities but for the FRET signal.  At some
+SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
-EndInjectFrame = round(27/0.15); % If doing a manual injection, which tends to bump the stage,
+EndInjectFrame = 1;% round(27/0.15); % If doing a manual injection, which tends to bump the stage,
     % you can set this to the value of a frame that you know is after the
     % injection is over, and spotfinding will be done starting at this
     % frame instead of at frame 1. I usually know when I'm done injecting
@@ -67,7 +67,7 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
-FindSpotsEveryXFrames = 10; % If this is 0 (or negative), spots will be found from 
+FindSpotsEveryXFrames = 0; % If this is 0 (or negative), spots will be found from 
     % EndInjectFrame:EndInjectFrame+FramesToAvg. If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)

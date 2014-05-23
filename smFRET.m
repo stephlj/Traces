@@ -27,7 +27,7 @@ function smFRET(rootname,debug)
         disp('Running in debug mode.')
     end
 
-    % Nested functions for use later:
+    % Subfunctions for use later:
     
     % Function 1: Getting absolute (in the whole original image) coordinates
     % for spots, rather than local (in a single channel) coordinates.
@@ -59,14 +59,18 @@ function smFRET(rootname,debug)
     % Function 2: Let user keep changing background threshhold for
     % spotfinding till satisfied:
     function [newspots,newthresh] = SptFindUserThresh(oldspots,SpotImg,thisn,thisxout,...
-            ChName,OrdfiltSize,MinDist,Method)
+            ChName,OrdfiltSize,MinDist,Method,oldthresh)
         newspots = oldspots;
+        newthresh = oldthresh;
         happy = 0;
         while happy==0
-            answer = input('Press enter if satisfied, anything else if not:','s');
+            answer = input('Press enter if satisfied, anything else+enter if not:','s');
             if ~isempty(answer)
                 close all
                 figure,bar(thisxout,thisn)
+                hold on
+                plot([newthresh newthresh],[0 max(thisn)],'--k')
+                hold off
                 title('Choose a threshold between background and true spots:','Fontsize',12)
                 xlabel('<-Background intensities ... Real spot intensities->')
                 ylabel('Counts')
@@ -88,7 +92,7 @@ function smFRET(rootname,debug)
 
     % Function 3: After calculating transform, eliminate any mispaired or
     % badly fit spots and refit, until the fit residuals are sufficiently
-    % low. Note matchedG, matchedR need to be cell arrays of matrices.
+    % low. Note matchedG, matchedR need to be cell arrays of matrices. 
     function [newtform,matchedG,matchedR] = RefineTform(matchedG,matchedR,oldtform,params)
         % Update 4/2014: Any mis-pairings of spots has a big effect on the
         % quality of the fitted transform, even for ~750 spots. With
@@ -96,6 +100,8 @@ function smFRET(rootname,debug)
         % be <0.008 per spot (note that the residuals will increase with more spots!):
         InitBdNum = size(matchedG,2);
         PrevResid = oldtform.ResidualsFwd;
+        ResidGtoR = oldtform.ResidualsFwd;
+        ResidRtoG = oldtform.ResidualsInv;
         steps = 0;
         newtform = oldtform;
         allmatchesG = [];
@@ -155,6 +161,7 @@ function smFRET(rootname,debug)
         clear steps
     end
 
+    % Load and check parameter settings
     smFRETsetup;
     params = load('AnalysisParameters.mat');
     % Error-handling: Check that the user-defined parameters are reasonable:
@@ -177,7 +184,7 @@ function smFRET(rootname,debug)
 
 %%%%%%FIRST PART: Channel mapping:
     % Load an old channel mapping, or perform a new one:
-    DoMap = input('Press enter to perform channel mapping with beads, L to load an old one, D to use data to make a map:','s');
+    DoMap = input('Press enter to perform channel mapping with beads, L+enter to load an old one, D+enter to use data to make a map:','s');
 
     if ~isempty(DoMap)
         % Default to most recent map:
@@ -260,31 +267,31 @@ function smFRET(rootname,debug)
 
             % Find spots in green channel
             if params.Refine_Bd_Cen
-                [spotsG{i},n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+                [spotsG{i},n,xout,thresh] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
                     'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
                     'Method','GaussFit');
                 spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
-                    params.BeadNeighborhood,params.BeadSize,'GaussFit');
+                    params.BeadNeighborhood,params.BeadSize,'GaussFit',thresh);
             else
-                [spotsG{i},n,xout] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+                [spotsG{i},n,xout,thresh] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
                     'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
                 spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
-                    params.BeadNeighborhood,params.BeadSize,'default');
+                    params.BeadNeighborhood,params.BeadSize,'default',thresh);
             end
             clear n xout
             
             % Find spots in red channel
             if params.Refine_Bd_Cen
-                [spotsR{i},n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
+                [spotsR{i},n,xout,thresh] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
                     'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
                     'Method','GaussFit');
                 spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
-                    params.BeadNeighborhood,params.BeadSize,'GaussFit');
+                    params.BeadNeighborhood,params.BeadSize,'GaussFit',thresh);
             else
-                [spotsR{i},n,xout] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
+                [spotsR{i},n,xout,thresh] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
                     'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
                 spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
-                    params.BeadNeighborhood,params.BeadSize,'default');
+                    params.BeadNeighborhood,params.BeadSize,'default',thresh);
             end
             clear n xout
             
@@ -602,11 +609,11 @@ close all
 
                    % Identify spots in this combined image:
                    if ff == params.EndInjectFrame
-                       [newspotsR,n,xout,~] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
+                       [newspotsR,n,xout,thresh] = FindSpotsV5(composite,'ShowResults',1,'ImgTitle','Composite Image',...
                              'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
                              'Method','GaussFit');
                        [newspotsR,threshhold] = SptFindUserThresh(newspotsR,composite,n,xout,'Composite Image',...
-                           params.DNANeighborhood,params.DNASize,'GaussFit');
+                           params.DNANeighborhood,params.DNASize,'GaussFit',thresh);
                    else
                         [tempnewspotsR,~,~,~] = FindSpotsV5(composite,...
                             'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
@@ -639,19 +646,19 @@ close all
                    % fitting to a Gaussian, regardless of whether or not user
                    % wants to weight intensities by a Gaussian:
                    if ff == params.EndInjectFrame
-                       [newspotsR,n,xout,~] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
+                       [newspotsR,n,xout,thresh] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
                              'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
                              'Method','GaussFit');
                        [newspotsR,threshholdR] = SptFindUserThresh(newspotsR,imgRMinusBkgnd,n,xout,'Red Channel',...
-                           params.DNANeighborhood,params.DNASize,'GaussFit');
+                           params.DNANeighborhood,params.DNASize,'GaussFit',thresh);
                        clear n xout
                        close
                        % And in donor channel
-                       [newspotsG,n,xout,~] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
+                       [newspotsG,n,xout,thresh] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
                              'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
                              'Method','GaussFit');
                        [newspotsG,threshholdG] = SptFindUserThresh(newspotsG,imgGMinusBkgnd,n,xout,'Green Channel',...
-                           params.DNANeighborhood,params.DNASize,'GaussFit');
+                           params.DNANeighborhood,params.DNASize,'GaussFit',thresh);
                        clear n xout
                        close
                    else
@@ -744,10 +751,20 @@ close all
                % paired to a red channel spot to our list of spots. Or, put
                % equivalently, add everything in RefinedCentersG that's not
                % in matchG.
-               Dists = FindSpotDists(RefinedCentersG,matchG);
-               spotnottooclose = Dists>0;
-               newspots = RefinedCentersG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
-               spotsGinR = tformPoly.FRETmapFwd(newspots);
+               if strcmpi(DoMap,'D')
+                   Dists = FindSpotDists(RefinedCentersG,matchG);
+                   spotnottooclose = Dists>0;
+                   newspots = RefinedCentersG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
+                  spotsGinR = tformPoly.FRETmapFwd(newspots);
+               else
+                   spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
+                   Dists = FindSpotDists(RefinedCentersR,spotsGinR);
+                   spotnottooclose = Dists>MappingTolerance*2;
+                   newspots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                   clear spotsGinR
+                   spotsGinR = newspots;
+               end
+
                if params.IntensityGaussWeight
                    % Problems I haven't really resolved yet:
                     % (1) Assume variance is same in green and red channels?
@@ -759,7 +776,11 @@ close all
                     % also output the amplitudes of the fits, so I could
                     % also choose based on which channel had a larger
                     % amplitude or something.
-                   Vars = VarsG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
+                    if strcmpi(DoMap,'D')
+                       Vars = VarsG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
+                    else
+                        Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                    end
                end
                % Check that the transformed G spots are reasonable
                % edges from the red channel boundaries: note that the same
