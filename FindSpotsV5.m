@@ -201,7 +201,9 @@ temppeaks = find((imggray==maxes).*truemaxes);
 [peaks_i,peaks_j] = ind2sub(size(imggray),temppeaks);
 peaks = [peaks_i,peaks_j];
 
-disp(strcat('Number of peaks found: ',int2str(size(peaks,1))))
+if ShowResults
+    disp(strcat('Number of peaks found: ',int2str(size(peaks,1))))
+end
 
 % SPOT REFINEMENT
 % For deciding if spots are too close together: first need to find all the
@@ -255,7 +257,9 @@ for i = 1:size(peaks,1)
     end
 end
 
-disp(strcat('Number of peaks kept: ',int2str(size(spots,2))))
+if ShowResults
+    disp(strcat('Number of peaks kept: ',int2str(size(spots,2))))
+end
 
 % For checking the results: make a figure that puts a box around each spot
 % found.  Also put a red x where it thinks the center of each spot is.

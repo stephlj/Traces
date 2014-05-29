@@ -55,7 +55,7 @@ EndInjectFrame = 1;% round(27/0.15); % If doing a manual injection, which tends 
     % frame instead of at frame 1. I usually know when I'm done injecting
     % in seconds (usually about 25 seconds, add a couple for safety), and I
     % collect data at 0.15 seconds per frame.
-NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
+NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
     % intensity over time, which may be due to laser power fluctuations;
@@ -67,7 +67,7 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
     % Set to zero to use the whole image.
-FindSpotsEveryXFrames = 0; % If this is 0 (or negative), spots will be found from 
+FindSpotsEveryXFrames = 10; % If this is 0 (or negative), spots will be found from 
     % EndInjectFrame:EndInjectFrame+FramesToAvg. If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
