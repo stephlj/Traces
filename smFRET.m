@@ -700,7 +700,7 @@ close all
                        % below for any new spots:
                         [tempnewspotsR,nR,xoutR,~] = FindSpotsV5(imgRMinusBkgnd,...
                             'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                            'UserThresh',threshholdR);
+                            'Method','GaussFit','UserThresh',threshholdR);
                         % Are there any new spots that we didn't find last
                         % time?
                         Dists = FindSpotDists(RefinedCentersR,tempnewspotsR);
@@ -711,7 +711,7 @@ close all
                         
                         [tempnewspotsG,nG,xoutG,~] = FindSpotsV5(imgGMinusBkgnd,...
                             'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                            'UserThresh',threshholdG);
+                            'Method','GaussFit','UserThresh',threshholdG);
                         % Are there any new spots that we didn't find last
                         % time?
                         Dists = FindSpotDists(RefinedCentersG,tempnewspotsG);
@@ -783,14 +783,14 @@ close all
                    % finding all spots throughout the movie, pairing, and
                    % comparing the variances of true pairs ...
                if ~isempty(newspotsR)
-                   [newspotsRref, newVarsR] = FindRefinedSpotCenters(imgRedavg,newspotsR,params);
+                   [newspotsRref, newVarsR] = FindRefinedSpotCenters(imgRedavg,newspotsR,0.2,params);
                    clear newspotsR
                    newspotsR = newspotsRref;
                    clear newspotsRref
-                   %newVarsR = FindSpotVars(imgRedavg,newspotsR,params);
+                   % newVarsR = FindSpotVars(imgRedavg,newspotsR,params);
                end
                if ~params.UseCombinedImage && ~isempty(newspotsG)
-                   [newspotsGref, newVarsG] = FindRefinedSpotCenters(imgGreenavg,newspotsG,params);
+                   [newspotsGref, newVarsG] = FindRefinedSpotCenters(imgGreenavg,newspotsG,0.2,params);
                    clear newspotsG
                    newspotsG = newspotsGref;
                    clear newspotsGref
@@ -818,7 +818,7 @@ close all
                newspotsG = []; 
                newVarsR = []; 
                newVarsG = [];
-               clear imgRbkgnd imgGbkgnd imgRMinusBkgnd imgGMinusBkgnd
+               clear imgRbkgnd imgGbkgnd imgRMinusBkgnd imgGMinusBkgnd imgGreen imgRedavg imgGreenavg
                
                if mod((ff-params.EndInjectFrame),100)==0
                    disp(sprintf('%d red spots and %d green spots found after %d frames',...
@@ -828,8 +828,6 @@ close all
            end
            close all
            clear totframes SptFindIncrement threshhold threshholdR threshholdG
-
-           clear imgGreen imgRedavg imgGreenavg
            
            if strcmpi(DoMap,'D')
                tformPolyRough = tformPoly;

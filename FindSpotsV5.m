@@ -33,16 +33,14 @@
 %   finding the centroid/center of mass; or by a local 2D Gaussian fit.
 %   Default is to take the pixel with the max intensity as the center.
 %   Currently centroid actually does a worse job than the default. 
-%   GaussFit takes about 2x longer, and offers minimal improvement (mean
-%   localization error of 0.4 pxl compared to 0.7 pxl). 
-%   NOTES:(1) GaussFit should not be called when finding spots 
-%   in real movies--spot centers will be refined at a later point for real data.
-%   (2) GaussFit tends to do better with a slightly smaller maxsize
+%   GaussFit takes about 2x longer. It also does some additional refinement
+%   of spot selections that take advantage of having fit a Gaussian: 
+%   checking the background is sufficiently low around the spot, and checking
+%   the variance doesn't indicate the spot is just one pixel.
+%   NOTE: GaussFit tends to do better with a slightly smaller maxsize
 %   parameter than you might use with the default parameter, BUT it should
-%   be large enough to have enough background to fit. So, if your beads are
-%   roughly 4 pixels across, a maxsize of 8 is good. (3) If GaussFit method
-%   is used, this will also check that spots are surrounded by a sufficiently
-%   low-intensity minimum, to help exclude two or more spots very close together.
+%   be large enough to have enough background to fit. So, for example, if your beads are
+%   roughly 4 pixels across, a maxsize of 8 is good.
 %
 % Outputs:
 % Spots:  a 2-by-numspots vector where each column is the (row,col) for the center of
@@ -73,8 +71,10 @@
 %
 % Updated 2/2014 to give the option of refining spot centers by 2D-Gaussian
 % fit.
+% Updated 5/2014 to use FindRefinedSpotCenters to do the Gauss-fit
+% refinement.
 %
-% Steph 8/2013, updated 2/2014
+% Steph 8/2013, updated 5/2014
 % Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
 function [spots,n,xout,truemaxthresh] = FindSpotsV5(img,varargin)
@@ -125,14 +125,8 @@ end
 % Other defaults:
 cen_boxsize = round(maxsize/2); % Size of the box to use for centroid 
     % calculation or GaussFit will be cen_boxsize*2+1
-cen_tolerance = 2; % To judge the goodness of Gaussian fit, don't let the 
-    % refined center position differ from the maximum pixel by more than
-    % this value. Realistically 1 is probably fine too, the refinement is
-    % usually within 1 pixel.
-bkgnd_tolerance = 0.01; % Extra spot refinement for Gaussian fitting: 
-    % mean intensity value around the spot has to go to less than the
-    % fitted background value plus this tolerance (for real spots, at least
-    % in the case of beads, they're usually within 0.01 of each other).
+bkgnd_tolerance = 0.01; %This is good for beads and background-subtracted DNAs, which is what
+    % FindSpots is called on
 
 % Error handling for inputs:
 if rem(NeighborhoodSize,sqrt(NeighborhoodSize))~=0
@@ -235,22 +229,12 @@ for i = 1:size(peaks,1)
             spots(:,end+1) = [peaks(i,1)-cen_boxsize-1+cen(1), peaks(i,2)-cen_boxsize-1+cen(2)];
             clear cen
         elseif strcmpi(Method,'GaussFit')
-            [cen(1), cen(2), ~, ~, bkgnd, ~] = Fit2DGaussToSpot(imggray((peaks(i,1)-cen_boxsize):(peaks(i,1)+cen_boxsize),...
-                (peaks(i,2)-cen_boxsize):(peaks(i,2)+cen_boxsize)));
-            % Additional refinements: check that (1) the fitting didn't totally
-            % fail--new spot center should be pretty close to old spot
-            % center; and (2) spot is surrounded by sufficiently
-            % low-intensity background that there's not another peak close
-            % by:
-            newspotcen = [peaks(i,1)-cen_boxsize-1+cen(1), peaks(i,2)-cen_boxsize-1+cen(2)];
-            spotboundary = [imggray(peaks(i,1)+cen_boxsize,(peaks(i,2)-cen_boxsize):(peaks(i,2)+cen_boxsize)),...
-                imggray(peaks(i,1)-cen_boxsize,(peaks(i,2)-cen_boxsize):(peaks(i,2)+cen_boxsize)),...
-                imggray((peaks(i,1)-cen_boxsize):(peaks(i,1)+cen_boxsize),peaks(i,2)+cen_boxsize)',...
-                imggray((peaks(i,1)-cen_boxsize):(peaks(i,1)+cen_boxsize),peaks(i,2)-cen_boxsize)'];
-            if (FindSpotDists(peaks(i,:),newspotcen)<cen_tolerance) && (mean(spotboundary)<=bkgnd+bkgnd_tolerance)
-                spots(:,end+1) = newspotcen;
+            params.DNASize = maxsize;
+            params.UseSymGauss = 0;
+            [tempspot, ~] = FindRefinedSpotCenters(imggray,peaks(i,:)',bkgnd_tolerance,params);
+            if ~isempty(tempspot)
+                spots(:,end+1) = tempspot;
             end
-            clear cen bkgnd newspotcen spotboundary
         else
             spots(:,end+1) = [peaks(i,1),peaks(i,2)];
         end
