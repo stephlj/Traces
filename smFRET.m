@@ -98,7 +98,6 @@ function smFRET(rootname,debug)
         % quality of the fitted transform, even for ~750 spots. With
         % perfect matching and our current alignment, the residuals should
         % be <0.008 per spot (note that the residuals will increase with more spots!):
-        InitBdNum = size(matchedG,2);
         PrevResid = oldtform.ResidualsFwd;
         ResidGtoR = oldtform.ResidualsFwd;
         ResidRtoG = oldtform.ResidualsInv;
@@ -110,6 +109,7 @@ function smFRET(rootname,debug)
             allmatchesG = [allmatchesG,matchedG{yy}];
             allmatchesR = [allmatchesR,matchedR{yy}];
         end
+        InitBdNum = size(allmatchesG,2);
         while ResidGtoR/size(allmatchesG,2)>=params.ResidTolerance ||...
             ResidRtoG/size(allmatchesG,2)>=params.ResidTolerance || ...
             abs(ResidGtoR-PrevResid)/PrevResid > 0.05 % Stop if residuals stop changing much
@@ -700,7 +700,7 @@ close all
                        % below for any new spots:
                         [tempnewspotsR,nR,xoutR,~] = FindSpotsV5(imgRMinusBkgnd,...
                             'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                            'Method','GaussFit','UserThresh',threshholdR);
+                            'UserThresh',threshholdR);
                         % Are there any new spots that we didn't find last
                         % time?
                         Dists = FindSpotDists(RefinedCentersR,tempnewspotsR);
@@ -711,7 +711,7 @@ close all
                         
                         [tempnewspotsG,nG,xoutG,~] = FindSpotsV5(imgGMinusBkgnd,...
                             'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                            'Method','GaussFit','UserThresh',threshholdG);
+                            'UserThresh',threshholdG);
                         % Are there any new spots that we didn't find last
                         % time?
                         Dists = FindSpotDists(RefinedCentersG,tempnewspotsG);
@@ -834,7 +834,7 @@ close all
                clear tformPoly
                % Use bead mapping as a rough estimate before finding all
                % DNA spot matches:
-               spotsGinR = tformPolyRough.FRETmapFwd(RefinedCentersR);
+               spotsGinR = tformPolyRough.FRETmapFwd(RefinedCentersG);
                [matchG{1},matchR{1}] = FindSpotMatches(spotsGinR,RefinedCentersR);
                tformPoly = FRETmap(matchG{1},matchR{1},'Green',params.TransformToCalc,...
                     params.TformMaxDeg,params.TformTotDeg);

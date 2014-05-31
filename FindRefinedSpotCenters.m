@@ -45,7 +45,7 @@ cen_tolerance = 2; % To judge the goodness of Gaussian fit, don't let the
     % refined center position differ from the maximum pixel by more than
     % this value. Realistically 1 is probably fine too, the refinement is
     % usually within 1 pixel.
-VarTolerance = 10;
+VarTolerance = 2;
 
 ROIsize = params.DNASize;
 symGauss = params.UseSymGauss;
