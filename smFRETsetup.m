@@ -60,7 +60,7 @@ NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensit
     % frame. We've been observing large fluctuations in total image
     % intensity over time, which may be due to laser power fluctuations;
     % this is an attempt to correct for that.
-FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
+FramesToAvg = 10; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted
 PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
     % contains both channels, to exclude from analysis.  On our system with

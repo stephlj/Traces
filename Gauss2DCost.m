@@ -13,15 +13,27 @@
 % OR
 % params must be [B,A] and varargin must be [x0,y0,xvar,yvar].
 %
+% Mode determines whether this function is used in conjunction with
+% lsqnonlin (requires just the differences between the data and the equation
+% to fit; pass mode = 'diffonly') or fminsearch (requires sum of squares 
+% of differences; pass mode = 'sumsquares').
+%
 % Thanks to David Wu for showing me how to write this (and the original
 % versions of the other associated functions, Fit2DGaussToSpot and
 % PlotGauss2D!)
 %
 % Steph 2/2014, updated 5/2014 to allow for only some parameters to be fit
 % and others (those in varargin) to remain constant.
+% Updated 6/2014 to interface with lsqnonlin as well as fminsearch.
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function cost = Gauss2DCost(params,data,varargin)
+function cost = Gauss2DCost(params,data,mode,varargin)
+
+    if ~strcmpi(mode,'sumsquares') && ~strcmpi(mode,'diffonly')
+        disp('Gauss2DCost: Mode not recognized, should be either sumsquares or diffonly.')
+        cost = [];
+        return
+    end
 
     if length(params)==6
         A = params(6);
@@ -46,6 +58,7 @@ function cost = Gauss2DCost(params,data,varargin)
         yvar = varargin{1}(4);
     else
         disp('Gauss2DCost: Input parameters unusable.')
+        cost = [];
         return
     end
     
@@ -53,10 +66,18 @@ function cost = Gauss2DCost(params,data,varargin)
     
     for i=1:size(data,1)
         for j=1:size(data,2);
-            difference(i,j) = (data(i,j)-(A*exp(-xvar*(i-x0)^2-yvar*(j-y0)^2) + B))^2;
+            if strcmpi(mode,'sumsquares')
+                difference(i,j) = (data(i,j)-(A*exp(-xvar*(i-x0)^2-yvar*(j-y0)^2) + B))^2;
+            else
+                difference(i,j) = data(i,j) - (A*exp(-xvar*(i-x0)^2-yvar*(j-y0)^2) + B);
+            end
         end
     end
     
-    cost = sum(sum(difference));
+    if strcmpi(mode,'sumsquares')
+        cost = sum(sum(difference));
+    else
+        cost = difference;
+    end
 
 end

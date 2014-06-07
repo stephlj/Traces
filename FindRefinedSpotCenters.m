@@ -39,7 +39,7 @@
 function [RefinedCenters, Vars,varargout] = FindRefinedSpotCenters(imgs,spots,bkgnd_tolerance,params,debug)
 
 if ~exist('debug','var') debug = 0; end
-if size(imgs,3)>1 imgs = mat2gray(mean(imgs)); end
+if size(imgs,3)>1 imgs = mat2gray(mean(imgs,3)); end
 
 cen_tolerance = 2; % To judge the goodness of Gaussian fit, don't let the 
     % refined center position differ from the maximum pixel by more than
@@ -72,9 +72,11 @@ Vars = [];
        % Note if the fit fails, Fit2DGaussToSpot will return the
        % StartParams, so make sure the StartParams for xvar and yvar are
        % the defaults hardcoded above
+       tic
        [RefinedLocalCenX,RefinedLocalCenY,tempVars(1,ss),tempVars(2,ss),bkgnd,Amps(ss)] = Fit2DGaussToSpot(spotimg,'Full',...
            'StartParams',[localcen(1),localcen(2),defaultXvar,defaultYvar,min(spotimg(:)),max(spotimg(:))],...
            'Debug',debug,'symGauss',symGauss);
+       toc
        tempCenters(:,ss) = [round(spots(1,ss))-floor(ROIsize/2)-1+RefinedLocalCenX; round(spots(2,ss))-floor(ROIsize/2)-1+RefinedLocalCenY];
        % for debugging
        % figure

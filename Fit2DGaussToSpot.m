@@ -114,25 +114,33 @@ end
 % Find parameters that minimize the difference between a 2D Gaussian and
 % the actual image.  This "minimize the difference" problem is encapsulated
 % in the Gauss2DCost function.
-% Note if you have the Optimization toolbox, it would be better (faster and
+% Note if you have the Optimization toolbox, it is better (faster and
 % more accurate) to use lsqnonlin rather than fminsearch. However,
-% fminsearch is used here to reduce this software suite's dependance on
-% Matlab toolboxes.
-%%%% TODO: use a try/catch block to use lsqnonlin if the Optimization
-%%%% toolbox is installed.
+% fminsearch is included as an option here to reduce this software suite's 
+% dependance on Matlab toolboxes.
 
 opts = optimset('Display','off'); % Don't display a warning if the fit doesn't converge
 
 if symGauss
-    [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCostSym(params,spotimg,fixedparams),...
-        startparams,opts);
+    try
+        [fitparams,~,~,exitflag] = lsqnonlin(@(params)Gauss2DCostSym(params,...
+            spotimg,'diffonly',fixedparams),startparams,[],[],opts);
+    catch
+        [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCostSym(params,...
+            spotimg,'sumsquares',fixedparams),startparams,opts);
+    end
 else
-    [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCost(params,spotimg,fixedparams),...
-        startparams,opts);
+    try
+        [fitparams,~,~,exitflag] = lsqnonlin(@(params)Gauss2DCost(params,...
+            spotimg,'diffonly',fixedparams),startparams,[],[],opts);
+    catch
+        [fitparams,~,exitflag] = fminsearch(@(params)Gauss2DCost(params,...
+            spotimg,'sumsquares',fixedparams),startparams,opts);
+    end
 end
 
 % Define output parameters:
-if exitflag==0
+if exitflag<=0
     % If the fit fails, return the default parameters. Sometimes the
     % parameters it gets from a failed fit are pretty whacky. Return a
     % very low amplitude as indication that this is not a good Gaussian.
