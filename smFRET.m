@@ -206,6 +206,7 @@ function smFRET(rootname,debug)
             tformPoly = Map.tformPoly;
             tformAffine = Map.tformAffine;
             MappingTolerance = Map.MappingTolerance;
+            params.PxlsToExclude = Map.PxlsToExclude;
             clear Map prevmapdir
         elseif strcmpi(DoMap,'L')
             disp(strcat('Map not found in',D_Beads))
@@ -484,7 +485,7 @@ function smFRET(rootname,debug)
         clear num_BeadDir BdDir checkTform
 
         save(fullfile(D_Beads,'ChannelMapping.mat'),'tformPoly','tformAffine',...
-            'BeadFilesInMap','MappingTolerance');
+            'BeadFilesInMap','MappingTolerance','PxlsToExclude');
         save('PathToRecentMap','MostRecentMapDir');
     end
 
@@ -869,15 +870,19 @@ close all
                    newspots = RefinedCentersG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
                   spotsGinR = tformPoly.FRETmapFwd(newspots);
                else
-                   spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
-                   Dists = FindSpotDists(RefinedCentersR,spotsGinR);
-                   spotnottooclose = Dists>MappingTolerance*2;
-                   newspots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                   clear spotsGinR
-                   spotsGinR = newspots;
+                   if ~isempty(RefinedCentersG)
+                       spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
+                       Dists = FindSpotDists(RefinedCentersR,spotsGinR);
+                       spotnottooclose = Dists>MappingTolerance*2;
+                       newspots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                       clear spotsGinR
+                       spotsGinR = newspots;
+                   else
+                       spotsGinR = [];
+                   end
                end
 
-               if params.IntensityGaussWeight
+               if params.IntensityGaussWeight && ~isempty(RefinedCentersG)
                    % Problems I haven't really resolved yet:
                     % (1) Assume variance is same in green and red channels?
                     % This is what the Ha lab IDL code does (actually they
@@ -899,34 +904,36 @@ close all
                % Check that the transformed G spots are reasonable
                % edges from the red channel boundaries: note that the same
                % is done for red spots in CalcIntensitiesV2
-               if length(find(round(spotsGinR(1,:))>=1+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
-                    oldGspots = spotsGinR;
-                    oldVars = Vars;
-                    clear spotsGinR Vars
-                    spotsGinR = oldGspots(:,round(oldGspots(1,:))>=1+floor(params.DNASize/2));
-                    Vars = oldVars(:,round(oldGspots(1,:))>=1+floor(params.DNASize/2));
-                end
-                if length(find(round(spotsGinR(2,:))>=1+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
-                    oldGspots = spotsGinR;
-                    oldVars = Vars;
-                    clear spotsGinR Vars
-                    spotsGinR = oldGspots(:,round(oldGspots(2,:))>=1+floor(params.DNASize/2)); 
-                    Vars = oldVars(:,round(oldGspots(2,:))>=1+floor(params.DNASize/2)); 
-                end
-                if length(find(round(spotsGinR(1,:))<=size(imgRed,1)+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
-                    oldGspots = spotsGinR;
-                    oldVars = Vars;
-                    clear spotsGinR Vars
-                    spotsGinR = oldGspots(:,round(oldGspots(1,:))<=size(imgRed,1)+floor(params.DNASize/2));
-                    Vars = oldVars(:,round(oldGspots(1,:))<=size(imgRed,1)+floor(params.DNASize/2));
-                end
-                if length(find(round(spotsGinR(2,:))<=size(imgRed,2)+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
-                    oldGspots = spotsGinR;
-                    oldVars = Vars;
-                    clear spotsGinR Vars
-                    spotsGinR = oldGspots(:,round(oldGspots(2,:))<=size(imgRed,2)+floor(params.DNASize/2)); 
-                    Vars = oldVars(:,round(oldGspots(2,:))<=size(imgRed,2)+floor(params.DNASize/2)); 
-                end
+               if ~isempty(spotsGinR)
+                   if length(find(round(spotsGinR(1,:))>=1+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
+                        oldGspots = spotsGinR;
+                        oldVars = Vars;
+                        clear spotsGinR Vars
+                        spotsGinR = oldGspots(:,round(oldGspots(1,:))>=1+floor(params.DNASize/2));
+                        Vars = oldVars(:,round(oldGspots(1,:))>=1+floor(params.DNASize/2));
+                    end
+                    if length(find(round(spotsGinR(2,:))>=1+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
+                        oldGspots = spotsGinR;
+                        oldVars = Vars;
+                        clear spotsGinR Vars
+                        spotsGinR = oldGspots(:,round(oldGspots(2,:))>=1+floor(params.DNASize/2)); 
+                        Vars = oldVars(:,round(oldGspots(2,:))>=1+floor(params.DNASize/2)); 
+                    end
+                    if length(find(round(spotsGinR(1,:))<=size(imgRed,1)+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
+                        oldGspots = spotsGinR;
+                        oldVars = Vars;
+                        clear spotsGinR Vars
+                        spotsGinR = oldGspots(:,round(oldGspots(1,:))<=size(imgRed,1)+floor(params.DNASize/2));
+                        Vars = oldVars(:,round(oldGspots(1,:))<=size(imgRed,1)+floor(params.DNASize/2));
+                    end
+                    if length(find(round(spotsGinR(2,:))<=size(imgRed,2)+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
+                        oldGspots = spotsGinR;
+                        oldVars = Vars;
+                        clear spotsGinR Vars
+                        spotsGinR = oldGspots(:,round(oldGspots(2,:))<=size(imgRed,2)+floor(params.DNASize/2)); 
+                        Vars = oldVars(:,round(oldGspots(2,:))<=size(imgRed,2)+floor(params.DNASize/2)); 
+                    end
+               end
                 clear oldGspots oldVars
                Vars(:,end+1:end+size(VarsR,2)) = VarsR;
                spots = [spotsGinR, RefinedCentersR];

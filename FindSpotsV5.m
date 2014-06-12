@@ -125,7 +125,7 @@ end
 % Other defaults:
 cen_boxsize = round(maxsize/2); % Size of the box to use for centroid 
     % calculation or GaussFit will be cen_boxsize*2+1
-bkgnd_tolerance = 0.01; %This is good for beads and background-subtracted DNAs, which is what
+bkgnd_tolerance = 0.02; %This is good for beads and background-subtracted DNAs, which is what
     % FindSpots is called on
 
 % Error handling for inputs:

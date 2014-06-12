@@ -66,7 +66,12 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % contains both channels, to exclude from analysis.  On our system with
     % a decent channel alignment this is about 10 pixels.  This avoids
     % finding spots in areas of the image where the channels might overlap.
-    % Set to zero to use the whole image.
+    % Set to zero to use the whole image. NOTE: This parameter MUST be the
+    % same for the data used to create a channel map, as for any data you
+    % analyze with that map. smFRET will insist on using the value for
+    % PxlsToExclude that comes with any map you load. Re-do a map with a
+    % different PxlsToExclude value in order to change the pixels excluded
+    % with real data!
 FindSpotsEveryXFrames = 0; % If this is 0 (or negative), spots will be found from 
     % EndInjectFrame:EndInjectFrame+FramesToAvg. If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
@@ -90,7 +95,7 @@ UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
 Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead center
     % position.  This will increase computational time for the channel
     % mapping by about a factor of 2, but is a good idea to do anyway.
-IntensityGaussWeight = 0; % If this is 1, weight the intensity of each spot  
+IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
     % in each frame by a Gaussian whose center and variance are determined
     % from a fit to the spot's first 10 frames. Note that if this is 0, it
     % will calculate intensities over a 5 pxl diameter circle.  That's
