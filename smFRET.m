@@ -893,6 +893,8 @@ close all
                     else
                         Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                     end
+               else
+                   Vars = [];
                end
                % Check that the transformed G spots are reasonable
                % edges from the red channel boundaries: note that the same
