@@ -206,7 +206,9 @@ function smFRET(rootname,debug)
             tformPoly = Map.tformPoly;
             tformAffine = Map.tformAffine;
             MappingTolerance = Map.MappingTolerance;
-            params.PxlsToExclude = Map.PxlsToExclude;
+            if isfield(Map,'PxlsToExclude')
+                params.PxlsToExclude = Map.PxlsToExclude;
+            end
             clear Map prevmapdir
         elseif strcmpi(DoMap,'L')
             disp(strcat('Map not found in',D_Beads))

@@ -21,11 +21,11 @@
 
 function newcoords = GlobalToROICoords(spot_global_coords,spot_local_coords,ROI_center_global,boxSizeX,boxSizeY)
 
-if isempty(globalcoords)
+if isempty(spot_global_coords)
     % User has local coords, wants global
     newcoords = [spot_local_coords(1)+ceil(ROI_center_global(1))-floor(boxSizeX)/2-1;...
         spot_local_coords(2)+ceil(ROI_center_global(2))-floor(boxSizeY)/2-1];
-elseif isempty(ROIcoords)
+elseif isempty(spot_local_coords)
     % User has global, wants local
     % Not sure if there's a better way to write a universal formula?
     newcoords = [spot_global_coords(1)-(ceil(ROI_center_global(1))-floor(boxSizeX)/2-1);...

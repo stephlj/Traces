@@ -75,7 +75,7 @@ Vars = [];
        [RefinedLocalCenX,RefinedLocalCenY,tempVars(1,ss),tempVars(2,ss),bkgnd,Amps(ss)] = Fit2DGaussToSpot(spotimg,'Full',...
            'StartParams',[localcen(1),localcen(2),defaultXvar,defaultYvar,min(spotimg(:)),max(spotimg(:))],...
            'Debug',debug,'symGauss',symGauss);
-       tempCenters(:,ss) = GlobalToROICoords([],[RefinedLocalCenX;RefinedLocalCenY],ceil(spots(1,ss)),ROIsize,ROIsize);
+       tempCenters(:,ss) = GlobalToROICoords([],[RefinedLocalCenX;RefinedLocalCenY],ceil(spots(:,ss)),ROIsize,ROIsize);
        % for debugging
        % figure
 %        imshow(imgs,[])
