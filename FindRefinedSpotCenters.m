@@ -98,15 +98,17 @@ Vars = [];
                 tempVars(1,ss) < VarTolerance
             RefinedCenters(:,end+1) = tempCenters(:,ss);
             Vars(:,end+1) = tempVars(:,ss);
+        % For debugging:
 %         else
 %             if FindSpotDists(tempCenters(:,ss),spots(:,ss))>cen_tolerance
-%                 disp(sprintf('Removing spot from bad fit convergence: new spot center is %d away',...
-%                     FindSpotDists(tempCenters(:,ss),spots(:,ss))))
+%                 disp(sprintf('Removing spot at (%d,%d) from bad fit convergence: new spot center is %d away',...
+%                     spots(1,ss),spots(2,ss),FindSpotDists(tempCenters(:,ss),spots(:,ss))))
 %             elseif spotboundary>bkgnd+bkgnd_tolerance
-%                 disp(sprintf('Removing spot from too high background: boundary background is %d',...
-%                     spotboundary))
+%                 disp(sprintf('Removing spot at (%d,%d) from too high background: boundary background is %d',...
+%                     spots(1,ss),spots(2,ss),spotboundary))
 %             else
-%                 disp(sprintf('Removing spot because variance is %d',tempVars(1,ss)))
+%                 disp(sprintf('Removing spot at (%d,%d) because variance is %d',...
+%                     spots(1,ss),spots(2,ss),tempVars(1,ss)))
 %             end
         end
         clear spotimg localcen tempVars tempCenters spotboundary bkgnd

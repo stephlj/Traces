@@ -43,11 +43,11 @@ Acceptor = 0; % This means the acceptor channel is the one on the left
 % from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-SmoothIntensities = 6; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 6; % Same as SmoothIntensities but for the FRET signal.  At some
+SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
 EndInjectFrame = 1;% round(27/0.15); % If doing a manual injection, which tends to bump the stage,
     % you can set this to the value of a frame that you know is after the
@@ -60,7 +60,7 @@ NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensit
     % frame. We've been observing large fluctuations in total image
     % intensity over time, which may be due to laser power fluctuations;
     % this is an attempt to correct for that.
-FramesToAvg = 10; % How many frames to average over for spotfinding and calculating
+FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted
 PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
     % contains both channels, to exclude from analysis.  On our system with
@@ -72,10 +72,14 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % PxlsToExclude that comes with any map you load. Re-do a map with a
     % different PxlsToExclude value in order to change the pixels excluded
     % with real data!
-FindSpotsEveryXFrames = 0; % If this is 0 (or negative), spots will be found from 
+FindSpotsEveryXFrames = 100; % If this is 0 (or negative), spots will be found from 
     % EndInjectFrame:EndInjectFrame+FramesToAvg. If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
+CheckSpotFindingEveryXFrames = 100; % If this is nonzero and nonnegative, will ask
+    % the user to check the fidelity of the spotfinding threshhold every
+    % this many frames. I recommend if FindSpotsEveryXFrames is greater
+    % than 0, that this is set to something like 10*FindSpotsEveryXFrames.
 TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
     % (caps insensitive)
 TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
@@ -131,4 +135,5 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
     'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage',...
     'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
-    'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','gamma');
+    'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','gamma',...
+    'CheckSpotFindingEveryXFrames');

@@ -27,7 +27,17 @@ alltifs = dir(fullfile(PathToMovie,'img*.tif'));
 RedI = zeros(size(Rspots,2),length(alltifs));
 GrI = zeros(size(Rspots,2),length(alltifs));
 % Find the spots in the coordinate system of the other (green) channel:
-Gspots = tform.FRETmapInv(Rspots);
+% Gspots = tform.FRETmapInv(Rspots);
+% HACK because I'm working with a cutout right now:
+Gspots = zeros(size(Rspots));
+RedSpotsGlobalCoords = zeros(size(Rspots));
+for hh=1:size(Rspots,2)
+    RedSpotsGlobalCoords(:,hh) = GlobalToROICoords([],Rspots(:,hh),[136;187],88,88);
+end
+GspotsGlobal = tform.FRETmapInv(RedSpotsGlobalCoords);
+for hh=1:size(Rspots,2)
+    Gspots(:,hh) = GlobalToROICoords(GspotsGlobal(:,hh),[],[136;187],88,88);
+end
 % It can happen that a red channel spot, when transformed to the green
 % channel, is too close to the edge to be useable.  Remove any such spots:
 [imgtogetsize,~] = LoadScaledMovie(PathToMovie,[1 1]);

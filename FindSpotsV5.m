@@ -47,7 +47,7 @@
 %   each spot found in terms of the matrix of intensities that makes the
 %   image.  Note row and col don't need to be integers here--but I'm keeping
 %   the output in terms of the coordinate system of the matrix, not normal
-%   Cartesian (x,y) coordinates.
+%   Cartesian (x,y) coordinates according to how Matlab plots images.
 % n,xout: outputs of the histogram of "diffs", in case the user wants to
 %   choose a better threshold for true maxima
 % truemaxthresh: The threshold that was used to choose true maxima
@@ -125,7 +125,7 @@ end
 % Other defaults:
 cen_boxsize = round(maxsize/2); % Size of the box to use for centroid 
     % calculation or GaussFit will be cen_boxsize*2+1
-bkgnd_tolerance = 0.02; %This is good for beads and background-subtracted DNAs, which is what
+bkgnd_tolerance = 0.01; %This is good for beads and background-subtracted DNAs, which is what
     % FindSpots is called on
 
 % Error handling for inputs:
@@ -193,10 +193,10 @@ truemaxes = (maxes-mins) > truemaxthresh;
 temppeaks = find((imggray==maxes).*truemaxes);
 % Find uses linear indexing (which is done column-wise), so convert these to (row,col):
 [peaks_i,peaks_j] = ind2sub(size(imggray),temppeaks);
-peaks = [peaks_i,peaks_j];
+peaks = [peaks_i,peaks_j]';
 
 if ShowResults
-    disp(strcat('Number of peaks found: ',int2str(size(peaks,1))))
+    disp(strcat('Number of peaks found: ',int2str(size(peaks,2))))
 end
 
 % SPOT REFINEMENT
@@ -214,30 +214,43 @@ spottooclose = Dists>maxsize;
 % Exclude any peaks that are too close to the boundaries or to another spot, 
 % and calculate centroid or 2D GaussFit if user desires:
 spots = [];
-for i = 1:size(peaks,1)
-    if (peaks(i,1)-maxsize)>=1 && (peaks(i,1)+maxsize)<=size(imggray,1) && ...
-            (peaks(i,2)-maxsize)>=1 && (peaks(i,2)+maxsize)<=size(imggray,2) && ...
+for i = 1:size(peaks,2)
+    if (peaks(1,i)-maxsize)>=1 && (peaks(1,i)+maxsize)<=size(imggray,1) && ...
+            (peaks(2,i)-maxsize)>=1 && (peaks(2,i)+maxsize)<=size(imggray,2) && ...
             sum(spottooclose(i,:))==length(spottooclose(i,:))-1
         % Keep this peak.  
         if strcmpi(Method,'Centroid')
-            cen = FindSpotCentroid(imggray((peaks(i,1)-cen_boxsize):(peaks(i,1)+cen_boxsize),...
-                (peaks(i,2)-cen_boxsize):(peaks(i,2)+cen_boxsize)));
+            cen = FindSpotCentroid(imggray((peaks(1,i)-cen_boxsize):(peaks(1,i)+cen_boxsize),...
+                (peaks(2,i)-cen_boxsize):(peaks(2,i)+cen_boxsize)));
             % Because the center-finding algorithms were passed only a
             % submatrix (ie a cropped image of each spot), they returned the (row,col) of
             % the center of the spot in terms of submatrix.  Want to
             % return centers relative to the original imggray matrix:
-            spots(:,end+1) = [peaks(i,1)-cen_boxsize-1+cen(1), peaks(i,2)-cen_boxsize-1+cen(2)];
+            spots(:,end+1) = [peaks(1,i)-cen_boxsize-1+cen(1); peaks(2,i)-cen_boxsize-1+cen(2)];
             clear cen
         elseif strcmpi(Method,'GaussFit')
             params.DNASize = maxsize;
             params.UseSymGauss = 0;
-            [tempspot, ~] = FindRefinedSpotCenters(imggray,peaks(i,:)',bkgnd_tolerance,params);
+            [tempspot, ~] = FindRefinedSpotCenters(imggray,peaks(:,i),bkgnd_tolerance,params);
             if ~isempty(tempspot)
                 spots(:,end+1) = tempspot;
             end
         else
-            spots(:,end+1) = [peaks(i,1),peaks(i,2)];
+            spots(:,end+1) = peaks(:,i);
         end
+    % For debugging:    
+%     else
+%         if (peaks(1,i)-maxsize)<1 || (peaks(1,i)+maxsize)>size(imggray,1) || ...
+%             (peaks(2,i)-maxsize)<1 || (peaks(2,i)+maxsize)>size(imggray,2)
+%             disp(sprintf('Peak at (%d,%d) excluded because too close to edge.',...
+%                 peaks(1,i),peaks(2,i)))
+%         elseif sum(spottooclose(i,:))~=length(spottooclose(i,:))-1
+%             disp(sprintf('Peak at (%d,%d) excluded because another spot too close.',...
+%                 peaks(1,i),peaks(2,i)))
+%         else
+%             disp(sprintf('Peak at (%d,%d) excluded for unknown reason ...',...
+%                 peaks(1,i),peaks(2,i)))
+%         end
     end
 end
 

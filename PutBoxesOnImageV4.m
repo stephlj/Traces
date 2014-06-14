@@ -22,11 +22,15 @@ function PutBoxesOnImageV4(img,spots,boxdim,NoX,boxcolor)
 %     img = mat2gray(img);
 % end
 
+if isempty(spots)
+    return
+end
+
 if ~exist('NoX','var') NoX = 0; end
 if ~exist('boxcolor','var') boxcolor = 'g'; end
 
-% Make sure the spots are listed as one spot per row:
-if size(spots,2)~=2
+% Make sure the spots are listed as one spot per column:
+if size(spots,1)~=2
     spots = transpose(spots);
 end
 
@@ -36,15 +40,15 @@ hold on
 
 t = 0:pi/100:2*pi;
 
-for j = 1:size(spots,1)
-    plot(spots(j,2)+boxdim/2*cos(t),spots(j,1)+boxdim/2*sin(t),strcat('-',boxcolor))
+for j = 1:size(spots,2)
+    plot(spots(2,j)+boxdim/2*cos(t),spots(1,j)+boxdim/2*sin(t),strcat('-',boxcolor))
 end
 
 % Lastly add a red dot in the center:
 % Update 9/2013: a red dot instead of an x
 if ~NoX
     % plot(spots(:,2),spots(:,1),'xr')
-    plot(spots(:,2),spots(:,1),'.r','MarkerSize',3)
+    plot(spots(2,:),spots(1,:),'.r','MarkerSize',3)
 end
 hold off
 
