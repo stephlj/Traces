@@ -25,6 +25,7 @@ end
         else
             FramesToAvg = 10;
         end
+        %FramesToAvg=1;
         for ff = 1:100:numtifs
             if strcmpi(channel,'green')
                 [~,imgs] = LoadScaledMovie(path,[ff ff+99]);
@@ -33,7 +34,7 @@ end
             end
             [spotimg,localcen] = ExtractROI(imgs,params.DNASize,spotcen);
             
-            if params.IntensityGaussWeight==1
+            %if params.IntensityGaussWeight==1
                 bkgnd = zeros(1,size(spotimg,3));
                 prevbkgnd = min(min(spotimg(:,:,1)));
                 prevA = max(max(spotimg(:,:,1)));
@@ -47,10 +48,13 @@ end
                 % containing the spot:
                 bkgnd = repmat(bkgnd,size(spotimg,1)*size(spotimg,2),1,1);
                 bkgnd = reshape(bkgnd,size(spotimg,1),size(spotimg,2),size(spotimg,3));
+            if params.IntensityGaussWeight==1
                 I(ff:ff+size(imgs,3)-1) = CalcSpotIntensityV4(spotimg-bkgnd,...
                     localcen,spotvars);
+%                 I(ff:ff+size(imgs,3)-1) = CalcSpotIntensityV4(spotimg-bkgnd,...
+%                     localcen,[0.3;0.3]);
             else
-                I(ff:ff+size(imgs,3)-1) = CalcSpotIntensityNoGauss(imgs,spotcen);
+                I(ff:ff+size(imgs,3)-1) = CalcSpotIntensityNoGauss(spotimg-bkgnd,localcen);
             end
         end
         
@@ -97,10 +101,8 @@ for ss = 1:size(base_spots,2)
     disp(sprintf('%d nearby spots;',length(CloseMatches)))
     if ~isempty(CloseMatches)
         % Calculate this spot's intensity as a function of time
-        tic
         base_I = CalcOneSpotIntensity(base_spots(:,ss),base_vars(:,ss),...
             base_channel,params,length(alltifs),PathToMovie);
-        toc
         
         match_I = zeros(length(CloseMatches),length(alltifs));
         spotcorrs = zeros(1,length(CloseMatches));

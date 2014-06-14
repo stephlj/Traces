@@ -36,7 +36,7 @@ spotsize = size(img(:,:,1));
 
 for i=1:size(img,3)
     I(i) = sum(sum(img(:,:,i).*PlotGauss2D(spotsize,...
-        [spotcen(1), spotcen(2), spotvar(1), spotvar(2), bkgnd, 2])));
+        [spotcen(1), spotcen(2), spotvar(1), spotvar(2), bkgnd, 1])));
     % Note: The Ha lab IDL code weights by a Gaussian of Amp 2 instead of
     % 1...
 end

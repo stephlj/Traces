@@ -117,13 +117,13 @@ BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in
     % neighborhood (area, in square pixels) for the beads.  Needs to be a perfect
     % square, and best if sqrt(BeadNeighborhood) is odd.  Should be a little 
     % bigger than we expect beads to be.
-DNASize = 6; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
+DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
     % if IntensityGaussWeight=1, this is also the side of a square over which
     % a Gaussian is fit and the intensity calculated. However, if IntensityGaussWeight=0,
     % the intensity is summed over a 5-pixel diameter circle and this parameter
     % has no effect.  In both cases DNASize also determines how close two 
     % spots can be and still be included in the analysis.
-    % I have found that 6 is a good number, 8 is ok.
+    % I have found that 6 or 8 is a good number.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
 BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
 gamma = 0; % Crosstalk between channels. Not implemented yet.

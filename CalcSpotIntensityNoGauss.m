@@ -29,7 +29,7 @@ mask(2:4,:) = ones(3,SpotDiam,class(img));
 mask(:,2:4) = ones(SpotDiam,3,class(img));
 
 % The part of the image that contains the spot is going to be in:
-SpotCenRound = round(spotcen);
+SpotCenRound = ceil(spotcen);
 SpotBox = [SpotCenRound(1)-floor(SpotDiam/2), SpotCenRound(1)+floor(SpotDiam/2);...
     SpotCenRound(2)-floor(SpotDiam/2), SpotCenRound(2)+floor(SpotDiam/2)];
 
