@@ -24,6 +24,12 @@ function [RedI, GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars, ...
 % Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
 
+if rem(100,params.FramesToAvg)==0
+    FramesToAvg = params.FramesToAvg;
+else
+    FramesToAvg = 10;
+end
+
 RedI = zeros(size(Rspots,2),length(alltifs));
 GrI = zeros(size(Rspots,2),length(alltifs));
 % Find the spots in the coordinate system of the other (green) channel:
@@ -97,13 +103,19 @@ for jj = 1:100:length(alltifs)
            % TODO: Should I take an average over some number of frames?
            bkgndR = zeros(1,size(spotimgR,3));
            bkgndG = zeros(1,size(spotimgR,3));
-           for bb = 1:size(spotimgR,3)
-               [~,~,~,~,bkgndR(bb),~] = Fit2DGaussToSpot(spotimgR(:,:,bb),'Background',...
+           prevbkgndR = min(min(spotimgR(:,:,1)));
+           prevAR = max(max(spotimgR(:,:,1)));
+           prevbkgndG = min(min(spotimgG(:,:,1)));
+           prevAG = max(max(spotimgG(:,:,1)));
+           for bb = 1:FramesToAvg:size(spotimgR,3)
+               [~,~,~,~,prevbkgndR,prevAR] = Fit2DGaussToSpot(spotimgR(:,:,bb),'Background',...
                    'StartParams',[localcenR(1),localcenR(2),spotVars(1,kk),spotVars(2,kk),...
-                   min(min(spotimgR(:,:,bb))),max(max(spotimgR(:,:,bb)))],'symGauss',params.UseSymGauss);
-               [~,~,~,~,bkgndG(bb),~] = Fit2DGaussToSpot(spotimgG(:,:,bb),'Background',...
+                   prevbkgndR,prevAR],'symGauss',params.UseSymGauss);
+               [~,~,~,~,prevbkgndG,prevAG] = Fit2DGaussToSpot(spotimgG(:,:,bb),'Background',...
                    'StartParams',[localcenG(1),localcenG(2),spotVars(1,kk),spotVars(2,kk),...
-                   min(min(spotimgG(:,:,bb))),max(max(spotimgG(:,:,bb)))],'symGauss',params.UseSymGauss);
+                   prevbkgndG,prevAG],'symGauss',params.UseSymGauss);
+               bkgndR(bb:bb+FramesToAvg-1) = prevbkgndR;
+               bkgndG(bb:bb+FramesToAvg-1) = prevbkgndG;
            end
            % Subtract this background value from every pixel in the ROI
            % containing the spot:
