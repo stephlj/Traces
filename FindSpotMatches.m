@@ -18,7 +18,7 @@
 % Steph 9/2013
 % Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
-function [matched1,matched2] = FindSpotMatches(spots1,spots2)
+function [matched1,matched2] = FindSpotMatches(spots1,spots2,maxDist)
 
 % global TotImg
 
@@ -38,7 +38,10 @@ Dists = FindSpotDists(spots1,spots2);
 % Assume that if a spot in spots1 doesn't have match that's a shorter
 % distance away than the mean distance over all the spots plus the standard
 % deviation, that that spot doesn't have a match:
-maxDist = mean(minDists)+std(minDists,1);
+% Update 6/2014: Providing the option for the user to pass in a maxDist:
+if ~exist('maxDist','var')
+    maxDist = mean(minDists)+std(minDists,1);
+end
 
 matched1 = [];
 matched2 = [];

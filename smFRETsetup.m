@@ -43,7 +43,7 @@ Acceptor = 0; % This means the acceptor channel is the one on the left
 % from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 20; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
@@ -72,11 +72,11 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % PxlsToExclude that comes with any map you load. Re-do a map with a
     % different PxlsToExclude value in order to change the pixels excluded
     % with real data!
-FindSpotsEveryXFrames = 100; % If this is 0 (or negative), spots will be found from 
+FindSpotsEveryXFrames = 0; % If this is 0 (or negative), spots will be found from 
     % EndInjectFrame:EndInjectFrame+FramesToAvg. If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
-CheckSpotFindingEveryXFrames = 100; % If this is nonzero and nonnegative, will ask
+CheckSpotFindingEveryXFrames = 0; % If this is nonzero and nonnegative, will ask
     % the user to check the fidelity of the spotfinding threshhold every
     % this many frames. I recommend if FindSpotsEveryXFrames is greater
     % than 0, that this is set to something like 10*FindSpotsEveryXFrames.

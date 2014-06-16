@@ -33,17 +33,17 @@ end
 RedI = zeros(size(Rspots,2),length(alltifs));
 GrI = zeros(size(Rspots,2),length(alltifs));
 % Find the spots in the coordinate system of the other (green) channel:
-% Gspots = tform.FRETmapInv(Rspots);
+Gspots = tform.FRETmapInv(Rspots);
 % HACK because I'm working with a cutout right now:
-Gspots = zeros(size(Rspots));
-RedSpotsGlobalCoords = zeros(size(Rspots));
-for hh=1:size(Rspots,2)
-    RedSpotsGlobalCoords(:,hh) = GlobalToROICoords([],Rspots(:,hh),[136;187],88,88);
-end
-GspotsGlobal = tform.FRETmapInv(RedSpotsGlobalCoords);
-for hh=1:size(Rspots,2)
-    Gspots(:,hh) = GlobalToROICoords(GspotsGlobal(:,hh),[],[136;187],88,88);
-end
+% Gspots = zeros(size(Rspots));
+% RedSpotsGlobalCoords = zeros(size(Rspots));
+% for hh=1:size(Rspots,2)
+%     RedSpotsGlobalCoords(:,hh) = GlobalToROICoords([],Rspots(:,hh),[136;187],88,88);
+% end
+% GspotsGlobal = tform.FRETmapInv(RedSpotsGlobalCoords);
+% for hh=1:size(Rspots,2)
+%     Gspots(:,hh) = GlobalToROICoords(GspotsGlobal(:,hh),[],[136;187],88,88);
+% end
 % It can happen that a red channel spot, when transformed to the green
 % channel, is too close to the edge to be useable.  Remove any such spots:
 [imgtogetsize,~] = LoadScaledMovie(PathToMovie,[1 1]);
@@ -101,6 +101,7 @@ for jj = 1:100:length(alltifs)
            % that can vary the background and the amplitude, to get the
            % local background in this frame.
            % TODO: Should I take an average over some number of frames?
+           % It really does change things a lot to do so ... 
            bkgndR = zeros(1,size(spotimgR,3));
            bkgndG = zeros(1,size(spotimgR,3));
            prevbkgndR = min(min(spotimgR(:,:,1)));
@@ -108,10 +109,10 @@ for jj = 1:100:length(alltifs)
            prevbkgndG = min(min(spotimgG(:,:,1)));
            prevAG = max(max(spotimgG(:,:,1)));
            for bb = 1:FramesToAvg:size(spotimgR,3)
-               [~,~,~,~,prevbkgndR,prevAR] = Fit2DGaussToSpot(spotimgR(:,:,bb),'Background',...
+               [~,~,~,~,prevbkgndR,prevAR] = Fit2DGaussToSpot(mean(spotimgR(:,:,bb:bb+FramesToAvg-1),3),'Background',...
                    'StartParams',[localcenR(1),localcenR(2),spotVars(1,kk),spotVars(2,kk),...
                    prevbkgndR,prevAR],'symGauss',params.UseSymGauss);
-               [~,~,~,~,prevbkgndG,prevAG] = Fit2DGaussToSpot(spotimgG(:,:,bb),'Background',...
+               [~,~,~,~,prevbkgndG,prevAG] = Fit2DGaussToSpot(mean(spotimgG(:,:,bb:bb+FramesToAvg-1),3),'Background',...
                    'StartParams',[localcenG(1),localcenG(2),spotVars(1,kk),spotVars(2,kk),...
                    prevbkgndG,prevAG],'symGauss',params.UseSymGauss);
                bkgndR(bb:bb+FramesToAvg-1) = prevbkgndR;
