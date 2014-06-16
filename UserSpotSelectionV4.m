@@ -13,7 +13,7 @@
 % Steph 10/2013
 % Copyright 2013 Stephanie Johnson, University of California, San Francisco
 
-function UserSpotSelectionV4(allRedI,allGrI,spots,PathToMovie,params,tform,savedir,fps,setnum)
+function UserSpotSelectionV4(allRedI,allGrI,spots,spotVars,PathToMovie,params,tform,savedir,fps,setnum)
 
 zoomsize = 10; % How many pixels across (and high) should the zoomed-in image around
     % a spot be
@@ -23,10 +23,10 @@ end
 
 %%%Setting up some stuff
 % subfunction for putting circles around a spot:
-    function boxfun(currspot)
+    function boxfun(currspot,circlesize)
         % CalcSpotIntensityNoGauss puts a circle of diameter 5 around each spot:
         t = 0:pi/100:2*pi;
-        plot(currspot(2)+5/2.*cos(t),currspot(1)+5/2.*sin(t),'-g')
+        plot(currspot(2)+circlesize(2)/2.*cos(t),currspot(1)+circlesize(1)/2.*sin(t),'-g')
         clear t
     end
 
@@ -104,14 +104,14 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
        subplot('Position',[0.08 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
        imshow(imgRinit)
        hold on
-       boxfun(spots(:,k));
+       boxfun(spots(:,k),spotVars(:,k).*5);
        hold off
        title('Red','Fontsize',12)
        % plot green channel with circle around spot
        subplot('Position',[0.54 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
        imshow(imgGinit)
        hold on
-       boxfun(GrSpots(:,k));
+       boxfun(GrSpots(:,k),spotVars(:,k).*5);
        hold off
        title('Green','Fontsize',12)
        % Show zoom in of the red spot, with the fitted Gaussian or a circle
@@ -119,13 +119,13 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
        subplot('Position',[0.13 0.05 0.2 .18])
        imshow(imgRzoom)
        hold on
-       boxfun(zoomcenR);
+       boxfun(zoomcenR,spotVars(:,k).*5);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
        imshow(imgGzoom)
        hold on
-       boxfun(zoomcenG);
+       boxfun(zoomcenG,spotVars(:,k).*5);
        hold off
        
        figure(h1)

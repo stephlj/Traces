@@ -884,26 +884,7 @@ close all
                    % paired to a red channel spot to our list of spots. Or, put
                    % equivalently, add everything in RefinedCentersG that's not
                    % in matchG.
-                   if strcmpi(DoMap,'D')
-                       Dists = FindSpotDists(RefinedCentersG,matchG);
-                       spotnottooclose = Dists>0;
-                       newspots = RefinedCentersG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
-                      spotsGinR = tformPoly.FRETmapFwd(newspots);
-                   else
-                       if ~isempty(RefinedCentersG)
-                           spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
-                           Dists = FindSpotDists(RefinedCentersR,spotsGinR);
-                           spotnottooclose = Dists>MappingTolerance*2;
-                           newspots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                           clear spotsGinR
-                           spotsGinR = newspots;
-                       else
-                           spotsGinR = [];
-                       end
-                   end
-
-                   if params.IntensityGaussWeight && ~isempty(RefinedCentersG)
-                       % Problems I haven't really resolved yet:
+                   % Problems I haven't really resolved yet:
                         % (1) Assume variance is same in green and red channels?
                         % This is what the Ha lab IDL code does (actually they
                         % hard-code a value for both channels, for all spots)
@@ -913,48 +894,33 @@ close all
                         % also output the amplitudes of the fits, so I could
                         % also choose based on which channel had a larger
                         % amplitude or something.
-                        if strcmpi(DoMap,'D')
-                           Vars = VarsG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
-                        else
-                            Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                        end
+                   if strcmpi(DoMap,'D')
+                       Dists = FindSpotDists(RefinedCentersG,matchG);
+                       spotnottooclose = Dists>0;
+                       newspots = RefinedCentersG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
+                       spotsGinR = tformPoly.FRETmapFwd(newspots);
+                       Vars = VarsG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
                    else
-                       Vars = [];
+                       if ~isempty(RefinedCentersG)
+                           spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
+                           Dists = FindSpotDists(RefinedCentersR,spotsGinR);
+                           spotnottooclose = Dists>MappingTolerance*2;
+                           newspots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                           clear spotsGinR
+                           spotsGinR = newspots;
+                           Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                       else
+                           spotsGinR = [];
+                       end
                    end
+
                    % Check that the transformed G spots are reasonable
                    % edges from the red channel boundaries: note that the same
                    % is done for red spots in CalcIntensitiesV2
                    if ~isempty(spotsGinR)
-                       if length(find(round(spotsGinR(1,:))>=1+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
-                            oldGspots = spotsGinR;
-                            oldVars = Vars;
-                            clear spotsGinR Vars
-                            spotsGinR = oldGspots(:,round(oldGspots(1,:))>=1+floor(params.DNASize/2));
-                            Vars = oldVars(:,round(oldGspots(1,:))>=1+floor(params.DNASize/2));
-                        end
-                        if length(find(round(spotsGinR(2,:))>=1+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
-                            oldGspots = spotsGinR;
-                            oldVars = Vars;
-                            clear spotsGinR Vars
-                            spotsGinR = oldGspots(:,round(oldGspots(2,:))>=1+floor(params.DNASize/2)); 
-                            Vars = oldVars(:,round(oldGspots(2,:))>=1+floor(params.DNASize/2)); 
-                        end
-                        if length(find(round(spotsGinR(1,:))<=size(imgRed,1)+floor(params.DNASize/2)))~=length(spotsGinR(1,:))
-                            oldGspots = spotsGinR;
-                            oldVars = Vars;
-                            clear spotsGinR Vars
-                            spotsGinR = oldGspots(:,round(oldGspots(1,:))<=size(imgRed,1)+floor(params.DNASize/2));
-                            Vars = oldVars(:,round(oldGspots(1,:))<=size(imgRed,1)+floor(params.DNASize/2));
-                        end
-                        if length(find(round(spotsGinR(2,:))<=size(imgRed,2)+floor(params.DNASize/2)))~=length(spotsGinR(2,:))
-                            oldGspots = spotsGinR;
-                            oldVars = Vars;
-                            clear spotsGinR Vars
-                            spotsGinR = oldGspots(:,round(oldGspots(2,:))<=size(imgRed,2)+floor(params.DNASize/2)); 
-                            Vars = oldVars(:,round(oldGspots(2,:))<=size(imgRed,2)+floor(params.DNASize/2)); 
-                        end
+                       [spotsGinR,~,Vars,~] = CheckSpotBoundaries(spotsGinR,...
+                            [],Vars,[],params,fullfile(D_Data,ToAnalyze(i).name));
                    end
-                    clear oldGspots oldVars
                    Vars(:,end+1:end+size(VarsR,2)) = VarsR;
                    spots = [spotsGinR, RefinedCentersR];
                    clear spotsGinR
@@ -982,7 +948,7 @@ close all
            
            disp('Calculating frame-by-frame intensities')
            
-           [RedI, GrI] = CalcIntensitiesV2(fullfile(D_Data,ToAnalyze(i).name),...
+           [RedI, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
                spots, Vars, tformPoly,params);
            
            % Save spot positions, intensities and associated GaussFit
@@ -1011,8 +977,18 @@ close all
            % are true FRET, etc
 
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           UserSpotSelectionV4(RedI,GrI,spots,...
-               fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+           if params.IntensityGaussWeight
+               UserSpotSelectionV4(RedI,GrI,spots,Vars,...
+                   fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+           else
+               % UserSpotSelectionV4 plots 5*the variance as a circle
+               % around the spot center; if the user didn't weight
+               % intensities by a Gaussian, show instead a circle of radius
+               % 5 over which the intensity was summed:
+               Vars = ones(size(spots));
+               UserSpotSelectionV4(RedI,GrI,spots,Vars,...
+                   fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+           end
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')));
            useoldparams = input('Use old parameters? (y/n)','s');
@@ -1021,8 +997,14 @@ close all
                 params = params.params;
            end
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
-               fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+           if params.IntensityGaussWeight
+               UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
+                   oldspots.SpotVars,fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+           else
+               Vars = ones(size(spots));
+               UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
+                   Vars,fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+           end
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp
     end
