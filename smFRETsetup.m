@@ -55,39 +55,17 @@ EndInjectFrame = 1;% round(27/0.15); % If doing a manual injection, which tends 
     % frame instead of at frame 1. I usually know when I'm done injecting
     % in seconds (usually about 25 seconds, add a couple for safety), and I
     % collect data at 0.15 seconds per frame.
-NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
-    % in each frame, to the median intensity of the (512x512) image at that
-    % frame. We've been observing large fluctuations in total image
-    % intensity over time, which may be due to laser power fluctuations;
-    % this is an attempt to correct for that.
 FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
-    % the local background that will be subtracted
-PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
-    % contains both channels, to exclude from analysis.  On our system with
-    % a decent channel alignment this is about 10 pixels.  This avoids
-    % finding spots in areas of the image where the channels might overlap.
-    % Set to zero to use the whole image. NOTE: This parameter MUST be the
-    % same for the data used to create a channel map, as for any data you
-    % analyze with that map. smFRET will insist on using the value for
-    % PxlsToExclude that comes with any map you load. Re-do a map with a
-    % different PxlsToExclude value in order to change the pixels excluded
-    % with real data!
+    % the local background that will be subtracted. 10-20 is a good value
+    % for me.
 FindSpotsEveryXFrames = 0; % If this is 0 (or negative), spots will be found from 
     % EndInjectFrame:EndInjectFrame+FramesToAvg. If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
-CheckSpotFindingEveryXFrames = 0; % If this is nonzero and nonnegative, will ask
+CheckSpotFindingEveryXFrames = 0; % If this is greater than zero, will ask
     % the user to check the fidelity of the spotfinding threshhold every
     % this many frames. I recommend if FindSpotsEveryXFrames is greater
     % than 0, that this is set to something like 10*FindSpotsEveryXFrames.
-TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
-    % (caps insensitive)
-TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
-    % (note if using built-in Matlab functions, this should equal TformTotDeg)
-TformTotDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
-    % (note if using built-in Matlab functions, this must be 2, 3, or 4)
-ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
-    % by total number of spots allowable.
 UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % overlaid on the other to find spots in real data. Otherwise, find
     % spots separately in each channel. While using a combined image has
@@ -96,19 +74,41 @@ UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % right now, depending on the fidelity of the transform. Note also that
     % this currently uses an affine transformation only, since polynomial
     % always does worse at creating a combined image.
+TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
+    % (caps insensitive)
+TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
+    % (note if using built-in Matlab functions, this should equal TformTotDeg)
+TformTotDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
+    % (note if using built-in Matlab functions, this must be 2, 3, or 4)
+ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
+    % by total number of spots allowable.
 Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead center
     % position.  This will increase computational time for the channel
-    % mapping by about a factor of 2, but is a good idea to do anyway.
+    % mapping slightly, but is a good idea to do anyway.
 IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
     % in each frame by a Gaussian whose center and variance are determined
     % from a fit to the spot's first 10 frames. Note that if this is 0, it
     % will calculate intensities over a 5 pxl diameter circle.  That's
-    % hard-wired into the code--see CalcSpotIntensityNoGauss.m to change
+    % hard-wired into the code--see CalcIntensitiesV3.m to change
     % the size.
+GaussWeightAmp = 2; % If IntensityGaussWeight is 1, this determines the amplitude
+    % of the Gaussian used to weight each spot's intensity. Effectively
+    % this just scales the intensity values--the Ha lab code uses an
+    % amplitude of 2, probably so that changes in intensity are more
+    % noticeable. I haven't noticed much of a difference bewteeen 1 vs 2.
+FixSpotVar = [0.3;0.3]; % If IntensityGaussWeight is 1, and FixSpotVar is not
+    % the empty matrix, all spot intensities will be weighted by a Gaussian
+    % with [xvar;yvar] = 1./(2.*FixSpotVar). The Ha lab always uses a fixed
+    % FixSpotVar = [0.3; 0.3]; I haven't found it to make a huge
+    % difference, but 0.3 seems to be good.  Most of my spots have values
+    % between 0.3 and 1, with an average at about 0.7. Err on the smaller
+    % side for these values, as that will mean you don't run the risk of
+    % under-weighting real intensity.
 UseSymGauss = 0; % If this is 1, insist that the Gaussian used if IntensityGaussWeight=1
     % is symmetric (same variances in x and y). Does not affect the use of
     % Gaussian fitting in spotfinding. Given the distortions at the bottom
-    % of our images I do not use a symmetric Gaussian.
+    % of our images I do not use a symmetric Gaussian (though of course this parameter
+    % does not matter if you use FixSpotVar with identical x and y values).
 BeadSize = 8; % Diameter of a circle that defines a bead (used for the channel
     % mapping procedure); beads whose centers are closer than BeadSize will 
     % not be included, and found beads will be circled by a circle of radius BeadSize.  
@@ -125,9 +125,50 @@ DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % spots can be and still be included in the analysis.
     % I have found that 6 or 8 is a good number.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
-BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
 gamma = 0; % Crosstalk between channels. Not implemented yet.
+PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
+    % contains both channels, to exclude from analysis.  On our system with
+    % a decent channel alignment this is about 10 pixels.  This avoids
+    % finding spots in areas of the image where the channels might overlap.
+    % Set to zero to use the whole image. NOTE: This parameter MUST be the
+    % same for the data used to create a channel map, as for any data you
+    % analyze with that map. smFRET will insist on using the value for
+    % PxlsToExclude that comes with any map you load. Re-do a map with a
+    % different PxlsToExclude value in order to change the pixels excluded
+    % with real data!
+BkgndSubSigma = 4; % For background subtraction: variance of the Gaussian filter that is applied
+NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
+    % in each frame, to the median intensity of the (512x512) image at that
+    % frame. We've been observing large fluctuations in total image
+    % intensity over time, which may be due to laser power fluctuations;
+    % this is an attempt to correct for that.
     
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%% PLEASE DO NOT CHANGE CODE BELOW HERE %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%% Check parameters are reasonable %%%%%%%%%%%%%%%%%%%%
+    PxlsToExclude = round(PxlsToExclude);
+    EndInjectFrame = round(EndInjectFrame);
+    FindSpotsEveryXFrames = round(FindSpotsEveryXFrames);
+    if EndInjectFrame<=0
+        EndInjectFrame = 1;
+    end
+    if FindSpotsEveryXFrames<0
+        FindSpotsEveryXFrames = 0;
+    end
+    if ~isempty(FixSpotVar) && (FixSpotVar(1)<=0 || ...
+            FixSpotVar(2)<=0)
+        FixSpotVar = [];
+    end
+    MatlabVer = ver;
+    MatlabDate = MatlabVer(1).Date;
+    if UseCombinedImage == 1 && str2double(MatlabDate(end-1:end))<=11 % Testing for Matlab versions older than 2012
+        disp('Warning: This version of Matlab does not support creation of a combined image.')
+        UseCombinedImage = 0;
+    end
+    clear MatlabVer MatlabDate
+
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%
 save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'defaultdatadir','splitx','Acceptor','BeadSize','BeadNeighborhood',...
@@ -136,4 +177,4 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'BkgndSubSigma','UseCombinedImage','IntensityGaussWeight','NormImage',...
     'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
     'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','gamma',...
-    'CheckSpotFindingEveryXFrames');
+    'CheckSpotFindingEveryXFrames','GaussWeightAmp','FixSpotVar');

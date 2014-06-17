@@ -20,9 +20,6 @@
 function [RedI, GrI] = CalcIntensitiesV3(PathToMovie, Rspots, spotVars, ...
     tform,params)
 
-amplitude_multiplier = 2; % Note: The Ha lab IDL code weights by a Gaussian of Amp 2 instead of
-            % 1...
-
 % Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
 
@@ -51,18 +48,19 @@ end
     Rspots,spotVars,[],params,PathToMovie);
 
     % Subfunction to do the actual intensity calculation:
-    function I = CalcSpotIntensityInternal(kind,img,spotcen,spotvar,bkgnd)
+    function I = CalcSpotIntensityInternal(kind,img,spotcen,spotvar,params,bkgnd)
 
         if ~exist('bkgnd','var')
             bkgnd = 0;
         end
+        if ~isempty(params.FixSpotVar)
+            spotvar = params.FixSpotVar;
+        end
 
         if strcmpi(kind,'Gauss')
             spotsize = size(img(:,:,1));
-            %mask = PlotGauss2D(spotsize,...
-            %    [spotcen(1), spotcen(2), spotvar(1), spotvar(2), bkgnd, amplitude_multiplier]);
             mask = PlotGauss2D(spotsize,...
-                [spotcen(1), spotcen(2), 0.3, 0.3, bkgnd, amplitude_multiplier]);
+               [spotcen(1), spotcen(2), spotvar(1), spotvar(2), bkgnd, params.GaussWeightAmp]);
         else
             SpotDiam = 5;
             mask = zeros(SpotDiam,SpotDiam,class(img));
@@ -93,9 +91,9 @@ for jj = 1:100:length(alltifs)
            [spotimgG,localcenG] = ExtractROI(imgG,params.DNASize,Gspots(:,kk));
            
            RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityInternal('Gauss',...
-               spotimgR,localcenR,spotVars(:,kk));
+               spotimgR,localcenR,spotVars(:,kk),params);
            GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityInternal('Gauss',...
-               spotimgG,localcenG,spotVars(:,kk));
+               spotimgG,localcenG,spotVars(:,kk),params);
 
        else
            % Get ROI in red channel
@@ -104,9 +102,9 @@ for jj = 1:100:length(alltifs)
            [spotimgG,localcenG] = ExtractROI(imgG,5,Gspots(:,kk));
 
            RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityInternal('NoGauss',...
-               spotimgR,localcenR,[]);
+               spotimgR,localcenR,[],params);
            GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityInternal('NoGauss',...
-               spotimgG,localcenG,[]);
+               spotimgG,localcenG,[],params);
        end
        clear spotimgG spotimgR
     end

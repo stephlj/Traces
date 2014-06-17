@@ -164,23 +164,6 @@ function smFRET(rootname,debug)
     % Load and check parameter settings
     smFRETsetup;
     params = load('AnalysisParameters.mat');
-    % Error-handling: Check that the user-defined parameters are reasonable:
-    params.PxlsToExclude = round(params.PxlsToExclude);
-    params.EndInjectFrame = round(params.EndInjectFrame);
-    params.FindSpotsEveryXFrames = round(params.FindSpotsEveryXFrames);
-    if params.EndInjectFrame<=0
-        params.EndInjectFrame = 1;
-    end
-    if params.FindSpotsEveryXFrames<0
-        params.FindSpotsEveryXFrames = 0;
-    end
-    MatlabVer = ver;
-    MatlabDate = MatlabVer(1).Date;
-    if params.UseCombinedImage == 1 && str2double(MatlabDate(end-1:end))<=11 % Testing for Matlab versions older than 2012
-        disp('Warning: This version of Matlab does not support creation of a combined image.')
-        params.UseCombinedImage = 0;
-    end
-    clear MatlabVer MatlabDate
 
 %%%%%%FIRST PART: Channel mapping:
     % Load an old channel mapping, or perform a new one:
@@ -529,10 +512,6 @@ close all
 
     for i = 1:length(ToAnalyze)
         disp(strcat('Analyzing:',ToAnalyze(i).name))
-        
-        % Reset parameters in case user had loaded an old one, then changed
-        % smFRET and wants to use new parameters for this set
-        smFRETsetup;
 
         % Update 12/2013: If this movie has already been analyzed, provide
         % the option to use the previously found spots, instead of
@@ -977,10 +956,7 @@ close all
            % are true FRET, etc
 
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
-           if params.IntensityGaussWeight
-               UserSpotSelectionV4(RedI,GrI,spots,Vars,...
-                   fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
-           else
+           if ~params.IntensityGaussWeight 
                % UserSpotSelectionV4 plots 5*the std dev of the weighting Gaussian as a circle
                % around the spot center; if the user didn't weight
                % intensities by a Gaussian, show instead a circle of radius
@@ -988,9 +964,11 @@ close all
                % (It should be noted that what I call "Vars", "spotVars",
                % etc is actually 1/(2*the real variance))
                Vars = ones(size(spots));
+           elseif ~isempty(params.FixSpotVar)
+               Vars = repmat(params.FixSpotVar,1,size(spots,2));
+           end
                UserSpotSelectionV4(RedI,GrI,spots,Vars,...
                    fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
-           end
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')));
            useoldparams = input('Use old parameters? (y/n)','s');
@@ -1000,13 +978,16 @@ close all
            end
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            if params.IntensityGaussWeight
-               UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
-                   oldspots.SpotVars,fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+               if isempty(params.FixSpotVar)
+                   Vars = oldspots.SpotVars;
+               else 
+                   Vars = repmat(params.FixSpotVar,1,size(oldspots.SpotsInR,2));
+               end
            else
                Vars = ones(size(spots));
-               UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
-                   Vars,fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
            end
+           UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
+               Vars,fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp
     end
