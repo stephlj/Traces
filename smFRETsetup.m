@@ -43,11 +43,11 @@ Acceptor = 0; % This means the acceptor channel is the one on the left
 % from smFRETsetup rather than from the acquisition file.
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-SmoothIntensities = 20; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 10; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal.  At some
+SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
 EndInjectFrame = 1;% round(27/0.15); % If doing a manual injection, which tends to bump the stage,
     % you can set this to the value of a frame that you know is after the

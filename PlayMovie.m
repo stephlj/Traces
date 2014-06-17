@@ -37,7 +37,7 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
         frames(1)=1;
     end
     if isempty(varargin)
-        h2 = figure('Position',[650,800,500,650]);
+        h2p = figure('Position',[650,800,500,650]);
     else 
         if length(varargin)~=3 && length(varargin)~=8
             disp('PlayMovie: Optional input must contain either 3 or 8 elements.');
@@ -45,8 +45,8 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
             LastGreenFrame = -1;
             return
         else
-            h2 = varargin{1};
-            figure(h2)
+            h2p = varargin{1};
+            figure(h2p)
         end
     end
     % subfunction for putting circles around a spot:

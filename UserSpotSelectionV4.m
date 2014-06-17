@@ -60,9 +60,10 @@ h2 = figure('Position',params.Fig2Pos);
 h1 = figure('Position',params.Fig1Pos);
 
 disp('Fig. 2 must be current.') 
-disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom; o=adjust black offset;')
+disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom;')
 disp('f=select frame to display; m = play movie between two points; a=show average around frame;')
-disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d=done with movie')
+disp('o=adjust black offset; l = re-_l_ocate spot; g=go to spot number;')
+disp('e=end of trace (after this point FRET set to zero); d=done with movie')
 
     while k <= size(spots,2)
        RedI = allRedI(k,:)-Rbkgnd(k);
@@ -97,6 +98,11 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
        [imgRzoom,zoomcenR] = ExtractROI(imgRinit,zoomsize,spots(:,k));
        [imgGzoom,zoomcenG] = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
        
+       % In case ExtractROI had to remove some pixels because the ROI
+       % center was too close to the edge:
+       zoomsizeR = size(imgRzoom,1)-1;
+       zoomsizeG = size(imgGzoom,1)-1;
+       
        % Show plots
        figure(h2)
        % plot red channel with circle around spot
@@ -104,14 +110,14 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
        subplot('Position',[0.08 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
        imshow(imgRinit)
        hold on
-       boxfun(spots(:,k),spotVars(:,k).*5);
+       boxfun(spots(:,k),sqrt(1./(2.*spotVars(:,k))).*5);
        hold off
        title('Red','Fontsize',12)
        % plot green channel with circle around spot
        subplot('Position',[0.54 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
        imshow(imgGinit)
        hold on
-       boxfun(GrSpots(:,k),spotVars(:,k).*5);
+       boxfun(GrSpots(:,k),sqrt(1./(2.*spotVars(:,k))).*5);
        hold off
        title('Green','Fontsize',12)
        % Show zoom in of the red spot, with the fitted Gaussian or a circle
@@ -119,13 +125,13 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
        subplot('Position',[0.13 0.05 0.2 .18])
        imshow(imgRzoom)
        hold on
-       boxfun(zoomcenR,spotVars(:,k).*5);
+       boxfun(zoomcenR,sqrt(1./(2.*spotVars(:,k))).*5);
        hold off
        % Same for green
        subplot('Position',[0.63 0.05 0.2 .18])
        imshow(imgGzoom)
        hold on
-       boxfun(zoomcenG,spotVars(:,k).*5);
+       boxfun(zoomcenG,sqrt(1./(2.*spotVars(:,k))).*5);
        hold off
        
        figure(h1)
@@ -223,9 +229,14 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                     rawRedI = rawRedToSave;
                     rawGrI = rawGrToSave;
                     rawFRET = rawFRETtoSave;
+                    Rspot = spots(:,k);
+                    Gspot = GrSpots(:,k);
+                    variance = spotVars(:,k);
                     save(fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k),'.mat')),...
-                        'RedI','GrI','FRET','rawRedI','rawGrI','rawFRET','fps')
+                        'RedI','GrI','FRET','rawRedI','rawGrI','rawFRET','fps',...
+                        'Rspot','Gspot','variance')
                     clear RedToSave GrToSave FRETtoSave rawRedToSave rawGrToSave rawFRETtoSave
+                    clear Rspot Gspot variance
                     cc=13;
                 % Zoom
                 elseif cc=='z'
@@ -293,6 +304,52 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                     imgGinit = mat2gray(mean(imgGinit,3));
                     clear x
                     cc = 13;
+                % Re-locate a spot in one of the channels, if the
+                % transformation looks like it didn't get the center right:
+                elseif cc=='l'
+                    disp('Click on trace at time around which to look for spot:')
+                    [xT,~] = ginput(1);
+                    xT = round(xT*fps/10^-3);
+                    starttime = xT-ceil(params.FramesToAvg/2);
+                    endtime = xT+ceil(params.FramesToAvg/2);
+                    if starttime<1
+                        endtime = endtime+0-starttime;
+                        starttime = 1;
+                    end
+                    if endtime>size(allRedI,2)
+                        starttime = starttime+(endtime-allRedI);
+                        endtime = size(allRedI,2);
+                    end
+                    spottorefit = input('Relocate red spot (r) or green spot (g)?: ','s');
+                    disp('Click on zoomed image of the spot where you want to look for a new one:')
+                    figure(h2)
+                    [xIlocal,yIlocal] = ginput(1);
+                    % TODO: need error handling if the user doesn't click
+                    % in the right axes ... 
+                    % TODO: need error handling if user doesn't enter r or
+                    % g
+                    if strcmpi(spottorefit,'r')
+                        newcoords = GlobalToROICoords([],[yIlocal;xIlocal],spots(:,k),zoomsizeR,zoomsizeR);
+                        [imgs,~] = LoadScaledMovie(PathToMovie,[starttime endtime]);
+                        [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
+                        if ~isempty(tempnewspot)
+                            spots(:,k) = tempnewspot;
+                            [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
+                                spots(:,k), spotVars(:,k),[],params);
+                        end
+                    elseif strcmpi(spottorefit,'g')
+                        newcoords = GlobalToROICoords([],[yIlocal;xIlocal],GrSpots(:,k),zoomsizeG,zoomsizeG);
+                        [~,imgs] = LoadScaledMovie(PathToMovie,[starttime endtime]);
+                        [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
+                        if ~isempty(tempnewspot)
+                            % if the fit fails, tempnewspot will be empty
+                            GrSpots(:,k) = tempnewspot;
+                        [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
+                            GrSpots(:,k), spotVars(:,k),[],params);
+                        end
+                    end
+                    clear imgs xT xIlocal yIlocal starttime endtime newcoords
+                    cc=13;
                 end
             end
        % end interactive section

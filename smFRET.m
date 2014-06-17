@@ -981,10 +981,12 @@ close all
                UserSpotSelectionV4(RedI,GrI,spots,Vars,...
                    fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
            else
-               % UserSpotSelectionV4 plots 5*the variance as a circle
+               % UserSpotSelectionV4 plots 5*the std dev of the weighting Gaussian as a circle
                % around the spot center; if the user didn't weight
                % intensities by a Gaussian, show instead a circle of radius
                % 5 over which the intensity was summed:
+               % (It should be noted that what I call "Vars", "spotVars",
+               % etc is actually 1/(2*the real variance))
                Vars = ones(size(spots));
                UserSpotSelectionV4(RedI,GrI,spots,Vars,...
                    fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
