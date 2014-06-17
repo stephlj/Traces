@@ -123,19 +123,19 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        % Show zoom in of the red spot, with the fitted Gaussian or a circle
        % around it to show how and where the spot intensity was calculated
        subplot('Position',[0.13 0.05 0.2 .18])
-       imshow(imgRzoom)
+       imgRzoom_axes = imshow(imgRzoom);
        hold on
        boxfun(zoomcenR,sqrt(1./(2.*spotVars(:,k))).*5);
        hold off
        % Same for green
-       subplot('Position',[0.63 0.05 0.2 .18])
+       imgGzoom_axes = subplot('Position',[0.63 0.05 0.2 .18]);
        imshow(imgGzoom)
        hold on
        boxfun(zoomcenG,sqrt(1./(2.*spotVars(:,k))).*5);
        hold off
        
        figure(h1)
-       subplot(2,1,1)
+       trace_axes = subplot(2,1,1);
        plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k',...
            [xvect(1) xvect(end)],[0 0],'--k')
        xlabel('Time (sec)','Fontsize',12)
@@ -145,7 +145,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
            xlim([xlims(k,1) xlims(k,2)])
        end
        
-       subplot(2,1,2)
+       fret_axes = subplot(2,1,2);
        plot(xvect,FRET,'-b',[xvect(1) xvect(end)],[0 0],'--k',...
            [xvect(1) xvect(end)],[1 1],'--k')
        xlabel('Time (sec)','Fontsize',12)
@@ -192,10 +192,14 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                 % Set background levels
                 elseif cc=='b'
                     [x,~] = ginput(2);
-                    x = sort(x);
-                    Rbkgnd(k) = mean(RedI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
-                    Gbkgnd(k) = mean(GrI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
-                    clear x
+                    % Make sure user actually selected something in the
+                    % correct panel
+                    if isequal(trace_axes,gca)
+                        x = sort(x);
+                        Rbkgnd(k) = mean(RedI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
+                        Gbkgnd(k) = mean(GrI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
+                        clear x
+                    end
                     cc=13;
                 % Reset background to zero
                 elseif cc=='r'
@@ -241,9 +245,11 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                 % Zoom
                 elseif cc=='z'
                     [x,~] = ginput(2);
-                    x = sort(x);
-                    xlims(k,1) = x(1);
-                    xlims(k,2) = x(2);
+                    if isequal(trace_axes,gca)
+                        x = sort(x);
+                        xlims(k,1) = x(1);
+                        xlims(k,2) = x(2);
+                    end
                     cc=13;
                 % Unzoom
                 elseif cc=='u'
@@ -254,101 +260,107 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     cc=13;
                 % Set end of signal (FRET set to zero after this point)
                 elseif cc=='e'
-                    [x,~] = ginput(1);
-                    ends(k) = round(x*fps/10^-3);
-                    cc=13;
-                % Don't let extra "enters" build up:
-                elseif isequal(cc,char(13)) %13 is the ascii code for the return key
+                    if isequal(trace_axes,gca) || isequal(fret_axes,gca)
+                        [x,~] = ginput(1);
+                        ends(k) = round(x*fps/10^-3);
+                    end
                     cc=13;
                 %Show a specific frame in figure 2
                 elseif cc=='f'
                     [x,~] = ginput(1);
-                    % x will be in seconds, not frames. Convert to frame:
-                    x = x*fps/10^-3; % fps is actually frames per ms
-                    [imgRinit,imgGinit] = PlayMovie(PathToMovie,[round(x) round(x)],h2,...
-                        strcat('subplot(',char(39),'Position',char(39),...
-                            ',[0.08 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
-                        strcat('subplot(',char(39),'Position',char(39),...
-                            ',[0.54 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
-                        spots(:,k),GrSpots(:,k),...
-                        strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
-                        strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
-                        zoomsize);
-                    clear x
+                    if isequal(trace_axes,gca) || isequal(fret_axes,gca)
+                        % x will be in seconds, not frames. Convert to frame:
+                        x = x*fps/10^-3; % fps is actually frames per ms
+                        [imgRinit,imgGinit] = PlayMovie(PathToMovie,[round(x) round(x)],h2,...
+                            strcat('subplot(',char(39),'Position',char(39),...
+                                ',[0.08 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
+                            strcat('subplot(',char(39),'Position',char(39),...
+                                ',[0.54 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
+                            spots(:,k),GrSpots(:,k),...
+                            strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
+                            strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
+                            zoomsize);
+                        clear x
+                    end
                     cc = 13;
                 %Play a section of the movie in figure 2
                 elseif cc=='m'
                     [x,~] = ginput(2);
-                    % x will be in seconds, not frames. Convert to frame:
-                    x = x*fps/10^-3; % fps is actually frames per ms
-                    x = round(sort(x));
-                    [imgRinit,imgGinit] = PlayMovie(PathToMovie,[x(1) x(2)],h2,...
-                        strcat('subplot(',char(39),'Position',char(39),...
-                            ',[0.08 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
-                        strcat('subplot(',char(39),'Position',char(39),...
-                            ',[0.54 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
-                        spots(:,k),GrSpots(:,k),...
-                        strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
-                        strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
-                        zoomsize);
-                    clear x
+                    if isequal(trace_axes,gca) || isequal(fret_axes,gca)
+                        % x will be in seconds, not frames. Convert to frame:
+                        x = x*fps/10^-3; % fps is actually frames per ms
+                        x = round(sort(x));
+                        [imgRinit,imgGinit] = PlayMovie(PathToMovie,[x(1) x(2)],h2,...
+                            strcat('subplot(',char(39),'Position',char(39),...
+                                ',[0.08 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
+                            strcat('subplot(',char(39),'Position',char(39),...
+                                ',[0.54 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
+                            spots(:,k),GrSpots(:,k),...
+                            strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
+                            strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
+                            zoomsize);
+                        clear x
+                    end
                     cc = 13;
                 % Show an average of 10 frames around where the user clicks
                 elseif cc=='a'
                     [x,~] = ginput(1);
-                    % x will be in seconds, not frames. Convert to frame:
-                    x = x*fps/10^-3; % fps is actually frames per ms
-                    [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,...
-                        [round(x)-ceil(params.FramesToAvg/2) round(x)+ceil(params.FramesToAvg/2)]);
-                    imgRinit = mat2gray(mean(imgRinit,3));
-                    imgGinit = mat2gray(mean(imgGinit,3));
-                    clear x
+                    if isequal(trace_axes,gca) || isequal(fret_axes,gca)
+                        % x will be in seconds, not frames. Convert to frame:
+                        x = x*fps/10^-3; % fps is actually frames per ms
+                        [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,...
+                            [round(x)-ceil(params.FramesToAvg/2) round(x)+ceil(params.FramesToAvg/2)]);
+                        imgRinit = mat2gray(mean(imgRinit,3));
+                        imgGinit = mat2gray(mean(imgGinit,3));
+                        clear x
+                    end
                     cc = 13;
                 % Re-locate a spot in one of the channels, if the
                 % transformation looks like it didn't get the center right:
                 elseif cc=='l'
                     disp('Click on trace at time around which to look for spot:')
                     [xT,~] = ginput(1);
-                    xT = round(xT*fps/10^-3);
-                    starttime = xT-ceil(params.FramesToAvg/2);
-                    endtime = xT+ceil(params.FramesToAvg/2);
-                    if starttime<1
-                        endtime = endtime+0-starttime;
-                        starttime = 1;
-                    end
-                    if endtime>size(allRedI,2)
-                        starttime = starttime+(endtime-allRedI);
-                        endtime = size(allRedI,2);
-                    end
-                    spottorefit = input('Relocate red spot (r) or green spot (g)?: ','s');
-                    disp('Click on zoomed image of the spot where you want to look for a new one:')
-                    figure(h2)
-                    [xIlocal,yIlocal] = ginput(1);
-                    % TODO: need error handling if the user doesn't click
-                    % in the right axes ... 
-                    % TODO: need error handling if user doesn't enter r or
-                    % g
-                    if strcmpi(spottorefit,'r')
-                        newcoords = GlobalToROICoords([],[yIlocal;xIlocal],spots(:,k),zoomsizeR,zoomsizeR);
-                        [imgs,~] = LoadScaledMovie(PathToMovie,[starttime endtime]);
-                        [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
-                        if ~isempty(tempnewspot)
-                            spots(:,k) = tempnewspot;
-                            [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
-                                spots(:,k), spotVars(:,k),[],params);
+                    if isequal(trace_axes,gca) || isequal(fret_axes,gca)
+                        xT = round(xT*fps/10^-3);
+                        starttime = xT-ceil(params.FramesToAvg/2);
+                        endtime = xT+ceil(params.FramesToAvg/2);
+                        if starttime<1
+                            endtime = endtime+0-starttime;
+                            starttime = 1;
                         end
-                    elseif strcmpi(spottorefit,'g')
-                        newcoords = GlobalToROICoords([],[yIlocal;xIlocal],GrSpots(:,k),zoomsizeG,zoomsizeG);
-                        [~,imgs] = LoadScaledMovie(PathToMovie,[starttime endtime]);
-                        [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
-                        if ~isempty(tempnewspot)
-                            % if the fit fails, tempnewspot will be empty
-                            GrSpots(:,k) = tempnewspot;
-                        [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
-                            GrSpots(:,k), spotVars(:,k),[],params);
+                        if endtime>size(allRedI,2)
+                            starttime = starttime+(endtime-allRedI);
+                            endtime = size(allRedI,2);
                         end
+                        spottorefit = input('Relocate red spot (r) or green spot (g)?: ','s');
+                        disp('Click on zoomed image of the spot where you want to look for a new one:')
+                        figure(h2)
+                        [xIlocal,yIlocal] = ginput(1);
+                        if strcmpi(spottorefit,'r') && isequal(imgRzoom_axes,gca)
+                            newcoords = GlobalToROICoords([],[yIlocal;xIlocal],spots(:,k),zoomsizeR,zoomsizeR);
+                            [imgs,~] = LoadScaledMovie(PathToMovie,[starttime endtime]);
+                            [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
+                            if ~isempty(tempnewspot)
+                                spots(:,k) = tempnewspot;
+                                [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
+                                    spots(:,k), spotVars(:,k),[],params);
+                            end
+                        elseif strcmpi(spottorefit,'g') && isequal(imgGzoom_axes,gca)
+                            newcoords = GlobalToROICoords([],[yIlocal;xIlocal],GrSpots(:,k),zoomsizeG,zoomsizeG);
+                            [~,imgs] = LoadScaledMovie(PathToMovie,[starttime endtime]);
+                            [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
+                            if ~isempty(tempnewspot)
+                                % if the fit fails, tempnewspot will be empty
+                                GrSpots(:,k) = tempnewspot;
+                            [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
+                                GrSpots(:,k), spotVars(:,k),[],params);
+                            end
+                        end
+                        clear imgs xT xIlocal yIlocal starttime endtime newcoords
                     end
-                    clear imgs xT xIlocal yIlocal starttime endtime newcoords
+                    cc=13;
+                % Don't let extra "enters" build up:
+                elseif isequal(cc,char(13)) %13 is the ascii code for the return key
                     cc=13;
                 end
             end
