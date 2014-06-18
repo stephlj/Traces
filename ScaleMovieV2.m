@@ -51,6 +51,18 @@ function ScaleMovieV2(PathToMovie,numframes,params)
                 size(moviebit,1),size(moviebit,2),1);
         end
         
+        % Update 6/2014: Implementing a background subtraction routine.
+        % Need to do this before computing a global max and min by which to
+        % scale the movie. 
+        
+        [~,moviebit] = SubBkgndFullImg(moviebit,params,0);
+        % Since SubBkgndFullImg takes a while, saving this to disk until
+        % I'm ready to scale it:
+        imgMinusBkgnd = moviebit;
+        save(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
+            'to',int2str(jj+99),'.mat')),'imgMinusBkgnd')
+        clear imgMinusBkgnd
+        
         MovieMax = max(MovieMax,double(max(max(max(moviebit)))));
         MovieMin = min(MovieMin,double(min(min(min(moviebit)))));
 
@@ -107,7 +119,11 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     
     % Re-load everything and actually do the scaling:
     for jj = 1:100:numframes
-        moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));
+        %moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));
+        % Because I'm now doing a background subtraction before scaling,
+        % load the files saved above:
+        moviebit = load(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
+            'to',int2str(jj+99),'.mat')),'imgMinusBkgnd');
                 
         % Update 4/2014: Allowing a normalization option--see note about
         % NormImage in smFRETsetup.m
@@ -121,42 +137,10 @@ function ScaleMovieV2(PathToMovie,numframes,params)
             % but need to explicitly do so earlier in case NormImage is 1
         [imgR,imgG] = SplitImg(ScaledMovie,params);
         
-        % If I were going to do background subtraction, I should do it
-        % here, but I think this doesn't work well:
-        % [imgRraw,imgGraw] = SplitImg(moviebit,params);
-            % Subtract time-local background: not actually sure this is the right
-            % thing to do. And if I do this I should probably scale movie after?
-            % Commenting out for now.
-            % For debugging:
-            %[imgRbkgnd,imgGbkgnd,imgR,imgG] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params,1);
-        %     [imgRbkgnd,imgGbkgnd,~,~] = SubBkgnd(mean(imgRraw,3),mean(imgGraw,3),params);
-        %     imgR = imgRraw-repmat(imgRbkgnd,1,1,size(imgRraw,3));
-        %     imgG = imgGraw-repmat(imgGbkgnd,1,1,size(imgRraw,3));
-
-            % For debugging the background subtraction:
-        %     temp = reshape(imgRraw,1,size(imgRraw,1)*size(imgRraw,2)*size(imgRraw,3));
-        %     hist(temp,1000)
-        %     xlim([0 1])
-        %     title('Red, Raw')
-        %     clear temp
-        %     temp = reshape(imgRbkgnd,1,size(imgRbkgnd,1)*size(imgRbkgnd,2));
-        %     figure,hist(temp,1000)
-        %     xlim([0 1])
-        %     title('Red, Bkgnd')
-        %     clear temp
-        %     temp = reshape(imgR,1,size(imgR,1)*size(imgR,2)*size(imgR,3));
-        %     figure,hist(temp,1000)
-        %     xlim([0 1])
-        %     title('Red, Minus bkgnd')
-        %     clear temp
-        %     pause 
-        %     close all
-        
         save(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
-        'to',int2str(jj+99),'.mat')),'imgR','imgG')
+            'to',int2str(jj+99),'.mat')),'imgR','imgG','-append')
         
         clear moviebit imgR imgG ScaledMovie
-        % HACK saving this info
-        %save(fullfile(PathToMovie,'MovieTotIntensities.mat'),'totIR','totIG')
+        
     end
 end

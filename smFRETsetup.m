@@ -88,9 +88,12 @@ Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead cent
 IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
     % in each frame by a Gaussian whose center and variance are determined
     % from a fit to the spot's first 10 frames. Note that if this is 0, it
-    % will calculate intensities over a 5 pxl diameter circle.  That's
+    % will calculate intensities over a 5 pxl diameter disk.  That's
     % hard-wired into the code--see CalcIntensitiesV3.m to change
-    % the size.
+    % the size. Obviously it's best to do the Gaussian weighting, but it
+    % works surprsingly well not to, if for some reason you just want to
+    % sum intensities in a disk. (There's not really a difference in speed
+    % or anything.)
 GaussWeightAmp = 2; % If IntensityGaussWeight is 1, this determines the amplitude
     % of the Gaussian used to weight each spot's intensity. Effectively
     % this just scales the intensity values--the Ha lab code uses an
