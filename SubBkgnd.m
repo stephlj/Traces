@@ -5,6 +5,8 @@
 
 function [imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgR,imgG,params,varargin)
 
+BkgndSubSigma = 4;
+
 % Medfilt2 works best with doubles:
 if ~strcmpi(class(imgR),'double') || ~strcmpi(class(imgG),'double')
     disp('SubBkgnd: Warning: works best with doubles!')
@@ -14,7 +16,7 @@ end
 % Matlab doesn't have a boxcar filter built-in to the image processing
 % toolbox, but it does have a Gaussian filter, with edge truncation as
 % default:
-h = fspecial('gaussian',params.DNASize,params.BkgndSubSigma);
+h = fspecial('gaussian',params.DNASize,BkgndSubSigma);
 imgRsmooth = imfilter(imgR,h);
 imgGsmooth = imfilter(imgG,h);
 
@@ -25,7 +27,7 @@ imgGmedians = medfilt2(imgGsmooth,[params.DNASize*2, params.DNASize*2]);
 
 % (3) Boxcar smooth again with window of 30 or 60 pixels (depending on
 % whether you use _brief); again here going with a Gaussian filter:
-h2 = fspecial('gaussian',params.DNASize.*5,params.BkgndSubSigma.*5);
+h2 = fspecial('gaussian',params.DNASize.*5,BkgndSubSigma.*5);
 imgRbkgnd = imfilter(imgRmedians,h2);
 imgGbkgnd = imfilter(imgGmedians,h2);
 

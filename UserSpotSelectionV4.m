@@ -54,7 +54,7 @@ Rbkgnd = zeros(size(spots,2),1);
 Gbkgnd = zeros(size(spots,2),1);
 xlims = zeros(size(spots,2),2);
 ends = zeros(size(spots,2),1); % Where the end of the FRET signal should be (zero after this point)
-offset = 0.1;
+offset = 1;
 
 h2 = figure('Position',params.Fig2Pos);
 h1 = figure('Position',params.Fig1Pos);
@@ -120,8 +120,8 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        title('Green','Fontsize',12)
        % Show zoom in of the red spot, with the fitted Gaussian or a circle
        % around it to show how and where the spot intensity was calculated
-       subplot('Position',[0.13 0.05 0.2 .18])
-       imgRzoom_axes = imshow(imgRzoom);
+       imgRzoom_axes = subplot('Position',[0.13 0.05 0.2 .18]);
+       imshow(imgRzoom);
        hold on
        boxfun(zoomcenR,sqrt(1./(2.*spotVars(:,k))).*5);
        hold off
@@ -342,6 +342,8 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 spots(:,k) = tempnewspot;
                                 [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
                                     spots(:,k), spotVars(:,k),[],params);
+                            else
+                                disp('Failed to find new spot center.')
                             end
                         elseif strcmpi(spottorefit,'g') && isequal(imgGzoom_axes,gca)
                             newcoords = GlobalToROICoords([],[yIlocal;xIlocal],GrSpots(:,k),zoomsizeG,zoomsizeG);
@@ -352,6 +354,8 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 GrSpots(:,k) = tempnewspot;
                             [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
                                 GrSpots(:,k), spotVars(:,k),[],params);
+                            else
+                                disp('Failed to find new spot center.')
                             end
                         end
                         clear imgs xT xIlocal yIlocal starttime endtime newcoords

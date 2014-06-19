@@ -51,10 +51,11 @@ SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
 EndInjectFrame = 1;% round(27/0.15); % If doing a manual injection, which tends to bump the stage,
     % you can set this to the value of a frame that you know is after the
-    % injection is over, and spotfinding will be done starting at this
-    % frame instead of at frame 1. I usually know when I'm done injecting
+    % injection is over, and spotfinding will skip from the frames between
+    % 1+FramesToAvg and EndInjectFrame. I usually know when I'm done injecting
     % in seconds (usually about 25 seconds, add a couple for safety), and I
-    % collect data at 0.15 seconds per frame.
+    % collect data at 0.15 seconds per frame, so I usually set this to 
+    % round(27/0.15).
 FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted. 10-20 is a good value
     % for me.

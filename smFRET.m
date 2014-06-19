@@ -149,6 +149,8 @@ function smFRET(rootname,debug)
             if size(allmatchesG,2)<0.75*InitBdNum || steps>5
                 newtform.HistResiduals('fwd');
                 disp('Channel mapping: having to exclude lots of beads to get residuals down.')
+                disp('If histogram looks ok, you can increase tolerance, for example, enter:')
+                disp('params.ResidTolerance = ResidualsGtoR/size(matchGall,2)+0.001; dbcont')
                 keyboard
                 % If the histogram looks ok, best thing to do is just to
                 % manually increase the tolerance:
@@ -169,24 +171,8 @@ function smFRET(rootname,debug)
     % Load an old channel mapping, or perform a new one:
     DoMap = input('Press enter to perform channel mapping with beads, L+enter to load an old one, D+enter to use data to make a map:','s');
 
-    if strcmpi(DoMap,'D') && params.FindSpotsEveryXFrames==0
-        tempXframes = input('How often to spotfind? Enter number of frames:');
-        if tempXframes<=0
-            DoMap = 'L';
-        else
-            params.FindSpotsEveryXFrames = round(tempXframes);
-        end
-        clear tempXframes
-    end
-    
-    if strcmpi(DoMap,'D') && params.UseCombinedImage == 1
-        disp('Cannot use combined image if you want to make a map with spots.')
-        return
-    end
-    
-    if ~isempty(DoMap)
+    if strcmpi(DoMap,'L')
         % Default to most recent map:
-        % Load a map even if you're going to use data to do a new one later
         prevmapdir = load('PathToRecentMap.mat');
         D_Beads = uigetdir(prevmapdir.MostRecentMapDir,'Select directory with old map');
         if exist(fullfile(D_Beads,'ChannelMapping.mat'),'file')
@@ -198,169 +184,183 @@ function smFRET(rootname,debug)
                 params.PxlsToExclude = Map.PxlsToExclude;
             end
             clear Map prevmapdir
-        elseif strcmpi(DoMap,'L')
+        else
             disp(strcat('Map not found in',D_Beads))
             return
         end
-    else 
-        D_Beads = uigetdir(params.defaultdatadir,'Select directory with beads');
-        % To easily load the most recent bead map:
-        MostRecentMapDir = D_Beads;
-        % Figure out how many bead files to analyze there are:
-        AllBeads = dir(fullfile(D_Beads,'Bead*'));
-        num_BeadDir = input(strcat('How many bead files to use for transformation? Max:',...
-            int2str(length(AllBeads)),' (Enter to use max)'));
-        if isempty(num_BeadDir) || num_BeadDir >= length(AllBeads)
-            BdDir = length(AllBeads);
-            num_BeadDir = length(AllBeads);
-        elseif num_BeadDir < length(AllBeads)
-            checkTform = input(strcat('Use remaining ',int2str(length(AllBeads)-num_BeadDir),...
-                ' movies to check transform? (y/n)'),'s');
-            if strcmpi(checkTform,'y')
-                BdDir = length(AllBeads); % But num_BeadDir will still be the 
-                    % number of movie files the user wants to include in
-                    % the transform
-            else
-                BdDir = num_BeadDir;
-            end
-        end
-
-        matchGall = [];
-        matchRall = [];
-        allBdImgs = [];
-        BeadFilesInMap = cell(num_BeadDir,1);
-
-        for i = 1:BdDir
-            if i<=num_BeadDir
-                BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); % Keeps a record of which bead files went into the map
-            end
-            
-            TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 params.FramesToAvg]);
-            
-            % Updated 2/2014 to account for LoadUManagerTifs returning an
-            % image of the same numeric type as the initial files.  For
-            % spot-finding, we don't care much about numeric type and image
-            % contrast scaling, but in order to get the averaged image scaled
-            % between 0 and 1, use mean first:
-            
-            if size(TotImg,3) == 1
-                TotImg2 = TotImg;
-            else
-                % allBdImgs(:,:,i) = mean(TotImg(:,:,1:10),3);
-                % With the new version of LoadUManagerTifs:
-                TotImg2 = mean(TotImg,3);
-            end
-            
-            allBdImgs(:,:,i) = mat2gray(TotImg2);
-            
-            disp(sprintf('Spotfinding in movies %d of %d',i,BdDir))
-
-            % Step 1: Find spots in red and green channels separately, so split the
-            % image up into the two channels:
-            [imgRedRaw,imgGreenRaw] = SplitImg(allBdImgs(:,:,i),params);
-            
-            % subtract background:
-            [~,~,imgRed,imgGreen] = SubBkgnd(imgRedRaw,imgGreenRaw,params);
-            % If you don't want to subtract background, uncomment these
-            % lines:
-            %imgRedsubB = imgRedRaw;
-            %imgGreensubB = imgGreenRaw;
-
-            % Find spots in green channel
-            if params.Refine_Bd_Cen
-                [spotsG{i},n,xout,thresh] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
-                    'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
-                    'Method','GaussFit');
-                spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
-                    params.BeadNeighborhood,params.BeadSize,'GaussFit',thresh);
-            else
-                [spotsG{i},n,xout,thresh] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
-                    'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
-                spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
-                    params.BeadNeighborhood,params.BeadSize,'default',thresh);
-            end
-            clear n xout
-            
-            % Find spots in red channel
-            if params.Refine_Bd_Cen
-                [spotsR{i},n,xout,thresh] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
-                    'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
-                    'Method','GaussFit');
-                spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
-                    params.BeadNeighborhood,params.BeadSize,'GaussFit',thresh);
-            else
-                [spotsR{i},n,xout,thresh] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
-                    'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
-                spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
-                    params.BeadNeighborhood,params.BeadSize,'default',thresh);
-            end
-            clear n xout
-            
-            % spotsG and spotsR are actually params.PxlsToExclude off from
-            % the full image's coordinates along the axis along which the
-            % channels are split.  So add those pixels back:
-            if params.splitx
-                spotsG{i}(1,:) = spotsG{i}(1,:);
-                spotsG{i}(2,:) = spotsG{i}(2,:)+params.PxlsToExclude;
-                spotsR{i}(1,:) = spotsR{i}(1,:);
-                spotsR{i}(2,:) = spotsR{i}(2,:)+params.PxlsToExclude;
-            else
-                spotsG{i}(1,:) = spotsG{i}(1,:)+params.PxlsToExclude;
-                spotsG{i}(2,:) = spotsG{i}(2,:);
-                spotsR{i}(1,:) = spotsR{i}(1,:)+params.PxlsToExclude;
-                spotsR{i}(2,:) = spotsR{i}(2,:);
-            end
-
-            if debug %Figure with all the spots found:
-                % plot all the boxes for both channels on a big image:
-                [spotsG_abs,spotsR_abs] = SpotsIntoAbsCoords(spotsG{i},...
-                        spotsR{i},params,size(allBdImgs(:,:,i),2)/2);
-                PutBoxesOnImageV4(allBdImgs(:,:,i),[spotsR_abs,spotsG_abs],params.BeadSize,'0','w');
-                pause
-                close
-                clear spotsG_abs spotsR_abs
-            end
-
-            % Step 2: figure out which spots in one channel go with the spots in
-            % the other channel.  For our beads, which are brighter in the donor
-            % than acceptor channel, the matching works best if you match spots
-            % in donor to spots in acceptor:
-            [matchG{i},matchR{i}] = FindSpotMatches(spotsG{i},spotsR{i});
-            if i<=num_BeadDir
-                matchGall = [matchGall, matchG{i}];
-                matchRall = [matchRall, matchR{i}];
-            end
-
-            if debug
-                % Box in green the ones that were matched:
-                [matchG_abs,matchR_abs] = SpotsIntoAbsCoords(matchG{i},...
-                        matchR{i},params,size(allBdImgs(:,:,i),2)/2);
-                PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR_abs';matchG_abs'],params.BeadSize);
-                title('Only spots that were matched')
-                % Another way of plotting the matching: blue line between points
-                % in the two channels, with a green dot for where the point is
-                % in the green channel, and the end of the blue line where the
-                % point it got matched to in the red channel is.  This is also a
-                % great way of looking at the distortion between the two
-                % channels
-                figure('Position',[200 200 325 625])
-                plot([matchR{i}(2,:);matchG{i}(2,:)],0-[matchR{i}(1,:);matchG{i}(1,:)],'-b')
-                hold on
-                plot(matchR{i}(2,:),0-matchR{i}(1,:),'xr')
-                if params.splitx == 1
-                    ylim([-size(allBdImgs(:,:,i),1) 0])
-                    xlim([0 size(allBdImgs(:,:,i),2)/2])
+    else
+        if isempty(DoMap)
+            D_Beads = uigetdir(params.defaultdatadir,'Select directory with beads');
+            % Figure out how many bead files to analyze there are:
+            AllBeads = dir(fullfile(D_Beads,'Bead*'));
+            num_BeadDir = input(strcat('How many bead files to use for transformation? Max:',...
+                int2str(length(AllBeads)),' (Enter to use max)'));
+            if isempty(num_BeadDir) || num_BeadDir >= length(AllBeads)
+                BdDir = length(AllBeads);
+                num_BeadDir = length(AllBeads);
+            elseif num_BeadDir < length(AllBeads)
+                checkTform = input(strcat('Use remaining ',int2str(length(AllBeads)-num_BeadDir),...
+                    ' movies to check transform? (y/n)'),'s');
+                if strcmpi(checkTform,'y')
+                    BdDir = length(AllBeads); % But num_BeadDir will still be the 
+                        % number of movie files the user wants to include in
+                        % the transform
                 else
-                    ylim([-size(allBdImgs(:,:,i),1)/2 0])
-                    xlim([0 size(allBdImgs(:,:,i),2)])
+                    BdDir = num_BeadDir;
                 end
-                title('Red x is center of point in red channel')
-                pause
-                close all
-                clear matchG_abs matchR_abs
             end
 
-            clear TotImg TotImg2 imgGreen imgRed spotsGabs
+            matchGall = [];
+            matchRall = [];
+            allBdImgs = [];
+            BeadFilesInMap = cell(num_BeadDir,1);
+
+            for i = 1:BdDir
+                if i<=num_BeadDir
+                    BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); % Keeps a record of which bead files went into the map
+                end
+
+                TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 params.FramesToAvg]);
+
+                % Updated 2/2014 to account for LoadUManagerTifs returning an
+                % image of the same numeric type as the initial files.  For
+                % spot-finding, we don't care much about numeric type and image
+                % contrast scaling, but in order to get the averaged image scaled
+                % between 0 and 1, use mean first:
+
+                if size(TotImg,3) == 1
+                    TotImg2 = TotImg;
+                else
+                    % allBdImgs(:,:,i) = mean(TotImg(:,:,1:10),3);
+                    % With the new version of LoadUManagerTifs:
+                    TotImg2 = mean(TotImg,3);
+                end
+
+                allBdImgs(:,:,i) = mat2gray(TotImg2);
+
+                disp(sprintf('Spotfinding in movies %d of %d',i,BdDir))
+
+                % Step 1: Find spots in red and green channels separately, so split the
+                % image up into the two channels:
+                [imgRedRaw,imgGreenRaw] = SplitImg(allBdImgs(:,:,i),params);
+
+                % subtract background:
+                [~,~,imgRed,imgGreen] = SubBkgnd(imgRedRaw,imgGreenRaw,params);
+                % If you don't want to subtract background, uncomment these
+                % lines:
+                %imgRedsubB = imgRedRaw;
+                %imgGreensubB = imgGreenRaw;
+
+                % Find spots in green channel
+                if params.Refine_Bd_Cen
+                    [spotsG{i},n,xout,thresh] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+                        'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
+                        'Method','GaussFit');
+                    spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
+                        params.BeadNeighborhood,params.BeadSize,'GaussFit',thresh);
+                else
+                    [spotsG{i},n,xout,thresh] = FindSpotsV5(imgGreen,'ShowResults',1,'ImgTitle','Green Channel',...
+                        'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
+                    spotsG{i} = SptFindUserThresh(spotsG{i},imgGreen,n,xout,'Green Channel',...
+                        params.BeadNeighborhood,params.BeadSize,'default',thresh);
+                end
+                clear n xout
+
+                % Find spots in red channel
+                if params.Refine_Bd_Cen
+                    [spotsR{i},n,xout,thresh] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
+                        'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize,...
+                        'Method','GaussFit');
+                    spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
+                        params.BeadNeighborhood,params.BeadSize,'GaussFit',thresh);
+                else
+                    [spotsR{i},n,xout,thresh] = FindSpotsV5(imgRed,'ShowResults',1,'ImgTitle','Red Channel',...
+                        'NeighborhoodSize',params.BeadNeighborhood,'maxsize',params.BeadSize);
+                    spotsR{i} = SptFindUserThresh(spotsR{i},imgRed,n,xout,'Red Channel',...
+                        params.BeadNeighborhood,params.BeadSize,'default',thresh);
+                end
+                clear n xout
+
+                % spotsG and spotsR are actually params.PxlsToExclude off from
+                % the full image's coordinates along the axis along which the
+                % channels are split.  So add those pixels back:
+                if params.splitx
+                    spotsG{i}(1,:) = spotsG{i}(1,:);
+                    spotsG{i}(2,:) = spotsG{i}(2,:)+params.PxlsToExclude;
+                    spotsR{i}(1,:) = spotsR{i}(1,:);
+                    spotsR{i}(2,:) = spotsR{i}(2,:)+params.PxlsToExclude;
+                else
+                    spotsG{i}(1,:) = spotsG{i}(1,:)+params.PxlsToExclude;
+                    spotsG{i}(2,:) = spotsG{i}(2,:);
+                    spotsR{i}(1,:) = spotsR{i}(1,:)+params.PxlsToExclude;
+                    spotsR{i}(2,:) = spotsR{i}(2,:);
+                end
+
+                if debug %Figure with all the spots found:
+                    % plot all the boxes for both channels on a big image:
+                    [spotsG_abs,spotsR_abs] = SpotsIntoAbsCoords(spotsG{i},...
+                            spotsR{i},params,size(allBdImgs(:,:,i),2)/2);
+                    PutBoxesOnImageV4(allBdImgs(:,:,i),[spotsR_abs,spotsG_abs],params.BeadSize,'0','w');
+                    pause
+                    close
+                    clear spotsG_abs spotsR_abs
+                end
+
+                % Step 2: figure out which spots in one channel go with the spots in
+                % the other channel.  For our beads, which are brighter in the donor
+                % than acceptor channel, the matching works best if you match spots
+                % in donor to spots in acceptor:
+                [matchG{i},matchR{i}] = FindSpotMatches(spotsG{i},spotsR{i});
+                if i<=num_BeadDir
+                    matchGall = [matchGall, matchG{i}];
+                    matchRall = [matchRall, matchR{i}];
+                end
+
+                if debug
+                    % Box in green the ones that were matched:
+                    [matchG_abs,matchR_abs] = SpotsIntoAbsCoords(matchG{i},...
+                            matchR{i},params,size(allBdImgs(:,:,i),2)/2);
+                    PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR_abs';matchG_abs'],params.BeadSize);
+                    title('Only spots that were matched')
+                    % Another way of plotting the matching: blue line between points
+                    % in the two channels, with a green dot for where the point is
+                    % in the green channel, and the end of the blue line where the
+                    % point it got matched to in the red channel is.  This is also a
+                    % great way of looking at the distortion between the two
+                    % channels
+                    figure('Position',[200 200 325 625])
+                    plot([matchR{i}(2,:);matchG{i}(2,:)],0-[matchR{i}(1,:);matchG{i}(1,:)],'-b')
+                    hold on
+                    plot(matchR{i}(2,:),0-matchR{i}(1,:),'xr')
+                    if params.splitx == 1
+                        ylim([-size(allBdImgs(:,:,i),1) 0])
+                        xlim([0 size(allBdImgs(:,:,i),2)/2])
+                    else
+                        ylim([-size(allBdImgs(:,:,i),1)/2 0])
+                        xlim([0 size(allBdImgs(:,:,i),2)])
+                    end
+                    title('Red x is center of point in red channel')
+                    pause
+                    close all
+                    clear matchG_abs matchR_abs
+                end
+
+                clear TotImg TotImg2 imgGreen imgRed spotsGabs
+            end
+
+        else
+            % Load paired DNA spots:
+            D_PairedDNAs = uigetdir(params.defaultsavedir,'Select directory with paired DNAs');
+            PairedSpots = dir(fullfile(D_PairedDNAs,'Spot*.mat'));
+            matchGall = [];
+            matchRall = [];
+            for d = 1:length(PairedSpots)
+                if ~isempty(regexpi(PairedSpots(d).name,'Spot\d+.*mat'))
+                    tempspot = load(fullfile(D_PairedDNAs,PairedSpots(d).name));
+                    matchGall(:,end+1) = tempspot.Gspot;
+                    matchRall(:,end+1) = tempspot.Rspot;
+                end
+            end
         end
 
         % Step three: calculate the transformation using all pairs of beads,
@@ -374,80 +374,101 @@ function smFRET(rootname,debug)
         disp(sprintf('Residuals for %d spots:',size(matchGall,2)))
         ResidualsGtoR = tformPoly.ResidualsFwd
         ResidualsRtoG = tformPoly.ResidualsInv
-        
-        for gg = 1:num_BeadDir
-            matchGforTform{gg} = matchG{gg};
-            matchRforTform{gg} = matchR{gg};
-        end
-        [tformPoly,matchGforTform,matchRforTform] = RefineTform(matchGforTform,matchRforTform,tformPoly,params);
-        matchGall = [];
-        matchRall = [];
-        for gg = 1:num_BeadDir
-            matchG{gg} = matchGforTform{gg};
-            matchR{gg} = matchRforTform{gg};
-            matchGall = [matchGall matchGforTform{gg}];
-            matchRall = [matchRall matchRforTform{gg}];
+
+        % Refine map by removing outliers (caused by mismatched pairs)
+        if isempty(DoMap)
+            for gg = 1:num_BeadDir
+                matchGforTform{gg} = matchG{gg};
+                matchRforTform{gg} = matchR{gg};
+            end
+            [tformPoly,matchGforTform,matchRforTform] = RefineTform(matchGforTform,matchRforTform,tformPoly,params);
+            matchGall = [];
+            matchRall = [];
+            for gg = 1:num_BeadDir
+                matchG{gg} = matchGforTform{gg};
+                matchR{gg} = matchRforTform{gg};
+                matchGall = [matchGall matchGforTform{gg}];
+                matchRall = [matchRall matchRforTform{gg}];
+            end
+        else
+            matchG{1} = matchGall;
+            matchR{1} = matchRall;
+            [tformPoly,matchG,matchR] = RefineTform(matchG,matchR,tformPoly,params);
+            matchGall = matchG{1};
+            matchRall = matchR{1};
         end
         tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
-        
-        % Plot the results for each movie:
-        for i = 1:num_BeadDir
-            disp(strcat('Iterating through bead images for user to check quality (',...
-                int2str(i),' of ',int2str(num_BeadDir),')'))
-            % Get green points in absolute coordinates
-            [matchG_abs,~] = SpotsIntoAbsCoords(matchG{i},...
-                matchR{i},params,size(allBdImgs(:,:,i),2)/2);
-            % Use tform to map to where they should be in the red channel:
-            newR = tformPoly.FRETmapFwd(matchG{i});
-            PutBoxesOnImageV4(allBdImgs(:,:,i),[newR';matchG_abs'],params.BeadSize);
-            title('Spots found in green, mapped to red','Fontsize',12)
-            tformPoly.PlotTform(newR,matchR{i})
+
+        % Finally, let the user check the resulting transformation:
+        if isempty(DoMap)
+            % Plot the results for each movie:
+            for i = 1:num_BeadDir
+                disp(strcat('Iterating through bead images for user to check quality (',...
+                    int2str(i),' of ',int2str(num_BeadDir),')'))
+                % Get green points in absolute coordinates
+                [matchG_abs,~] = SpotsIntoAbsCoords(matchG{i},...
+                    matchR{i},params,size(allBdImgs(:,:,i),2)/2);
+                % Use tform to map to where they should be in the red channel:
+                newR = tformPoly.FRETmapFwd(matchG{i});
+                PutBoxesOnImageV4(allBdImgs(:,:,i),[newR';matchG_abs'],params.BeadSize);
+                title('Spots found in green, mapped to red','Fontsize',12)
+                tformPoly.PlotTform(newR,matchR{i})
+                legend('Green spots mapped to red','Red spots')
+                ylim([-512 0])
+                xlim([0 256])
+                tformPoly.TformResiduals(matchG{i},matchR{i},'fwd')
+                xlabel('Distance between green spots mapped to red channel, and real red spots','Fontsize',12)
+
+                % Show an overlay of one channel on the other:
+                [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
+                tform = tformAffine.ReturnMatlabTform('fwd');
+                CombineErr = CalcCombinedImage(tform,imgGreen,imgRed,1);
+                if CombineErr ~= -1
+                    title('Overlay using affine')
+                end
+                clear tform CombineErr
+                tform = tformPoly.ReturnMatlabTform('fwd');
+                CombineErr = CalcCombinedImage(tform,imgGreen,imgRed,1);
+                if CombineErr ~= -1
+                    title('Overlay using polynomial')
+                end
+                clear tform CombineErr
+
+                pause
+                close all
+                clear newR imgRed imgGreen
+
+                % Because I explicitly calculated the transformation both ways,
+                % check also that the inverse transformation looks ok:
+                % Use tform to map to where they should be in the red channel:
+                newG = tformPoly.FRETmapInv(matchR{i});
+                % Get green points in absolute coordinates
+                [newG_abs,~] = SpotsIntoAbsCoords(newG,...
+                    matchR{i},params,size(allBdImgs(:,:,i),2)/2);
+                PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR{i}';newG_abs'],params.BeadSize);
+                title('Spots found in red, mapped to green','Fontsize',12)
+                tformPoly.PlotTform(newG,matchG{i})
+                ylim([-512 0])
+                xlim([0 256])
+                legend('Green spots mapped to red','Red spots')
+                tformPoly.TformResiduals(matchR{i},matchG{i},'inv')
+                xlabel('Distance between red spots mapped to green channel, and real green spots','Fontsize',12)
+
+                pause
+                close all
+                clear newG matchG_abs imgRed imgGreen
+            end
+        else
+            tformPoly.PlotTform(tformPoly.FRETmapFwd(tformPoly.StartData),tformPoly.EndData)
             legend('Green spots mapped to red','Red spots')
             ylim([-512 0])
             xlim([0 256])
-            tformPoly.TformResiduals(matchG{i},matchR{i},'fwd')
+            tformPoly.HistResiduals('fwd')
             xlabel('Distance between green spots mapped to red channel, and real red spots','Fontsize',12)
-            
-            % Show an overlay of one channel on the other:
-            [imgRed,imgGreen] = SplitImg(allBdImgs(:,:,i),params);
-            tform = tformAffine.ReturnMatlabTform('fwd');
-            CombineErr = CalcCombinedImage(tform,imgGreen,imgRed,1);
-            if CombineErr ~= -1
-                title('Overlay using affine')
-            end
-            clear tform CombineErr
-            tform = tformPoly.ReturnMatlabTform('fwd');
-            CombineErr = CalcCombinedImage(tform,imgGreen,imgRed,1);
-            if CombineErr ~= -1
-                title('Overlay using polynomial')
-            end
-            clear tform CombineErr
-            
             pause
             close all
-            clear newR imgRed imgGreen
-            
-            % Because I explicitly calculated the transformation both ways,
-            % check also that the inverse transformation looks ok:
-            % Use tform to map to where they should be in the red channel:
-            newG = tformPoly.FRETmapInv(matchR{i});
-            % Get green points in absolute coordinates
-            [newG_abs,~] = SpotsIntoAbsCoords(newG,...
-                matchR{i},params,size(allBdImgs(:,:,i),2)/2);
-            PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR{i}';newG_abs'],params.BeadSize);
-            title('Spots found in red, mapped to green','Fontsize',12)
-            tformPoly.PlotTform(newG,matchG{i})
-            ylim([-512 0])
-            xlim([0 256])
-            legend('Green spots mapped to red','Red spots')
-            tformPoly.TformResiduals(matchR{i},matchG{i},'inv')
-            xlabel('Distance between red spots mapped to green channel, and real green spots','Fontsize',12)
-            
-            pause
-            close all
-            clear newG matchG_abs imgRed imgGreen
         end
-        
+
         % The mapping tolerance is the maximal distance away a spot center
         % could be in the other channel, and still possibly be the same as
         % the spot you're looking at:
@@ -456,9 +477,10 @@ function smFRET(rootname,debug)
         DistsG = sqrt((matchRall(1,:)-tempGinRs(1,:)).^2+(matchRall(2,:)-tempGinRs(2,:)).^2);
         DistsR = sqrt((matchGall(1,:)-tempRinGs(1,:)).^2+(matchGall(2,:)-tempRinGs(2,:)).^2);
         MappingTolerance = ceil(max(mean(DistsG)+5*std(DistsG),mean(DistsR)+5*std(DistsR)))
-        
-        % Lastly, check the transformation, if the user wishes:
-        if checkTform
+
+        % Lastly, check the transformation with held-out data, if we have some:
+        if isempty(DoMap) && strcmpi(checkTform,'y')
+            disp('Residuals with held-out data:')
             GforChecking = [];
             RforChecking = [];
             for j = num_BeadDir:length(AllBeads)
@@ -470,14 +492,26 @@ function smFRET(rootname,debug)
             pause
             close
         end
-            
-        clear allBdImgs matchG matchR matchGall matchRall Dists tempRinGs tempGinRs
+
+        clear allBdImgs matchG matchR matchGall matchRall DistsG DistsR tempRinGs tempGinRs
         clear num_BeadDir BdDir checkTform
 
-        save(fullfile(D_Beads,'ChannelMapping.mat'),'tformPoly','tformAffine',...
-            'BeadFilesInMap','MappingTolerance','PxlsToExclude');
+        PxlsToExclude = params.PxlsToExclude;
+        if isempty(DoMap)
+            save(fullfile(D_Beads,'ChannelMapping.mat'),'tformPoly','tformAffine',...
+                'BeadFilesInMap','MappingTolerance','PxlsToExclude');
+        else
+            D_Beads = uigetdir(params.defaultdatadir,...
+                'Save this map with the data used to generate it');
+            save(fullfile(D_Beads,'ChannelMapping.mat'),'tformPoly','tformAffine',...
+                'MappingTolerance','PxlsToExclude');
+        end
+        % To easily load the most recent bead map:
+        MostRecentMapDir = D_Beads;
         save('PathToRecentMap','MostRecentMapDir');
+        clear MostRecentMapDir
     end
+clear DoMap
 
 %%%%%%SECOND PART: Analyze data:
 close all
@@ -694,7 +728,7 @@ close all
                         end
 
                    end
-                   if ff > 11
+                   if ff > 1
                         % Are there any new spots that we didn't find last
                         % time?
                         if ~isempty(tempnewspotsR) && ~isempty(RefinedCentersR)
@@ -714,7 +748,7 @@ close all
                         end
                    end
 
-                        if debug && ff>11 && ...
+                        if debug && ff>1 && ...
                                 mod(ff-params.EndInjectFrame,params.CheckSpotFindingEveryXFrames)==0
                             if ~isempty(newspotsR)
                                PutBoxesOnImageV4(mat2gray(imgRMinusBkgnd),newspotsR,params.DNASize);
@@ -831,35 +865,6 @@ close all
                save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),...
                    'RefinedCentersR','RefinedCentersG','VarsR','VarsG');
 
-               if strcmpi(DoMap,'D')
-                   tformPolyRough = tformPoly;
-                   clear tformPoly
-                   % Use bead mapping as a rough estimate before finding all
-                   % DNA spot matches:
-                   spotsGinR = tformPolyRough.FRETmapFwd(RefinedCentersG);
-                   [matchG{1},matchR{1}] = FindSpotMatches(RefinedCentersR,spotsGinR);
-                   tformPoly = FRETmap(matchG{1},matchR{1},'Green',params.TransformToCalc,...
-                        params.TformMaxDeg,params.TformTotDeg);
-                   disp(sprintf('Residuals for %d spots:',size(matchG{1},2)))
-                   ResidualsGtoR = tformPoly.ResidualsFwd
-                   ResidualsRtoG = tformPoly.ResidualsInv
-                   [tformPoly,matchG,matchR] = RefineTform(matchG,matchR,tformPoly,params);
-                   tformAffine = FRETmap(matchG{1},matchR{1},'Green','Affine');
-                   % The mapping tolerance is the maximal distance away a spot center
-                    % could be in the other channel, and still possibly be the same as
-                    % the spot you're looking at:
-                    tempGinRs = tformPoly.FRETmapFwd(matchG{1});
-                    tempRinGs = tformPoly.FRETmapInv(matchR{1});
-                    DistsG = sqrt((matchR{1}(1,:)-tempGinRs(1,:)).^2+(matchR{1}(2,:)-tempGinRs(2,:)).^2);
-                    DistsR = sqrt((matchG{1}(1,:)-tempRinGs(1,:)).^2+(matchG{1}(2,:)-tempRinGs(2,:)).^2);
-                    MappingTolerance = ceil(max(mean(DistsG)+5*std(DistsG),mean(DistsR)+5*std(DistsR)))
-                    FileUsedForMap = fullfile(D_Data,ToAnalyze(i).name);
-                    save(fullfile(D_Data,'ChannelMapping.mat'),'tformPoly','tformAffine',...
-                        'FileUsedForMap','MappingTolerance');
-                    save('PathToRecentMap','MostRecentMapDir');
-                    clear spotsGinR
-               end
-
                if ~params.UseCombinedImage
                    % Step 1.3: Add any spots in green channel that weren't
                    % paired to a red channel spot to our list of spots. Or, put
@@ -875,24 +880,16 @@ close all
                         % also output the amplitudes of the fits, so I could
                         % also choose based on which channel had a larger
                         % amplitude or something.
-                   if strcmpi(DoMap,'D')
-                       Dists = FindSpotDists(RefinedCentersG,matchG);
-                       spotnottooclose = Dists>0;
-                       newspots = RefinedCentersG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
-                       spotsGinR = tformPoly.FRETmapFwd(newspots);
-                       Vars = VarsG(:,sum(spotnottooclose,1)~=size(spotnottooclose,1));
+                   if ~isempty(RefinedCentersG)
+                       spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
+                       Dists = FindSpotDists(RefinedCentersR,spotsGinR);
+                       spotnottooclose = Dists>MappingTolerance*2;
+                       newspots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                       clear spotsGinR
+                       spotsGinR = newspots;
+                       Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
                    else
-                       if ~isempty(RefinedCentersG)
-                           spotsGinR = tformPoly.FRETmapFwd(RefinedCentersG);
-                           Dists = FindSpotDists(RefinedCentersR,spotsGinR);
-                           spotnottooclose = Dists>MappingTolerance*2;
-                           newspots = spotsGinR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                           clear spotsGinR
-                           spotsGinR = newspots;
-                           Vars = VarsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                       else
-                           spotsGinR = [];
-                       end
+                       spotsGinR = [];
                    end
 
                    % Check that the transformed G spots are reasonable
@@ -901,6 +898,8 @@ close all
                    if ~isempty(spotsGinR)
                        [spotsGinR,~,Vars,~] = CheckSpotBoundaries(spotsGinR,...
                             [],Vars,[],params,fullfile(D_Data,ToAnalyze(i).name));
+                   else
+                       Vars = [];
                    end
                    Vars(:,end+1:end+size(VarsR,2)) = VarsR;
                    spots = [spotsGinR, RefinedCentersR];
