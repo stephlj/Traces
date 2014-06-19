@@ -23,10 +23,10 @@ end
 
 %%%Setting up some stuff
 % subfunction for putting circles around a spot:
-    function boxfun(currspot,circlesize)
+    function boxfun(currspot,circlesize,markercolor)
         % CalcSpotIntensityNoGauss puts a circle of diameter 5 around each spot:
         t = 0:pi/100:2*pi;
-        plot(currspot(2)+circlesize(2)/2.*cos(t),currspot(1)+circlesize(1)/2.*sin(t),'-g')
+        plot(currspot(2)+circlesize(2)/2.*cos(t),currspot(1)+circlesize(1)/2.*sin(t),strcat('-',markercolor))
         clear t
     end
 
@@ -108,14 +108,14 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        subplot('Position',[0.08 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
        imshow(imgRinit)
        hold on
-       boxfun(spots(:,k),sqrt(1./(2.*spotVars(:,k))).*5);
+       boxfun(spots(:,k),sqrt(1./(2.*spotVars(:,k))).*5,'r');
        hold off
        title('Red','Fontsize',12)
        % plot green channel with circle around spot
        subplot('Position',[0.54 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
        imshow(imgGinit)
        hold on
-       boxfun(GrSpots(:,k),sqrt(1./(2.*spotVars(:,k))).*5);
+       boxfun(GrSpots(:,k),sqrt(1./(2.*spotVars(:,k))).*5,'g');
        hold off
        title('Green','Fontsize',12)
        % Show zoom in of the red spot, with the fitted Gaussian or a circle
@@ -123,13 +123,13 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        imgRzoom_axes = subplot('Position',[0.13 0.05 0.2 .18]);
        imshow(imgRzoom);
        hold on
-       boxfun(zoomcenR,sqrt(1./(2.*spotVars(:,k))).*5);
+       boxfun(zoomcenR,sqrt(1./(2.*spotVars(:,k))).*5,'r');
        hold off
        % Same for green
        imgGzoom_axes = subplot('Position',[0.63 0.05 0.2 .18]);
        imshow(imgGzoom)
        hold on
-       boxfun(zoomcenG,sqrt(1./(2.*spotVars(:,k))).*5);
+       boxfun(zoomcenG,sqrt(1./(2.*spotVars(:,k))).*5,'g');
        hold off
        
        figure(h1)
@@ -277,7 +277,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                             spots(:,k),GrSpots(:,k),...
                             strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
                             strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
-                            zoomsize);
+                            zoomsize,sqrt(1./(2.*spotVars(:,k))).*5);
                         clear x
                     end
                     cc = 13;
@@ -296,7 +296,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                             spots(:,k),GrSpots(:,k),...
                             strcat('subplot(',char(39),'Position',char(39),',[0.13 0.05 0.2 .18])'),...
                             strcat('subplot(',char(39),'Position',char(39),',[0.63 0.05 0.2 .18])'),...
-                            zoomsize);
+                            zoomsize,sqrt(1./(2.*spotVars(:,k))).*5);
                         clear x
                     end
                     cc = 13;

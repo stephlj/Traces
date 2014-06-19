@@ -976,6 +976,9 @@ close all
            if strcmpi(useoldparams,'y')
                 params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
                 params = params.params;
+           else
+               params.fps = fps;
+               save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
            end
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            if params.IntensityGaussWeight

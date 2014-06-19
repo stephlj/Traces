@@ -21,6 +21,8 @@
 %       movie in the red channel
 %   varargin{7}: same as {6} but for green channel
 %   varargin{8}: size of the ROI to extract (one side of a square)
+%   varargin{9}: if {4} and {5} are passed, [xdim;ydim] of size of circle 
+%       to put on the zoomed image
 %
 % Outputs:
 % LastRedFrame = last frame of the red channel that was played
@@ -39,8 +41,8 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
     if isempty(varargin)
         h2p = figure('Position',[650,800,500,650]);
     else 
-        if length(varargin)~=3 && length(varargin)~=8
-            disp('PlayMovie: Optional input must contain either 3 or 8 elements.');
+        if length(varargin)~=3 && length(varargin)~=9
+            disp('PlayMovie: Optional input must contain either 3 or 9 elements.');
             LastRedFrame=-1;
             LastGreenFrame = -1;
             return
@@ -50,9 +52,10 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
         end
     end
     % subfunction for putting circles around a spot:
-    function boxfun(currspot)
+    function boxfun(currspot,circlesize,markercolor)
+        % CalcSpotIntensityNoGauss puts a circle of diameter 5 around each spot:
         t = 0:pi/100:2*pi;
-        plot(currspot(2)+5/2.*cos(t),currspot(1)+5/2.*sin(t),'-g')
+        plot(currspot(2)+circlesize(2)/2.*cos(t),currspot(1)+circlesize(1)/2.*sin(t),strcat('-',markercolor))
         clear t
     end
     
@@ -74,13 +77,13 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
                 eval(varargin{2})
                 imshow(movRed(:,:,i))
                 hold on
-                boxfun(varargin{4});
+                boxfun(varargin{4},varargin{9},'r');
                 hold off
                 title('Red','Fontsize',12)
                 eval(varargin{3})
                 imshow(movGreen(:,:,i))
                 hold on
-                boxfun(varargin{5});
+                boxfun(varargin{5},varargin{9},'g');
                 hold off
                 title('Green','Fontsize',12)
                 if length(varargin)>3
@@ -89,12 +92,12 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
                     eval(varargin{6})
                     imshow(imgRzoom)
                     hold on
-                    boxfun(zoomcenR);
+                    boxfun(zoomcenR,varargin{9},'r');
                     hold off
                     eval(varargin{7})
                     imshow(imgGzoom)
                     hold on
-                    boxfun(zoomcenG);
+                    boxfun(zoomcenG,varargin{9},'g');
                     hold off
                 end
                 drawnow
