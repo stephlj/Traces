@@ -17,8 +17,8 @@ defaultsavedir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data
 defaultdatadir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData';
 % defaultdatadir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data';
 % Where the code is (which is where it saves this parameter file)
-% codedir = '/Volumes/smFRET/smFRET analysis code';
-codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
+codedir = '/Volumes/smFRET/smFRET analysis code/smFRET Suite V1.0';
+% codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
 
 %%%%%%%% Display defaults: %%%%%%%
 % These control where the two figures that show traces and a field of view
