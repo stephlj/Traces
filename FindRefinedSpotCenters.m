@@ -45,7 +45,7 @@ cen_tolerance = 2; % To judge the goodness of Gaussian fit, don't let the
     % refined center position differ from the maximum pixel by more than
     % this value. Realistically 1 is probably fine too, the refinement is
     % usually within 1 pixel.
-VarTolerance = 2;
+VarTolerance = 1;
 
 ROIsize = params.DNASize;
 symGauss = params.UseSymGauss;
@@ -61,10 +61,13 @@ tempCenters = zeros(2,size(spots,2));
 tempVars = zeros(2,size(spots,2)); % Vars will be:
     % First row will contain xvars, second row yvars
     % Columns will be spots
-Amps = zeros(size(spots,2));
+tempbkgnd = zeros(1,size(spots,2));
+tempAmps = zeros(1,size(spots,2));
 
 RefinedCenters = [];
 Vars = [];
+bkgnd = [];
+Amps = [];
 
     for ss = 1:size(spots,2)
        % Extract an ROI over which to calculate the fit:
@@ -72,7 +75,7 @@ Vars = [];
        % Note if the fit fails, Fit2DGaussToSpot will return the
        % StartParams, so make sure the StartParams for xvar and yvar are
        % the defaults hardcoded above
-       [RefinedLocalCenX,RefinedLocalCenY,tempVars(1,ss),tempVars(2,ss),bkgnd,Amps(ss)] = Fit2DGaussToSpot(spotimg,'Full',...
+       [RefinedLocalCenX,RefinedLocalCenY,tempVars(1,ss),tempVars(2,ss),tempbkgnd(ss),tempAmps(ss)] = Fit2DGaussToSpot(spotimg,'Full',...
            'StartParams',[localcen(1),localcen(2),defaultXvar,defaultYvar,min(spotimg(:)),max(spotimg(:))],...
            'Debug',debug,'symGauss',symGauss);
        tempCenters(:,ss) = GlobalToROICoords([],[RefinedLocalCenX;RefinedLocalCenY],ceil(spots(:,ss)),ROIsize,ROIsize);
@@ -94,10 +97,12 @@ Vars = [];
         % ridiculuous and that this isn't a one-pixel maximum by checking
         % the variance:
         if (FindSpotDists(tempCenters(:,ss),spots(:,ss))<cen_tolerance) && ... 
-                spotboundary<=bkgnd+bkgnd_tolerance && ...
+                spotboundary<=tempbkgnd(ss)+bkgnd_tolerance && ...
                 tempVars(1,ss) < VarTolerance
             RefinedCenters(:,end+1) = tempCenters(:,ss);
             Vars(:,end+1) = tempVars(:,ss);
+            bkgnd(end+1) = tempbkgnd(ss);
+            Amps(end+1) = tempAmps(ss);
         % For debugging:
 %         else
 %             if FindSpotDists(tempCenters(:,ss),spots(:,ss))>cen_tolerance
@@ -111,7 +116,8 @@ Vars = [];
 %                     spots(1,ss),spots(2,ss),tempVars(1,ss)))
 %             end
         end
-        clear spotimg localcen tempVars tempCenters spotboundary bkgnd
+        clear spotimg localcen tempVars tempCenters spotboundary empbkgnd
     end
 
-varargout = Amps;
+varargout{1} = bkgnd;
+varargout{2} = Amps;

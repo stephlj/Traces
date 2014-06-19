@@ -569,6 +569,8 @@ close all
                RefinedCentersG = [];
                VarsR = [];
                VarsG = [];
+               bkgndR = [];
+               bkgndG = [];
                newspotsR = [];
                newspotsG = [];
                newVarsR = [];

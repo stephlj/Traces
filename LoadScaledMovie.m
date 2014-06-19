@@ -1,4 +1,4 @@
-% function [movRed,movGreen, firstframe,lastframe] = LoadScaledMovie(PathToMovie,frames)
+% function [movRed,movGreen,movRedBkgnd,movGrBkgnd,firstframe,lastframe] = LoadScaledMovie(PathToMovie,frames)
 %
 % Loads the scaled and background-subtracted movie frames saved by
 % CalcIntensities.m. 
@@ -12,13 +12,15 @@
 % Outputs:
 % movRed, movGreen: x-by-y-by-frames matrix of intensities for the red and
 %   green channels
+% movRedBkgnd, movGrBkgnd: images used to compute background for intensity
+%   calculation (currently only called by CalcIntensitiesV3)
 % lastframe: The last frame returned.  This is frames(2) if the user asked
 %   for fewer than 100 frames to be returned; else this is start+99.
 %
 % Stephanie 4/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [movRed,movGreen,lastframe] = LoadScaledMovie(PathToMovie,frames)
+function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(PathToMovie,frames)
 
     % Input error handling
     frames = sort(frames);
@@ -40,12 +42,16 @@ function [movRed,movGreen,lastframe] = LoadScaledMovie(PathToMovie,frames)
             movRed = -1;
             movGreen = -1;
             lastframe = -1;
+            movRedBkgnd = -1;
+            movGrBkgnd = -1;
             return
         end
         temp = load(fullfile(PathToMovie,'ScaledMovieFrames1to100.mat'));
         lastframe = min(frames(2),size(temp.imgR,3)); %Can't load frames that don't exist, even if the user asked for them
         movRed = temp.imgR(:,:,frames(1):lastframe);
         movGreen = temp.imgG(:,:,frames(1):lastframe);
+        movRedBkgnd = temp.imgRBkgnd(:,:,frames(1):lastframe);
+        movGrBkgnd = temp.imgGBkgnd(:,:,frames(1):lastframe);
         return
     end
     % Make sure the file exists
@@ -54,6 +60,8 @@ function [movRed,movGreen,lastframe] = LoadScaledMovie(PathToMovie,frames)
         movRed = -1;
         movGreen = -1;
         lastframe = -1;
+        movRedBkgnd = -1;
+        movGrBkgnd = -1;
         return
     end
     
@@ -65,6 +73,8 @@ function [movRed,movGreen,lastframe] = LoadScaledMovie(PathToMovie,frames)
     % size(movRed,3) = 1 ... 
     movRed = zeros(0,0,0);
     movGreen = zeros(0,0,0);
+    movRedBkgnd = zeros(0,0,0);
+    movGrBkgnd = zeros(0,0,0);
     
     % Converts global frame number to per-file frame number
     FileFrame = @(frame) rem(frame - 1, 100) + 1;
@@ -81,6 +91,8 @@ function [movRed,movGreen,lastframe] = LoadScaledMovie(PathToMovie,frames)
         %disp(sprintf('movRed(:,:,%d:%d) = temp.imgR(:,:,%d:%d)', size(movRed, 3)+1, size(movRed, 3)+1+lastframe-firstframe, FileFrame(firstframe), FileFrame(lastframe)))
         movRed(  :,:,end+1:end+1+lastframe-firstframe) = temp.imgR(:,:,FileFrame(firstframe):FileFrame(lastframe));
         movGreen(:,:,end+1:end+1+lastframe-firstframe) = temp.imgG(:,:,FileFrame(firstframe):FileFrame(lastframe));
+        movRedBkgnd(:,:,end+1:end+1+lastframe-firstframe) = temp.imgRBkgnd(:,:,FileFrame(firstframe):FileFrame(lastframe));
+        movGrBkgnd (:,:,end+1:end+1+lastframe-firstframe) = temp.imgGBkgnd(:,:,FileFrame(firstframe):FileFrame(lastframe));
         
         firstframe = lastframe+1;
         

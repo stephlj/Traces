@@ -51,18 +51,6 @@ function ScaleMovieV2(PathToMovie,numframes,params)
                 size(moviebit,1),size(moviebit,2),1);
         end
         
-        % Update 6/2014: Implementing a background subtraction routine.
-        % Need to do this before computing a global max and min by which to
-        % scale the movie. 
-        
-        [~,moviebit] = SubBkgndFullImg(moviebit,params,0);
-        % Since SubBkgndFullImg takes a while, saving this to disk until
-        % I'm ready to scale it:
-        imgMinusBkgnd = moviebit;
-        save(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
-            'to',int2str(jj+99),'.mat')),'imgMinusBkgnd')
-        clear imgMinusBkgnd
-        
         MovieMax = max(MovieMax,double(max(max(max(moviebit)))));
         MovieMin = min(MovieMin,double(min(min(min(moviebit)))));
 
@@ -119,11 +107,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     
     % Re-load everything and actually do the scaling:
     for jj = 1:100:numframes
-        %moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));
-        % Because I'm now doing a background subtraction before scaling,
-        % load the files saved above:
-        moviebit = load(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
-            'to',int2str(jj+99),'.mat')),'imgMinusBkgnd');
+        moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));
                 
         % Update 4/2014: Allowing a normalization option--see note about
         % NormImage in smFRETsetup.m
@@ -136,11 +120,13 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         ScaledMovie = mat2gray(moviebit,[MovieMin MovieMax]); % This also converts it to double precision,
             % but need to explicitly do so earlier in case NormImage is 1
         [imgR,imgG] = SplitImg(ScaledMovie,params);
+
+        [imgRBkgnd,imgGBkgnd] = CalcBkgnd(imgR,imgG,params);
         
         save(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
-            'to',int2str(jj+99),'.mat')),'imgR','imgG','-append')
+            'to',int2str(jj+99),'.mat')),'imgR','imgG','imgRBkgnd','imgGBkgnd')
         
-        clear moviebit imgR imgG ScaledMovie
+        clear moviebit imgR imgG ScaledMovie imgRBkgnd imgGBkgnd
         
     end
 end

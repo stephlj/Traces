@@ -27,7 +27,6 @@ if isempty(spot_global_coords)
         spot_local_coords(2)+ceil(ROI_center_global(2))-floor(boxSizeY)/2-1];
 elseif isempty(spot_local_coords)
     % User has global, wants local
-    % Not sure if there's a better way to write a universal formula?
     newcoords = [spot_global_coords(1)-(ceil(ROI_center_global(1))-floor(boxSizeX)/2-1);...
         spot_global_coords(2)-(ceil(ROI_center_global(2))-floor(boxSizeY)/2-1)];
 else

@@ -81,19 +81,22 @@ end
     end
 
 for jj = 1:100:length(alltifs)
-    [imgR,imgG] = LoadScaledMovie(PathToMovie,[jj jj+99]);
+    [imgR,imgG,bkgndR,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+99]);
     
     for kk = 1:size(Rspots,2)
+        
        if params.IntensityGaussWeight==1
             % Get ROI in red channel
            [spotimgR,localcenR] = ExtractROI(imgR,params.DNASize,Rspots(:,kk));
+           [spotRbkgnd,~] = ExtractROI(bkgndR,params.DNASize,Rspots(:,kk));
            % Get ROI in green channel:
            [spotimgG,localcenG] = ExtractROI(imgG,params.DNASize,Gspots(:,kk));
+           [spotGbkgnd,~] = ExtractROI(bkgndG,params.DNASize,Rspots(:,kk));
            
            RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityInternal('Gauss',...
-               spotimgR,localcenR,spotVars(:,kk),params);
+               spotimgR-spotRbkgnd,localcenR,spotVars(:,kk),params);
            GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensityInternal('Gauss',...
-               spotimgG,localcenG,spotVars(:,kk),params);
+               spotimgG-spotGbkgnd,localcenG,spotVars(:,kk),params);
 
        else
            % Get ROI in red channel
@@ -109,7 +112,7 @@ for jj = 1:100:length(alltifs)
        clear spotimgG spotimgR
     end
     
-   clear imgR imgG 
+   clear imgR imgG bkgndR bkgndG
    disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))
 end
 end

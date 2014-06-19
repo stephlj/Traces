@@ -73,8 +73,6 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        rawGrI = GrI;
        rawFRET = FRET;
        if params.SmoothIntensities>0
-           % Another thing I'm not sure I should do: Smooth the intensities and FRET
-           % values (see below)
            SmoothIntensities = round(params.SmoothIntensities); % User error handling
            clear RedI GrI
            RedI = smooth(rawRedI,SmoothIntensities); % Moving average with span = SmoothIntensities
