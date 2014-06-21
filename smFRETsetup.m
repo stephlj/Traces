@@ -10,15 +10,11 @@ function smFRETsetup
 
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
-% defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
-% defaultsavedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData/RealDNA/analysis';
-defaultsavedir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data analysis';
+defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
 % Where to load data from:
-defaultdatadir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code/SampleData';
-% defaultdatadir = '/Users/Steph/Dropbox/Steph Dropbox/Narlikar Lab DB/smFRET data';
+defaultdatadir = '/Volumes/smFRET/smFRET data';
 % Where the code is (which is where it saves this parameter file)
 codedir = '/Volumes/smFRET/smFRET analysis code/smFRET Suite V1.0';
-% codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
 
 %%%%%%%% Display defaults: %%%%%%%
 % These control where the two figures that show traces and a field of view
@@ -76,7 +72,8 @@ UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % this currently uses an affine transformation only, since polynomial
     % always does worse at creating a combined image.
 TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
-    % (caps insensitive)
+    % (caps insensitive, the Matlab_ versions use built-in Matlab functions
+    % instead of my hand-written code)
 TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
     % (note if using built-in Matlab functions, this should equal TformTotDeg)
 TformTotDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
@@ -84,8 +81,7 @@ TformTotDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the p
 ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
     % by total number of spots allowable.
 Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead center
-    % position.  This will increase computational time for the channel
-    % mapping slightly, but is a good idea to do anyway.
+    % position.  Highly recommended.
 IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
     % in each frame by a Gaussian whose center and variance are determined
     % from a fit to the spot's first 10 frames. Note that if this is 0, it

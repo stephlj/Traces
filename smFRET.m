@@ -176,7 +176,7 @@ function smFRET(rootname,debug)
         if exist('PathToRecentMap.mat','file')
             prevmapdir = load('PathToRecentMap.mat');
         else
-            prevmapdir = params.defaultdatadir;
+            prevmapdir.MostRecentMapDir = params.defaultdatadir;
         end
         D_Beads = uigetdir(prevmapdir.MostRecentMapDir,'Select directory with old map');
         if exist(fullfile(D_Beads,'ChannelMapping.mat'),'file')
