@@ -75,11 +75,11 @@ function smFRET(rootname,debug)
                 xlabel('<-Background intensities ... Real spot intensities->')
                 ylabel('Counts')
                 newthresh = input('Enter new threshold to use:');
-                close
                 % Error handling:
-                while newthresh <=0 || newthresh >= 1
+                while isempty(newthresh) ||  newthresh <=0 || newthresh >= 1
                     newthresh = input('Enter new threshold to use:');
                 end
+                close
                 [newspots,thisn,thisxout,newthresh] = FindSpotsV5(SpotImg,'ShowResults',1,...
                     'UserThresh',newthresh,'ImgTitle',ChName,'NeighborhoodSize',OrdfiltSize,...
                     'maxsize',MinDist,'Method',Method);

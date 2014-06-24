@@ -14,7 +14,7 @@ defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
 % Where to load data from:
 defaultdatadir = '/Volumes/smFRET/smFRET data';
 % Where the code is (which is where it saves this parameter file)
-codedir = '/Volumes/smFRET/smFRET analysis code/smFRET Suite V1.0';
+codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
 
 %%%%%%%% Display defaults: %%%%%%%
 % These control where the two figures that show traces and a field of view
