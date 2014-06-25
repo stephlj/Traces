@@ -5,17 +5,19 @@
 %
 % Inputs are the image that spots were found in, a vector of (x,y)
 % coordinates where the spot centers are, and boxdim that determines the
-% size of the box to put around each spot.  The user should click in the box
-% in order to deselect or re-select a spot.  Output is a vector of the kept
-% spotcenters.
+% size of the circle to put around each spot.  The user should click in the
+% circle in order to deselect or re-select a spot.  Output is a vector of 
+% the kept spotcenters.
 %
 % Optional input is a string to put on the image, so you know what you're
 % analyzing.
 %
-% This version uses an updated version of PutBoxesOnImage that allows figure
-% data to be replaced without replotting the whole thing--makes it much faster!
+% Replaces an older version that used a different version of PutBoxesOnImage 
+% that allows figure data to be replaced without replotting the whole thing--
+% would have been much faster ... 
 %
-% Steph 6/2013
+% Steph 6/2013, updated 6/2014
+% Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
 function newspots = ScreenSpotsV2(img,spotcenters,boxdim,varargin)
 
@@ -25,13 +27,18 @@ if ~isempty(varargin) && ~ischar(varargin{1})
     return
 end
 
+% Make sure the spots are listed as one spot per column:
+if size(spotcenters,1)~=2
+    spotcenters = transpose(spotcenters);
+end
+
 newspots = spotcenters; % Start out assuming user wants to keep all spots
 badspots = [];
 
 happy = 0;
 coords=[];
 
-h = PutBoxesOnImage(img,newspots,boxdim);
+PutBoxesOnImageV4(img,newspots,boxdim);
 if ~isempty(varargin)
     title(strcat(varargin{1},'; Click on a spot to deselect; z to zoom; u to unzoom; return to end'));
 else
@@ -56,9 +63,8 @@ while happy == 0
     else
         % Find the nearest spot center to the user's click.  Start by
         % finding the distance from user's click to every spot:
-        dists = sqrt((spotcenters(:,1)-SelectedSpotx.*ones(length(spotcenters),1)).^2+...
-            (spotcenters(:,2)-SelectedSpoty.*ones(length(spotcenters),1)).^2);
-        [~,closest] = min(dists);
+        dists = FindSpotDists([SelectedSpotx;SelectedSpoty],spotcenters);
+        [~,closest] = min(dists,[],2);
         % The closest spot to the click is the one at
         % spotcenters(closest,:).
         % If this spot is in newspots, deselect and move to badspots:
@@ -84,7 +90,12 @@ while happy == 0
             disp('Spot is not in newspots or bad spots.  Problem!')
             keyboard
         end
-       PutBoxesOnImage(img,newspots,boxdim,h);   
+       PutBoxesOnImageV4(img,newspots,boxdim); 
+       if ~isempty(varargin)
+           title(strcat(varargin{1},'; Click on a spot to deselect; z to zoom; u to unzoom; return to end'));
+       else
+           title('Click on a spot to deselect; z to zoom; u to unzoom; return to end');
+       end
        
     end
 end

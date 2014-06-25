@@ -33,6 +33,20 @@ function smFRET(rootname,debug)
     % for spots, rather than local (in a single channel) coordinates.
     function [spotsGglobal,spotsRglobal] = SpotsIntoAbsCoords(spotsGlocal,...
             spotsRlocal,params_struct,imgwidth)
+        % spotsG and spotsR are actually params.PxlsToExclude off from
+        % the full image's coordinates along the axis along which the
+        % channels are split.  So add those pixels back:
+        if params_struct.splitx
+            spotsGlocal(1,:) = spotsGlocal(1,:);
+            spotsGlocal(2,:) = spotsGlocal(2,:)+params_struct.PxlsToExclude;
+            spotsRlocal(1,:) = spotsRlocal(1,:);
+            spotsRlocal(2,:) = spotsRlocal(2,:)+params_struct.PxlsToExclude;
+        else
+            spotsGlocal(1,:) = spotsGlocal(1,:)+params_struct.PxlsToExclude;
+            spotsGlocal(2,:) = spotsGlocal(2,:);
+            spotsRlocal(1,:) = spotsRlocal(1,:)+params_struct.PxlsToExclude;
+            spotsRlocal(2,:) = spotsRlocal(2,:);
+        end
         if params_struct.splitx
                 if ~params_struct.Acceptor
                     spotsGglobal(1,:) = spotsGlocal(1,:);
@@ -285,21 +299,6 @@ function smFRET(rootname,debug)
                 end
                 clear n xout
 
-                % spotsG and spotsR are actually params.PxlsToExclude off from
-                % the full image's coordinates along the axis along which the
-                % channels are split.  So add those pixels back:
-                if params.splitx
-                    spotsG{i}(1,:) = spotsG{i}(1,:);
-                    spotsG{i}(2,:) = spotsG{i}(2,:)+params.PxlsToExclude;
-                    spotsR{i}(1,:) = spotsR{i}(1,:);
-                    spotsR{i}(2,:) = spotsR{i}(2,:)+params.PxlsToExclude;
-                else
-                    spotsG{i}(1,:) = spotsG{i}(1,:)+params.PxlsToExclude;
-                    spotsG{i}(2,:) = spotsG{i}(2,:);
-                    spotsR{i}(1,:) = spotsR{i}(1,:)+params.PxlsToExclude;
-                    spotsR{i}(2,:) = spotsR{i}(2,:);
-                end
-
                 if debug %Figure with all the spots found:
                     % plot all the boxes for both channels on a big image:
                     [spotsG_abs,spotsR_abs] = SpotsIntoAbsCoords(spotsG{i},...
@@ -337,11 +336,11 @@ function smFRET(rootname,debug)
                     hold on
                     plot(matchR{i}(2,:),0-matchR{i}(1,:),'xr')
                     if params.splitx == 1
-                        ylim([-size(allBdImgs(:,:,i),1) 0])
-                        xlim([0 size(allBdImgs(:,:,i),2)/2])
+                        ylim([-size(imgRed(:,:,i),1) 0])
+                        xlim([0 size(imgRed(:,:,i),2)/2])
                     else
-                        ylim([-size(allBdImgs(:,:,i),1)/2 0])
-                        xlim([0 size(allBdImgs(:,:,i),2)])
+                        ylim([-size(imgRed(:,:,i),1)/2 0])
+                        xlim([0 size(imgRed(:,:,i),2)])
                     end
                     title('Red x is center of point in red channel')
                     pause
@@ -409,12 +408,13 @@ function smFRET(rootname,debug)
             for i = 1:num_BeadDir
                 disp(strcat('Iterating through bead images for user to check quality (',...
                     int2str(i),' of ',int2str(num_BeadDir),')'))
-                % Get green points in absolute coordinates
-                [matchG_abs,~] = SpotsIntoAbsCoords(matchG{i},...
-                    matchR{i},params,size(allBdImgs(:,:,i),2)/2);
                 % Use tform to map to where they should be in the red channel:
                 newR = tformPoly.FRETmapFwd(matchG{i});
-                PutBoxesOnImageV4(allBdImgs(:,:,i),[newR';matchG_abs'],params.BeadSize);
+                % Get points in absolute coordinates for overlaying on the
+                % whole image
+                [matchG_abs,newR_abs] = SpotsIntoAbsCoords(matchG{i},...
+                    newR,params,size(allBdImgs(:,:,i),2)/2);
+                PutBoxesOnImageV4(allBdImgs(:,:,i),[newR_abs';matchG_abs'],params.BeadSize);
                 title('Spots found in green, mapped to red','Fontsize',12)
                 tformPoly.PlotTform(newR,matchR{i})
                 legend('Green spots mapped to red','Red spots')
@@ -446,10 +446,10 @@ function smFRET(rootname,debug)
                 % check also that the inverse transformation looks ok:
                 % Use tform to map to where they should be in the red channel:
                 newG = tformPoly.FRETmapInv(matchR{i});
-                % Get green points in absolute coordinates
-                [newG_abs,~] = SpotsIntoAbsCoords(newG,...
+                % Get points in absolute coordinates
+                [newG_abs,matchR_abs] = SpotsIntoAbsCoords(newG,...
                     matchR{i},params,size(allBdImgs(:,:,i),2)/2);
-                PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR{i}';newG_abs'],params.BeadSize);
+                PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR_abs';newG_abs'],params.BeadSize);
                 title('Spots found in red, mapped to green','Fontsize',12)
                 tformPoly.PlotTform(newG,matchG{i})
                 ylim([-512 0])
