@@ -224,7 +224,7 @@ classdef FRETmap < handle
                 oldspots = transpose(oldspots);
                 flipoutput = 1;
             end
-            if strcmpi(self.Kind,'affine') || strcmpi(self.Kind,'AffineMatlab')
+            if strcmpi(self.Kind,'affine') || strcmpi(self.Kind,'MatlabAffine')
                 x = [oldspots; ones(1,size(oldspots,2))];
                 y = self.A*x;
                 newspots = y(1:2,:);
@@ -261,7 +261,7 @@ classdef FRETmap < handle
                 oldspots = transpose(oldspots);
                 flipoutput = 1;
             end
-            if strcmpi(self.Kind,'affine') || strcmpi(self.Kind,'AffineMatlab')
+            if strcmpi(self.Kind,'affine') || strcmpi(self.Kind,'MatlabAffine')
                 M = self.Ainv(:,1:2);
                 b = self.Ainv(:,3);
                 b = repmat(b,1,size(oldspots,2));

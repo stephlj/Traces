@@ -314,6 +314,10 @@ function smFRET(rootname,debug)
                 % than acceptor channel, the matching works best if you match spots
                 % in donor to spots in acceptor:
                 [matchG{i},matchR{i}] = FindSpotMatches(spotsG{i},spotsR{i});
+                if matchG{i} == -1 % Greedy algorithm failed
+                    [matchR{i},matchG{i}] = UserPickSptsForAffine(imgRed,...
+                        imgGreen,spotsR{i},spotsG{i},params.BeadSize);
+                end
                 if i<=num_BeadDir
                     matchGall = [matchGall, matchG{i}];
                     matchRall = [matchRall, matchR{i}];
