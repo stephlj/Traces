@@ -33,31 +33,31 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
             % Find the nearest spot center to the user's click.  Start by
             % finding the distance from user's click to every spot:
             dists = FindSpotDists(spotclicked,allspots);
-            [~,closest] = min(dists,[],2);
+            [minDist,closest] = min(dists,[],2);
             % The closest spot to the click is the one at
             % spotcenters(closest,:).
-            % If this spot is in unused, move to kept:
-            if length(find(ismember(unused,allspots(:,closest))))==2
-                kept(:,end+1) = allspots(:,closest);
-                kept = transpose(sortrows(kept'));
-                spotind = find(ismember(unused(1,:),allspots(1,closest)));
-                tempspots = unused;
-                clear unused
-                unused = [tempspots(:,1:spotind-1), tempspots(:,spotind+1:end)];
-                clear tempspots spotind
-                % Don't need to sort, the unused vector should still be sorted
-            % if it's in kept, re-select and move to unused:
-            elseif length(find(ismember(kept,allspots(:,closest))))==2
-                unused(:,end+1) = allspots(:,closest);
-                unused = transpose(sortrows(unused'));
-                spotind = find(ismember(kept(1,:),allspots(1,closest)));
-                tempspots = kept;
-                clear kept
-                kept = [tempspots(:,1:spotind-1), tempspots(:,spotind+1:end)];
-                clear tempspots spotind
-            else
-                disp('Spot is not in unused or kept spots.  Problem!')
-                keyboard
+            if minDist < boxdim*2
+                % If this spot is in unused, move to kept, as long as there's not
+                % already a spot in kept:
+                if length(find(ismember(unused,allspots(:,closest))))==2 && isempty(kept)
+                    kept(:,end+1) = allspots(:,closest);
+                    %kept = transpose(sortrows(kept'));
+                    spotind = find(ismember(unused(1,:),allspots(1,closest)));
+                    tempspots = unused;
+                    clear unused
+                    unused = [tempspots(:,1:spotind-1), tempspots(:,spotind+1:end)];
+                    clear tempspots spotind
+                    % Don't need to sort, the unused vector should still be sorted
+                % if it's in kept, re-select and move to unused:
+                elseif length(find(ismember(kept,allspots(:,closest))))==2
+                    unused(:,end+1) = allspots(:,closest);
+                    %unused = transpose(sortrows(unused'));
+                    spotind = find(ismember(kept(1,:),allspots(1,closest)));
+                    tempspots = kept;
+                    clear kept
+                    kept = [tempspots(:,1:spotind-1), tempspots(:,spotind+1:end)];
+                    clear tempspots spotind
+                end
             end
         end
 
@@ -65,8 +65,6 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
     spotsRforAffine = [];
     unusedspotsG = spotsG;
     spotsGforAffine = [];
-
-    coords=[];
 
     % Plot the two images side by side, with circles around all the spots:
     figure('Position',[200 200 700 625])
@@ -86,49 +84,62 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
         plot(spotsG(2,j)+boxdim/2*cos(t),spotsG(1,j)+boxdim/2*sin(t),'-g')
     end
     
-    disp('Click on three red spots to keep.')
-
-    while size(spotsRforAffine,2) < 3     
-        [SelectedSpotx,SelectedSpoty] = ginput(1);
-        if isequal(gca,Raxes)
-            [unusedspotsR,spotsRforAffine] = FindUserSelection(spotsR,unusedspotsR,...
-                spotsRforAffine,[SelectedSpoty;SelectedSpotx]);
-            subplot(1,2,1)
-            imshow(imgR,[])
-            hold on
-            for j = 1:size(unusedspotsR,2)
-                plot(unusedspotsR(2,j)+boxdim/2*cos(t),unusedspotsR(1,j)+boxdim/2*sin(t),'-r')
-            end
-            for j = 1:size(spotsRforAffine,2)
-                plot(spotsRforAffine(2,j)+boxdim/2*cos(t),spotsRforAffine(1,j)+boxdim/2*sin(t),'-w')
-            end
-            hold off
-            drawnow
-        end
+    for r = 1:3 % Three is the minimum number of points to define an affine
+        z = 5;
+        rspottemp = [];
+        gspottemp = [];
         
-    end
-    
-    disp('Click on the three green pairs, IN THE SAME ORDER as you clicked reds.')
-    
-    while size(spotsGforAffine,2) < 3
-        [SelectedSpotx,SelectedSpoty] = ginput(1);
-        if isequal(gca,Gaxes)
-            [unusedspotsG,spotsGforAffine] = FindUserSelection(spotsG,unusedspotsG,...
-                spotsGforAffine,[SelectedSpoty;SelectedSpotx]);
-            subplot(1,2,2)
-            imshow(imgG,[])
-            hold on
-            for j = 1:size(unusedspotsG,2)
-                plot(unusedspotsG(2,j)+boxdim/2*cos(t),unusedspotsG(1,j)+boxdim/2*sin(t),'-g')
+        disp('Click on a red spot to keep; click again to un-keep it. Press enter when satisfied.')
+        while ~isempty(z)
+            [SelectedSpotx,SelectedSpoty,z] = ginput(1);
+            if isequal(gca,Raxes) && ~isempty(z)
+                [unusedspotsR,rspottemp] = FindUserSelection(spotsR,unusedspotsR,...
+                rspottemp,[SelectedSpoty;SelectedSpotx]);
+                subplot(1,2,1)
+                imshow(imgR,[])
+                hold on
+                for j = 1:size(unusedspotsR,2)
+                    plot(unusedspotsR(2,j)+boxdim/2*cos(t),unusedspotsR(1,j)+boxdim/2*sin(t),'-r')
+                end
+                for j = 1:size(spotsRforAffine,2)
+                    plot(spotsRforAffine(2,j)+boxdim/2*cos(t),spotsRforAffine(1,j)+boxdim/2*sin(t),'-w')
+                end
+                for j = 1:size(rspottemp,2)
+                    plot(rspottemp(2,j)+boxdim/2*cos(t),rspottemp(1,j)+boxdim/2*sin(t),'-w')
+                end
+                hold off
+                drawnow
             end
-            for j = 1:size(spotsGforAffine,2)
-                plot(spotsGforAffine(2,j)+boxdim/2*cos(t),spotsGforAffine(1,j)+boxdim/2*sin(t),'-w')
-            end
-            hold off
-            drawnow
-
         end
+        spotsRforAffine(:,end+1) = rspottemp;
+        
+        z = 5;
+        
+        disp('Now click on its match in the green channel; click again to un-keep it. Press enter when satisfied.')
+        while ~isempty(z)
+            [SelectedSpotx,SelectedSpoty,z] = ginput(1);
+            if isequal(gca,Gaxes) && ~isempty(z)
+                [unusedspotsG,gspottemp] = FindUserSelection(spotsG,unusedspotsG,...
+                    gspottemp,[SelectedSpoty;SelectedSpotx]);
+                subplot(1,2,2)
+                imshow(imgG,[])
+                hold on
+                for j = 1:size(unusedspotsG,2)
+                    plot(unusedspotsG(2,j)+boxdim/2*cos(t),unusedspotsG(1,j)+boxdim/2*sin(t),'-g')
+                end
+                for j = 1:size(spotsGforAffine,2)
+                    plot(spotsGforAffine(2,j)+boxdim/2*cos(t),spotsGforAffine(1,j)+boxdim/2*sin(t),'-w')
+                end
+                for j = 1:size(gspottemp,2)
+                    plot(gspottemp(2,j)+boxdim/2*cos(t),gspottemp(1,j)+boxdim/2*sin(t),'-w')
+                end
+                hold off
+                drawnow
+            end
+        end
+        spotsGforAffine(:,end+1) = gspottemp;
     end
+    
     close
     
     % Make an affine transformation with these user-paired spots
