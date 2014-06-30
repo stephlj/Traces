@@ -14,9 +14,9 @@ function [newtestspots,newgoodspots,newtestVars,newgoodVars] = CheckSpotBoundari
 
 imgsize = GetInfoFromMetaData(PathToMovie,'imgsize');
 if params.splitx
-    imgsize(2) = imgsize(2)-2*params.PxlsToExclude;
+    imgsize(2) = imgsize(2)/2-2*params.PxlsToExclude;
 else
-    imgsize(1) = imgsize(1)-2*params.PxlsToExclude;
+    imgsize(1) = imgsize(1)/2-2*params.PxlsToExclude;
 end
 
 boxdim = params.DNASize;

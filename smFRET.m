@@ -602,22 +602,21 @@ close all
                else
                    SptFindIncrement = params.FindSpotsEveryXFrames;
                end
-               if params.EndInjectFrame == 1
-                   EndInjectFrame = SptFindIncrement+1;
-               else
+%                if params.EndInjectFrame == 1
+%                    EndInjectFrame = SptFindIncrement+1;
+%                else
                    EndInjectFrame = params.EndInjectFrame;
-               end
+               %end
                RefinedCentersR = [];
                RefinedCentersG = [];
                VarsR = [];
                VarsG = [];
-               bkgndR = [];
-               bkgndG = [];
                newspotsR = [];
                newspotsG = [];
                newVarsR = [];
                newVarsG = [];
-               for ff = [1,EndInjectFrame:SptFindIncrement:totframes]
+               %for ff = [1,EndInjectFrame:SptFindIncrement:totframes]
+               for ff = EndInjectFrame:SptFindIncrement:totframes
                    [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),...
                        [ff ff+params.FramesToAvg]);
                    imgRedavg = mat2gray(mean(imgRed,3)); %Do I want to do mat2gray here? Update 4/2014:
@@ -662,7 +661,8 @@ close all
                % Step 1.1 Identify spots in acceptor channel, and refine centers by
                    % fitting to a Gaussian, regardless of whether or not user
                    % wants to weight intensities by a Gaussian:
-                   if ff == 1 
+                   %if ff == 1
+                   if ff == EndInjectFrame
                        [newspotsR,nR,xoutR,thresh] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
                              'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
                              'Method','GaussFit');
@@ -736,7 +736,8 @@ close all
                         end
 
                    end
-                   if ff > 1
+                   %if ff > 1
+                   if ff > EndInjectFrame
                         % Are there any new spots that we didn't find last
                         % time?
                         if ~isempty(tempnewspotsR) && ~isempty(RefinedCentersR)
@@ -905,7 +906,7 @@ close all
                    % is done for red spots in CalcIntensitiesV2
                    if ~isempty(spotsGinR)
                        [spotsGinR,~,Vars,~] = CheckSpotBoundaries(spotsGinR,...
-                            [],Vars,[],params,fullfile(D_Data,ToAnalyze(i).name));
+                            spotsGinR,Vars,Vars,params,fullfile(D_Data,ToAnalyze(i).name));
                    else
                        Vars = [];
                    end

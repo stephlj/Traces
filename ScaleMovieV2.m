@@ -78,6 +78,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
             figure
             plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
             keyboard
+            close
         end
     end
     clear sortedMaxes MaxDiffs meanDiff stdDiff
