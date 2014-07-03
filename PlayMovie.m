@@ -7,6 +7,8 @@
 % Inputs:
 % PathToMovie: Full path to folder with the "ScaledMovieFrames..." files
 % frames: [start end] vector of frames to show
+% FrameLoadMax: Max number of frames to load into memory at any one time,
+%   so you don't kill Matlab
 % Optional inputs: must have either the first three only, or all seven
 %   varargin{1}: handle to a figure to play the movie into
 %   varargin{2}: a string containing 'subplot(blah)' to play the red
@@ -31,7 +33,7 @@
 % Stephanie 4/2014
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
+function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,FrameLoadMax,varargin)
 
     % Input error handling
     frames = sort(frames);
@@ -64,7 +66,7 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,varargin)
     while lastframe<=frames(2)
         disp('Loading movie part ... ')
         [movRed,movGreen,~,~,lastframe] = LoadScaledMovie(PathToMovie,...
-            [lastframe frames(2)]);
+            [lastframe min(lastframe+FrameLoadMax, frames(2))]);
         
         for i=1:size(movRed,3)
             if isempty(varargin)

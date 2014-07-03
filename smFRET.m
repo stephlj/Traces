@@ -581,9 +581,14 @@ close all
 
                UseScaledMov = 'n';
 
-               if exist(fullfile(D_Data,ToAnalyze(i).name,'ScaledMovieFrames1to100.mat'),'file')
+               % wow. this is irritating. You can't use regular expressions
+               % in combination with "exist".
+               % Workaround:
+               templist = dir(fullfile(D_Data,ToAnalyze(i).name,'ScaledMovieFrames*.mat'));
+               if ~isempty(templist)
                    UseScaledMov = input('Load scaled movie? (y/n)','s');
                end
+               clear templist
 
                if strcmpi(UseScaledMov,'n')
                    % Update 4/2014: Scaling the movie first, before finding spots,
@@ -937,8 +942,10 @@ close all
            
            disp('Calculating frame-by-frame intensities')
            
+           tic
            [RedI, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
                spots, Vars, tformPoly,params);
+           toc
            
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.

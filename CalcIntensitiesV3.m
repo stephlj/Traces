@@ -117,8 +117,8 @@ for jj = 1:FrameLoadMax:length(alltifs)
        end
        clear spotimgG spotimgR
     end
-    
+   
+   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+size(imgR,3)-1,length(alltifs)))
    clear imgR imgG bkgndR bkgndG
-   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+FrameLoadMax-1,length(alltifs)))
 end
 end

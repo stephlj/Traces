@@ -137,7 +137,16 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % different PxlsToExclude value in order to change the pixels excluded
     % with real data!
 FrameLoadMax = 500; % Maximum number of frames to load into Matlab's memory 
-    % at one time. Right now hard-coded to be 100.
+    % at one time. Making this number bigger will make some parts of the
+    % analysis process marginally faster, but not hugely significantly so, at
+    % least on my laptop.  Note: you can change this number as much
+    % as you like, and the rest of the analysis suite will run fine 
+    % (for example, you can scale movies with it set to 500, and then change 
+    % it, making it either bigger or smaller, and calculate intensities, etc.).
+    % It will always use whatever the current value of FrameLoadMax is (so
+    % if, for example, you scaled movies in 500-frame chunks, but then change 
+    % this to 100 and rerun the same data set, the play movie feature in
+    % the GUI will only load 100 frames at a time).
 NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
