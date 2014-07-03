@@ -33,9 +33,15 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     % For debugging
     %totI = zeros(1,numframes);
     %allMeans = zeros(1,numframes);
+    
+    if params.FrameLoadMax > numframes
+        FrameLoadMax = numframes;
+    else
+        FrameLoadMax = params.FrameLoadMax;
+    end
 
-    for jj = 1:100:numframes
-        moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));
+    for jj = 1:FrameLoadMax:numframes
+        moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+FrameLoadMax-1]));
         % Do I want to scale the entire image to the same max and min, or
         % do I want to scale the two channels separately?  The Ha lab code
         % does the whole image together, I believe.  So only calculating
@@ -101,14 +107,15 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     legend('Median')
     xlabel('Frame')
     ylabel('Raw Intensity (a.u.)')
+    print('-depsc',fullfile(PathToMovie,'ScalingFig'))
     pause
     close
     
     disp('Continuing with the scaling ...')
     
     % Re-load everything and actually do the scaling:
-    for jj = 1:100:numframes
-        moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+99]));
+    for jj = 1:FrameLoadMax:numframes
+        moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+FrameLoadMax-1]));
                 
         % Update 4/2014: Allowing a normalization option--see note about
         % NormImage in smFRETsetup.m
@@ -125,7 +132,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         [imgRBkgnd,imgGBkgnd] = CalcBkgnd(imgR,imgG,params);
         
         save(fullfile(PathToMovie,strcat('ScaledMovieFrames',int2str(jj),...
-            'to',int2str(jj+99),'.mat')),'imgR','imgG','imgRBkgnd','imgGBkgnd')
+            'to',int2str(jj+FrameLoadMax-1),'.mat')),'imgR','imgG','imgRBkgnd','imgGBkgnd')
         
         clear moviebit imgR imgG ScaledMovie imgRBkgnd imgGBkgnd
         

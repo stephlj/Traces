@@ -9,8 +9,13 @@
 % Updated 1/2014 to return an allimgs array of the same integer type as 
 % the original file (in our case, to keep it as uint16).
 %
-% Steph 3/2013, updated 10/2013
-% Copyright 2013 Stephanie Johnson, University of California, San Francisco
+% Note that this does not make use of the FrameLoadMax parameter in 
+% smFRETsetup!  You can load as many frames as you want with this function,
+% including so many it'll crash Matlab if Matlab doesn't have enough
+% memory ...
+%
+% Steph 3/2013, updated 1/2014
+% Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
 function allimgs = LoadUManagerTifsV5(D,varargin)
 
@@ -21,7 +26,7 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
             StartStop(1)=1;
         end
     end
-
+    
     % In folder D uManager will have saved a bunch of image files, and two
     % text files that contain information about the data and its acquisition.
     
@@ -45,7 +50,7 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
         allimgs = zeros(xpxls,ypxls,(StartStop(2)-StartStop(1)+1),classtype);
     end
 
-    % Load all the bead images into a 3d matrix:
+    % Load all the images into a 3d matrix:
     if isempty(varargin)
         for i = 1:length(alltifs)
             img = imread(fullfile(D,alltifs(i).name));

@@ -596,7 +596,7 @@ close all
 
                % Update 5/2014: Added the option to find spots throughout the
                % movie, not just from EndInjectFrame:EndInjectFrame+FramesToAvg
-               totframes = 100*length(dir(fullfile(D_Data,ToAnalyze(i).name,'ScaledMovie*.mat')));
+               totframes = params.FrameLoadMax*length(dir(fullfile(D_Data,ToAnalyze(i).name,'ScaledMovie*.mat')));
                if params.FindSpotsEveryXFrames==0
                    SptFindIncrement = totframes;
                else

@@ -23,6 +23,12 @@ function [RedI, GrI] = CalcIntensitiesV3(PathToMovie, Rspots, spotVars, ...
 % Figure out the total number of image files in this movie:
 alltifs = dir(fullfile(PathToMovie,'img*.tif'));
 
+if params.FrameLoadMax > length(alltifs)
+    FrameLoadMax = length(alltifs);
+else
+    FrameLoadMax = params.FrameLoadMax;
+end
+
 RedI = zeros(size(Rspots,2),length(alltifs));
 GrI = zeros(size(Rspots,2),length(alltifs));
 % Find the spots in the coordinate system of the other (green) channel:
@@ -80,8 +86,8 @@ end
         
     end
 
-for jj = 1:100:length(alltifs)
-    [imgR,imgG,bkgndR,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+99]);
+for jj = 1:FrameLoadMax:length(alltifs)
+    [imgR,imgG,bkgndR,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+FrameLoadMax-1],'bkgnd');
     
     for kk = 1:size(Rspots,2)
         
@@ -113,6 +119,6 @@ for jj = 1:100:length(alltifs)
     end
     
    clear imgR imgG bkgndR bkgndG
-   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+99,length(alltifs)))
+   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+FrameLoadMax-1,length(alltifs)))
 end
 end

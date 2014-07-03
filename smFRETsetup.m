@@ -45,7 +45,7 @@ SmoothIntensities = 10; % If this is zero (or negative), don't do any smoothing
     % an integer.
 SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
-EndInjectFrame = 1; %round(27/0.15); % If doing a manual injection, which tends to bump the stage,
+EndInjectFrame = round(27/0.15); % If doing a manual injection, which tends to bump the stage,
     % you can set this to the value of a frame that you know is after the
     % injection is over, and spotfinding will start at EndInjectFrame. 
     % I usually know when I'm done injecting in seconds (usually about 25 seconds, 
@@ -124,7 +124,8 @@ DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % spots can be and still be included in the analysis.
     % I have found that 6 or 8 is a good number.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
-gamma = 0; % Crosstalk between channels. Not implemented yet.
+alpha = 0; % Crosstalk between channels. Not implemented yet.
+gamma = 0; % Detection inequality between dyes. Not implemented yet.
 PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
     % contains both channels, to exclude from analysis.  On our system with
     % a decent channel alignment this is about 10 pixels.  This avoids
@@ -135,7 +136,7 @@ PxlsToExclude = 10; % How many pixels on each side of the image, along the axis 
     % PxlsToExclude that comes with any map you load. Re-do a map with a
     % different PxlsToExclude value in order to change the pixels excluded
     % with real data!
-FrameLoadMax = 100; % Maximum number of frames to load into Matlab's memory 
+FrameLoadMax = 500; % Maximum number of frames to load into Matlab's memory 
     % at one time. Right now hard-coded to be 100.
 NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
@@ -176,5 +177,5 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
     'FrameLoadMax','UseCombinedImage','IntensityGaussWeight','NormImage',...
     'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
-    'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','gamma',...
+    'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','alpha','gamma',...
     'CheckSpotFindingEveryXFrames','GaussWeightAmp','FixSpotVar');
