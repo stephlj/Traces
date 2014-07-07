@@ -238,7 +238,7 @@ function smFRET(rootname,debug)
                     BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); % Keeps a record of which bead files went into the map
                 end
 
-                TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),[1 params.FramesToAvg]);
+                TotImg = LoadUManagerTifsV5(fullfile(D_Beads,AllBeads(i).name),'FramesToLoad',[1 params.FramesToAvg]);
 
                 % Updated 2/2014 to account for LoadUManagerTifs returning an
                 % image of the same numeric type as the initial files.  For

@@ -45,7 +45,7 @@ SmoothIntensities = 10; % If this is zero (or negative), don't do any smoothing
     % an integer.
 SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal.  At some
     % point should implement a Gauss filter instead
-EndInjectFrame = round(27/0.15); % If doing a manual injection, which tends to bump the stage,
+EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends to bump the stage,
     % you can set this to the value of a frame that you know is after the
     % injection is over, and spotfinding will start at EndInjectFrame. 
     % I usually know when I'm done injecting in seconds (usually about 25 seconds, 

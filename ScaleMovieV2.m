@@ -9,13 +9,16 @@
 % Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
 function ScaleMovieV2(PathToMovie,numframes,params)
+
+    % Get some preliminary info:
+    framesize = GetInfoFromMetaData(PathToMovie,'imgsize');
  
     % First, set the initial max to the minimum possible value, then the initial minimum to
     % the maximum possible value:
     MovieMax = 0;
     % To get the maximum possible value, load one frame and figure out the
     % numeric type:
-    tempfr = LoadUManagerTifsV5(PathToMovie,[1 1]);
+    tempfr = LoadUManagerTifsV5(PathToMovie,'FramesToLoad',[1 1]);
     if strcmpi(class(tempfr),'uint16')
         MovieMin = 2^16-1;
     elseif strcmpi(class(tempfr),'uint8')
@@ -41,7 +44,8 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     end
 
     for jj = 1:FrameLoadMax:numframes
-        moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+FrameLoadMax-1]));
+        moviebit = double(LoadUManagerTifsV5(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
+            'FrameSize',framesize));
         % Do I want to scale the entire image to the same max and min, or
         % do I want to scale the two channels separately?  The Ha lab code
         % does the whole image together, I believe.  So only calculating
@@ -115,7 +119,8 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     
     % Re-load everything and actually do the scaling:
     for jj = 1:FrameLoadMax:numframes
-        moviebit = double(LoadUManagerTifsV5(PathToMovie,[jj jj+FrameLoadMax-1]));
+        moviebit = double(LoadUManagerTifsV5(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
+            'FrameSize',framesize));
                 
         % Update 4/2014: Allowing a normalization option--see note about
         % NormImage in smFRETsetup.m

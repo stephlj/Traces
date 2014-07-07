@@ -1,13 +1,20 @@
-% function allimgs = LoadUManagerTifsV5(D)
+% function allimgs = LoadUManagerTifsV5(D,varargin)
 %
-% Loads all the images in a uManager-created folder into one 3-d matrix.
+% Loads images in a uManager-created folder into one 3-d matrix.
 % D is the full path to the folder where they're stored; output is the
 % image matrix.  In V5, images returned are NOT scaled between 0 and 1.
-% Also, the optional input allows the user to specify how many images to
-% load, in the form of [start end] vector.
+% 
+% Optional inputs: Pass these as '<name>',<val> pairs
+% 'FramesToLoad',[start end]: allows the user to specify how many images to
+%    load, in the form of [start end] vector.
+% 'FrameSize',[xpxls ypxls]: size of each frame to be loaded. 
 %
 % Updated 1/2014 to return an allimgs array of the same integer type as 
 % the original file (in our case, to keep it as uint16).
+%
+% Updated 7/2014 to add a second optional input containing the xdim and ydim
+% of the images to be loaded, so you don't have to call GetInfoFromMetadata
+% every time if you're calling this in a loop.
 %
 % Note that this does not make use of the FrameLoadMax parameter in 
 % smFRETsetup!  You can load as many frames as you want with this function,
@@ -19,11 +26,20 @@
 
 function allimgs = LoadUManagerTifsV5(D,varargin)
 
-    % Input error handling
+    alltifs = dir(fullfile(D,'img*.tif'));
+    
+    % Deal with inputs
     if ~isempty(varargin)
-        StartStop = sort(varargin{1});
-        if StartStop(1)<=0
-            StartStop(1)=1;
+        for p = 1:2:length(varargin)
+            if strcmpi(varargin{p},'FramesToLoad')
+                StartStop = sort(varargin{p+1});
+                if StartStop(1)<=0
+                    StartStop(1)=1;
+                end
+            elseif strcmpi(varargin{p},'FrameSize')
+                xpxls = varargin{p+1}(1);
+                ypxls = varargin{p+1}(2);
+            end
         end
     end
     
@@ -31,13 +47,12 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
     % text files that contain information about the data and its acquisition.
     
     % First figure out the size of the images:
-    val = GetInfoFromMetaData(D,'imgsize');
-    xpxls = val(1);
-    ypxls = val(2);
-    
-    % Next figure out how many tif files there are:
-    
-    alltifs = dir(fullfile(D,'img*.tif'));
+    % Update 7/2014:
+    if ~exist('xpxls','var')
+        val = GetInfoFromMetaData(D,'imgsize');
+        xpxls = val(1);
+        ypxls = val(2);
+    end
     
     % Update 1/2014: Load one file to get the integer type class:
     temp = imread(fullfile(D,alltifs(1).name));
