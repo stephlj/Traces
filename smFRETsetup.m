@@ -124,8 +124,17 @@ DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % spots can be and still be included in the analysis.
     % I have found that 6 or 8 is a good number.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
-alpha = 0; % Crosstalk between channels. Not implemented yet.
-gamma = 0; % Detection inequality between dyes. Not implemented yet.
+alpha = 0; % Crosstalk between channels: Corrects for bleed-through of donor intensity
+    % into acceptor channel.  Corrects raw acceptor intensities I_A,raw
+    % according to the formula I_A = I_A,raw - alpha*I_D, where I_D is the
+    % donor intensity. Set to 0 to not correct for channel cross-talk.
+    % TODO: Not clear to me if this should be done before or after
+    % background subtraction? Doing it after, consistent with Ha lab IDL
+    % code.
+gamma = 1; % Detection inequality (and quantum yield inequalities, etc) between dyes. 
+    % Corrects FRET values according to FRET = I_A / (I_D + gamma*I_A). Set
+    % to 1 to not correct for detection inequality (Ha and Selvin 2007 say
+    % for Cy3 and Cy5, gamma is roughly 1).
 PxlsToExclude = 10; % How many pixels on each side of the image, along the axis that
     % contains both channels, to exclude from analysis.  On our system with
     % a decent channel alignment this is about 10 pixels.  This avoids

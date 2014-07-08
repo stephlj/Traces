@@ -66,12 +66,19 @@ disp('o=adjust black offset; l = re-_l_ocate spot; g=go to spot number;')
 disp('e=end of trace (after this point FRET set to zero); d=done with movie')
 
     while k <= size(spots,2)
-       RedI = allRedI(k,:)-Rbkgnd(k);
-       GrI = allGrI(k,:)-Gbkgnd(k);
-       FRET = RedI./(RedI+GrI);
-       rawRedI = RedI; % Even if user wants to smooth intensities and/or FRET, always save the raw as well
-       rawGrI = GrI;
-       rawFRET = FRET;
+       % Calculate raw intensities and raw FRET, then correct for gamma
+       % and alpha as user wants:
+       % Note: Before smoothing, even if user wants to smooth intensities and/or 
+       % FRET, always save the raw as well (see below)
+       rawRedI = allRedI(k,:)-Rbkgnd(k);
+       rawGrI = allGrI(k,:)-Gbkgnd(k);
+       % Correct for gamma and alpha as user wants:
+       RedI = rawRedI - params.alpha*rawGrI;
+       GrI = rawGrI;
+       FRET = RedI./(GrI+params.gamma*RedI);
+       rawFRET = FRET; % Note the raw FRET will be corrected for alpha and gamma, but
+        % because the raw intensities are also saved, you can always
+        % recalculate FRET from those.  rawFRET just means not smoothed.
        if params.SmoothIntensities>0
            SmoothIntensities = round(params.SmoothIntensities); % User error handling
            clear RedI GrI
