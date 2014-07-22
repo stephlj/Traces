@@ -159,6 +159,7 @@ function smFRET(rootname,debug)
             disp(sprintf('Residuals for %d spots:',size(allmatchesG,2)))
             ResidGtoR = newtform.ResidualsFwd
             ResidRtoG = newtform.ResidualsInv
+            ResidGtoRperSpot = newtform.ResidualsFwd/size(allmatchesG,2)
             
             if size(allmatchesG,2)<0.75*InitBdNum || steps>5
                 newtform.HistResiduals('fwd');
@@ -300,12 +301,9 @@ function smFRET(rootname,debug)
                 clear n xout
 
                 if debug %Figure with all the spots found:
-                    % plot all the boxes for both channels on a big image:
                     [spotsG_abs,spotsR_abs] = SpotsIntoAbsCoords(spotsG{i},...
                             spotsR{i},params,size(allBdImgs(:,:,i),2)/2);
-                    PutBoxesOnImageV4(allBdImgs(:,:,i),[spotsR_abs,spotsG_abs],params.BeadSize,'0','w');
-                    pause
-                    close
+                    PlotDebugFigures(1,allBdImgs(:,:,i),spotsR_abs,spotsG_abs,params)
                     clear spotsG_abs spotsR_abs
                 end
 
@@ -323,32 +321,11 @@ function smFRET(rootname,debug)
                     matchRall = [matchRall, matchR{i}];
                 end
 
-                if debug
-                    % Box in green the ones that were matched:
+                if debug % Box in green the ones that were matched:
                     [matchG_abs,matchR_abs] = SpotsIntoAbsCoords(matchG{i},...
                             matchR{i},params,size(allBdImgs(:,:,i),2)/2);
-                    PutBoxesOnImageV4(allBdImgs(:,:,i),[matchR_abs';matchG_abs'],params.BeadSize);
-                    title('Only spots that were matched')
-                    % Another way of plotting the matching: blue line between points
-                    % in the two channels, with a green dot for where the point is
-                    % in the green channel, and the end of the blue line where the
-                    % point it got matched to in the red channel is.  This is also a
-                    % great way of looking at the distortion between the two
-                    % channels
-                    figure('Position',[200 200 325 625])
-                    plot([matchR{i}(2,:);matchG{i}(2,:)],0-[matchR{i}(1,:);matchG{i}(1,:)],'-b')
-                    hold on
-                    plot(matchR{i}(2,:),0-matchR{i}(1,:),'xr')
-                    if params.splitx == 1
-                        ylim([-size(imgRed(:,:,i),1) 0])
-                        xlim([0 size(imgRed(:,:,i),2)/2])
-                    else
-                        ylim([-size(imgRed(:,:,i),1)/2 0])
-                        xlim([0 size(imgRed(:,:,i),2)])
-                    end
-                    title('Red x is center of point in red channel')
-                    pause
-                    close all
+                    PlotDebugFigures(2,allBdImgs(:,:,i),matchG_abs,matchR_abs,params,...
+                        matchR{i},matchG{i},size(imgRed))
                     clear matchG_abs matchR_abs
                 end
 
@@ -458,7 +435,7 @@ function smFRET(rootname,debug)
                 tformPoly.PlotTform(newG,matchG{i})
                 ylim([-512 0])
                 xlim([0 256])
-                legend('Green spots mapped to red','Red spots')
+                legend('Red spots mapped to green','Green spots')
                 tformPoly.TformResiduals(matchR{i},matchG{i},'inv')
                 xlabel('Distance between red spots mapped to green channel, and real green spots','Fontsize',12)
 
@@ -599,14 +576,16 @@ close all
                    ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),length(alltifs),params);
                end
 
-               % Update 5/2014: Added the option to find spots throughout the
-               % movie, not just from EndInjectFrame:EndInjectFrame+FramesToAvg
-               totframes = params.FrameLoadMax*length(dir(fullfile(D_Data,ToAnalyze(i).name,'ScaledMovie*.mat')));
+               % Update 5/2014: Added the option to find spots throughout the movie
+               totframes = length(dir(fullfile(D_Data,ToAnalyze(i).name,'*.tif')));
                if params.FindSpotsEveryXFrames==0
                    SptFindIncrement = totframes;
                else
                    SptFindIncrement = params.FindSpotsEveryXFrames;
                end
+               % This option was to always find spots in the first
+               % FramesToAvg frames, even if EndInjectFrame is bigger than
+               % 1. Decided not to allow this.
 %                if params.EndInjectFrame == 1
 %                    EndInjectFrame = SptFindIncrement+1;
 %                else
@@ -620,14 +599,14 @@ close all
                newspotsG = [];
                newVarsR = [];
                newVarsG = [];
+               % This goes with the option of insisting spotfinding happen
+               % in the first FramesToAvg frames, regardless of the value
+               % of EndInjectFrame.
                %for ff = [1,EndInjectFrame:SptFindIncrement:totframes]
                for ff = EndInjectFrame:SptFindIncrement:totframes
                    [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),...
                        [ff ff+params.FramesToAvg]);
-                   imgRedavg = mat2gray(mean(imgRed,3)); %Do I want to do mat2gray here? Update 4/2014:
-                        % since I'm going to treat spotfinding as totally separate
-                        % from Gauss fitting for intensity smoothing, it is best
-                        % that I do mat2gray here
+                   imgRedavg = mat2gray(mean(imgRed,3)); 
                    imgGreenavg = mat2gray(mean(imgGreen,3));
 
                    % Step 0: subtract background:
@@ -652,7 +631,7 @@ close all
                        % Step 1.1 Create a combined image
                        imgRMinusBkgnd = CalcCombinedImage(tformAffine,imgGMinusBkgnd,imgRMinusBkgnd);
                        % The built-in Matlab function imfuse used to create the output
-                       % of CalcCombinedImage only returns unit8 images, but fminsearch
+                       % of CalcCombinedImage only returns uint8 images, but fminsearch
                        % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
                        % double, so convert back to doubles:
                        if imgRMinusBkgnd~=-1
@@ -942,10 +921,8 @@ close all
            
            disp('Calculating frame-by-frame intensities')
            
-           tic
            [RedI, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
                spots, Vars, tformPoly,params);
-           toc
            
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.

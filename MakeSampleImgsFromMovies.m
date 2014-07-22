@@ -1,6 +1,6 @@
 %% Load first 20 frames of a movie
-D = '/Volumes/smFRET/smFRET data/14Apr03/AfterRSC5minCh4_1';
-allimgs = double(LoadUManagerTifsV5(D,[1 20]));
+D = '/Volumes/smFRET/smFRET data/14Jul04/Nucs75pM18mW_1';
+allimgs = double(LoadUManagerTifsV5(D,'FramesToLoad',[1 20]));
 imshow(mean(allimgs,3),[])
 %% If neccesary histogram all intensity values to figure out a nice scaling
 temp = reshape(allimgs,1,size(allimgs,1)*size(allimgs,2)*size(allimgs,3));

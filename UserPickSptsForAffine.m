@@ -61,91 +61,100 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
             end
         end
 
-    unusedspotsR = spotsR; % Start out assuming user wants to keep all spots
-    spotsRforAffine = [];
-    unusedspotsG = spotsG;
-    spotsGforAffine = [];
+    done = 0;
+    
+    while done==0
+        unusedspotsR = spotsR; % Start out assuming user wants to keep all spots
+        spotsRforAffine = [];
+        unusedspotsG = spotsG;
+        spotsGforAffine = [];
 
-    % Plot the two images side by side, with circles around all the spots:
-    figure('Position',[200 200 700 625])
-    t = 0:pi/100:2*pi;
+        % Plot the two images side by side, with circles around all the spots:
+        figure('Position',[200 200 700 625])
+        t = 0:pi/100:2*pi;
 
-    Raxes = subplot(1,2,1);
-    imshow(imgR,[])
-    hold on
-    for j = 1:size(spotsR,2)
-        plot(spotsR(2,j)+boxdim/2*cos(t),spotsR(1,j)+boxdim/2*sin(t),'-r')
-    end
-    hold off
-    Gaxes = subplot(1,2,2);
-    imshow(imgG,[])
-    hold on
-    for j = 1:size(spotsG,2)
-        plot(spotsG(2,j)+boxdim/2*cos(t),spotsG(1,j)+boxdim/2*sin(t),'-g')
-    end
-    
-    for r = 1:3 % Three is the minimum number of points to define an affine
-        z = 5;
-        rspottemp = [];
-        gspottemp = [];
-        
-        disp('Click on a red spot to keep; click again to un-keep it. Press enter when satisfied.')
-        while ~isempty(z)
-            [SelectedSpotx,SelectedSpoty,z] = ginput(1);
-            if isequal(gca,Raxes) && ~isempty(z)
-                [unusedspotsR,rspottemp] = FindUserSelection(spotsR,unusedspotsR,...
-                rspottemp,[SelectedSpoty;SelectedSpotx]);
-                subplot(1,2,1)
-                imshow(imgR,[])
-                hold on
-                for j = 1:size(unusedspotsR,2)
-                    plot(unusedspotsR(2,j)+boxdim/2*cos(t),unusedspotsR(1,j)+boxdim/2*sin(t),'-r')
-                end
-                for j = 1:size(spotsRforAffine,2)
-                    plot(spotsRforAffine(2,j)+boxdim/2*cos(t),spotsRforAffine(1,j)+boxdim/2*sin(t),'-w')
-                end
-                for j = 1:size(rspottemp,2)
-                    plot(rspottemp(2,j)+boxdim/2*cos(t),rspottemp(1,j)+boxdim/2*sin(t),'-w')
-                end
-                hold off
-                drawnow
-            end
+        Raxes = subplot(1,2,1);
+        imshow(imgR,[])
+        hold on
+        for j = 1:size(spotsR,2)
+            plot(spotsR(2,j)+boxdim/2*cos(t),spotsR(1,j)+boxdim/2*sin(t),'-r')
         end
-        spotsRforAffine(:,end+1) = rspottemp;
-        
-        z = 5;
-        
-        disp('Now click on its match in the green channel; click again to un-keep it. Press enter when satisfied.')
-        while ~isempty(z)
-            [SelectedSpotx,SelectedSpoty,z] = ginput(1);
-            if isequal(gca,Gaxes) && ~isempty(z)
-                [unusedspotsG,gspottemp] = FindUserSelection(spotsG,unusedspotsG,...
-                    gspottemp,[SelectedSpoty;SelectedSpotx]);
-                subplot(1,2,2)
-                imshow(imgG,[])
-                hold on
-                for j = 1:size(unusedspotsG,2)
-                    plot(unusedspotsG(2,j)+boxdim/2*cos(t),unusedspotsG(1,j)+boxdim/2*sin(t),'-g')
-                end
-                for j = 1:size(spotsGforAffine,2)
-                    plot(spotsGforAffine(2,j)+boxdim/2*cos(t),spotsGforAffine(1,j)+boxdim/2*sin(t),'-w')
-                end
-                for j = 1:size(gspottemp,2)
-                    plot(gspottemp(2,j)+boxdim/2*cos(t),gspottemp(1,j)+boxdim/2*sin(t),'-w')
-                end
-                hold off
-                drawnow
-            end
+        hold off
+        Gaxes = subplot(1,2,2);
+        imshow(imgG,[])
+        hold on
+        for j = 1:size(spotsG,2)
+            plot(spotsG(2,j)+boxdim/2*cos(t),spotsG(1,j)+boxdim/2*sin(t),'-g')
         end
-        spotsGforAffine(:,end+1) = gspottemp;
+
+        for r = 1:3 % Three is the minimum number of points to define an affine
+            z = 5;
+            rspottemp = [];
+            gspottemp = [];
+
+            disp('Click on a red spot to keep; click again to un-keep it. Press enter when satisfied.')
+            while ~isempty(z)
+                [SelectedSpotx,SelectedSpoty,z] = ginput(1);
+                if isequal(gca,Raxes) && ~isempty(z)
+                    [unusedspotsR,rspottemp] = FindUserSelection(spotsR,unusedspotsR,...
+                    rspottemp,[SelectedSpoty;SelectedSpotx]);
+                    subplot(1,2,1)
+                    imshow(imgR,[])
+                    hold on
+                    for j = 1:size(unusedspotsR,2)
+                        plot(unusedspotsR(2,j)+boxdim/2*cos(t),unusedspotsR(1,j)+boxdim/2*sin(t),'-r')
+                    end
+                    for j = 1:size(spotsRforAffine,2)
+                        plot(spotsRforAffine(2,j)+boxdim/2*cos(t),spotsRforAffine(1,j)+boxdim/2*sin(t),'-w')
+                    end
+                    for j = 1:size(rspottemp,2)
+                        plot(rspottemp(2,j)+boxdim/2*cos(t),rspottemp(1,j)+boxdim/2*sin(t),'-w')
+                    end
+                    hold off
+                    drawnow
+                end
+            end
+            spotsRforAffine(:,end+1) = rspottemp;
+
+            z = 5;
+
+            disp('Now click on its match in the green channel; click again to un-keep it. Press enter when satisfied.')
+            while ~isempty(z)
+                [SelectedSpotx,SelectedSpoty,z] = ginput(1);
+                if isequal(gca,Gaxes) && ~isempty(z)
+                    [unusedspotsG,gspottemp] = FindUserSelection(spotsG,unusedspotsG,...
+                        gspottemp,[SelectedSpoty;SelectedSpotx]);
+                    subplot(1,2,2)
+                    imshow(imgG,[])
+                    hold on
+                    for j = 1:size(unusedspotsG,2)
+                        plot(unusedspotsG(2,j)+boxdim/2*cos(t),unusedspotsG(1,j)+boxdim/2*sin(t),'-g')
+                    end
+                    for j = 1:size(spotsGforAffine,2)
+                        plot(spotsGforAffine(2,j)+boxdim/2*cos(t),spotsGforAffine(1,j)+boxdim/2*sin(t),'-w')
+                    end
+                    for j = 1:size(gspottemp,2)
+                        plot(gspottemp(2,j)+boxdim/2*cos(t),gspottemp(1,j)+boxdim/2*sin(t),'-w')
+                    end
+                    hold off
+                    drawnow
+                end
+            end
+            spotsGforAffine(:,end+1) = gspottemp;
+        end
+
+        close
+
+        % Make an affine transformation with these user-paired spots
+        tformAffine = FRETmap(spotsGforAffine,spotsRforAffine,'Green','MatlabAffine');
+
+        % Re-pair spots and return new matches:
+        [newspotsGtemp,newspotsR] = FindSpotMatches(tformAffine.FRETmapFwd(spotsG),spotsR);
+        if newspotsGtemp == -1 % Still didn't work
+            disp('Affine transformation not good enough, try picking different spot-pairs.')
+        else
+            done = 1;
+        end
     end
-    
-    close
-    
-    % Make an affine transformation with these user-paired spots
-    tformAffine = FRETmap(spotsGforAffine,spotsRforAffine,'Green','MatlabAffine');
-    
-    % Re-pair spots and return new matches:
-    [newspotsGtemp,newspotsR] = FindSpotMatches(tformAffine.FRETmapFwd(spotsG),spotsR);
     newspotsG = tformAffine.FRETmapInv(newspotsGtemp);
 end

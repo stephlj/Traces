@@ -87,6 +87,14 @@ function ScaleMovieV2(PathToMovie,numframes,params)
             disp('ScaleMovieV2: A lot of max outliers?')
             figure
             plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
+            if params.NormImage
+                ylabel('Normalized Intensity (a.u.)','FontSize',14)
+            else
+                ylabel('Raw intensity (a.u.)','FontSize',14)
+            end
+            legend('Maxes','Mins')
+            set(gca,'FontSize',14)
+            xlabel('Frame','FontSize',14)
             keyboard
             close
         end
@@ -100,17 +108,19 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     subplot(2,1,1)
     plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
     legend('Maxes','Mins')
-    xlabel('Frame')
+    set(gca,'FontSize',14)
+    xlabel('Frame','FontSize',14)
     if params.NormImage
-        ylabel('Normalized Intensity (a.u.)')
+        ylabel('Normalized Intensity (a.u.)','FontSize',14)
     else
-        ylabel('Raw intensity (a.u.)')
+        ylabel('Raw intensity (a.u.)','FontSize',14)
     end
     subplot(2,1,2)
     plot(1:numframes,allMedians,'.g')
     legend('Median')
-    xlabel('Frame')
-    ylabel('Raw Intensity (a.u.)')
+    set(gca,'FontSize',14)
+    xlabel('Frame','FontSize',14)
+    ylabel('Raw Intensity (a.u.)','FontSize',14)
     print('-depsc',fullfile(PathToMovie,'ScalingFig'))
     pause
     close

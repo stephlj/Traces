@@ -1,12 +1,11 @@
-% function smFRETsetup
+% function smFRETsetup()
 %
 % Called by smFRET; sets up some basic parameters. This is the only code 
-% that a new user might have to change.
+% that the user should have to change.
 %
-% Steph 9/2013
-% Copyright 2013 Stephanie Johnson, University of California, San Francisco
+% Copyright 2014 Stephanie Johnson, University of California, San Francisco
 
-function smFRETsetup
+function smFRETsetup()
 
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
@@ -21,7 +20,7 @@ codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
 % show up on your monitor. Numbers are [top left corner x position, top left y,
 % width, height].  Run figure('Position',Fig2Pos) to see where the figure
 % will show up; adjust the Fig2Pos vector elements as necessary.  Note: Macs
-% and PC's have a different (0,0) for the monitor I think.
+% and PC's have a different (0,0) for the monitor.
 % Fig2Pos = [650,800,700,550];
 Fig2Pos = [650,800,500,650];
 % Fig1Pos = [0,400,600,500];
@@ -43,53 +42,51 @@ SmoothIntensities = 10; % If this is zero (or negative), don't do any smoothing
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal.  At some
-    % point should implement a Gauss filter instead
-EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends to bump the stage,
-    % you can set this to the value of a frame that you know is after the
-    % injection is over, and spotfinding will start at EndInjectFrame. 
+SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal. 
+EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
+    % to bump the stage, you can set this to the value of a frame that you 
+    % know is after theinjection is over, and spotfinding will start at EndInjectFrame. 
     % I usually know when I'm done injecting in seconds (usually about 25 seconds, 
     % add a couple for safety), and I collect data at 0.15 seconds per frame, 
     % so I usually set this to round(27/0.15).
 FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted. 10-20 is a good value
     % for me.
-FindSpotsEveryXFrames = 0; % If this is 0 (or negative), spots will be found from 
-    % EndInjectFrame:EndInjectFrame+FramesToAvg. If this is greater than 0,
+FindSpotsEveryXFrames = 0; % If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
-CheckSpotFindingEveryXFrames = 0; % If this is greater than zero, will ask
+CheckSpotFindingEveryXFrames = 0; % If this is greater than zero, smFRET will ask
     % the user to check the fidelity of the spotfinding threshhold every
     % this many frames. I recommend if FindSpotsEveryXFrames is greater
-    % than 0, that this is set to something like 10*FindSpotsEveryXFrames.
+    % than 0, that this is set to something like 5*FindSpotsEveryXFrames.
 UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % overlaid on the other to find spots in real data. Otherwise, find
     % spots separately in each channel. While using a combined image has
-    % the advantage of capturing mid-FRET spots, it depends heavily on the
-    % quality of the channel mapping. NOTE this does not work very well
+    % the advantage of capturing mid-FRET spots more easily, it depends heavily 
+    % on the quality of the channel mapping. NOTE this does not work very well
     % right now, depending on the fidelity of the transform. Note also that
     % this currently uses an affine transformation only, since polynomial
-    % always does worse at creating a combined image.
+    % always does worse at creating a combined image. It's probably better
+    % to just adjust the spotfinding threshold to capture mid-FRET spots.
 TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
-    % (caps insensitive, the Matlab_ versions use built-in Matlab functions
+    % (caps insensitive; the Matlab_ versions use built-in Matlab functions
     % instead of my hand-written code)
 TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
     % (note if using built-in Matlab functions, this should equal TformTotDeg)
 TformTotDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
     % (note if using built-in Matlab functions, this must be 2, 3, or 4)
-ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual divided
-    % by total number of spots allowable.
+ResidTolerance = 0.008; % When calculating channel mapping: what's the maximum residual, 
+    % divided by total number of spots, allowable.
 Refine_Bd_Cen = 1; % If this is 1, use a 2D gaussian fit to refine the bead center
     % position.  Highly recommended.
 IntensityGaussWeight = 1; % If this is 1, weight the intensity of each spot  
-    % in each frame by a Gaussian whose center and variance are determined
-    % from a fit to the spot's first 10 frames. Note that if this is 0, it
+    % in each frame by a Gaussian whose center (and possibly variance) are determined
+    % from a fit to the spot's first FramesToAvg frames. Note that if this is 0, it
     % will calculate intensities over a 5 pxl diameter disk.  That's
     % hard-wired into the code--see CalcIntensitiesV3.m to change
     % the size. Obviously it's best to do the Gaussian weighting, but it
-    % works surprsingly well not to, if for some reason you just want to
-    % sum intensities in a disk. (There's not really a difference in speed
-    % or anything.)
+    % works surprsingly well not to, if that's preferable. (There's not 
+    % really a difference in speed or anything.)
 GaussWeightAmp = 2; % If IntensityGaussWeight is 1, this determines the amplitude
     % of the Gaussian used to weight each spot's intensity. Effectively
     % this just scales the intensity values--the Ha lab code uses an
@@ -111,11 +108,11 @@ UseSymGauss = 0; % If this is 1, insist that the Gaussian used if IntensityGauss
 BeadSize = 8; % Diameter of a circle that defines a bead (used for the channel
     % mapping procedure); beads whose centers are closer than BeadSize will 
     % not be included, and found beads will be circled by a circle of radius BeadSize.  
-BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in 
-    % "neighborhoods" (see FindSpotsV4 comments). This defines the size of a
-    % neighborhood (area, in square pixels) for the beads.  Needs to be a perfect
-    % square, and best if sqrt(BeadNeighborhood) is odd.  Should be a little 
-    % bigger than we expect beads to be.
+BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in local
+    % "neighborhoods". This defines the size of a neighborhood (area, in square
+    % pixels) for the beads.  Needs to be a perfect square, and best if
+    % sqrt(BeadNeighborhood) is odd.  Should be a little bigger than we
+    % expect beads to be.
 DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
     % if IntensityGaussWeight=1, this is also the side of a square over which
     % a Gaussian is fit and the intensity calculated. However, if IntensityGaussWeight=0,
@@ -124,10 +121,12 @@ DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % spots can be and still be included in the analysis.
     % I have found that 6 or 8 is a good number.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
-alpha = 0; % Crosstalk between channels: Corrects for bleed-through of donor intensity
+alpha = 0.1; % Crosstalk between channels: Corrects for bleed-through of donor intensity
     % into acceptor channel.  Corrects raw acceptor intensities I_A,raw
     % according to the formula I_A = I_A,raw - alpha*I_D, where I_D is the
     % donor intensity. Set to 0 to not correct for channel cross-talk.
+    % On our setup, alpha should be about 0.1 at ~10 mW laser power, maybe
+    % as high as 0.14 for 30 mW laser power.
     % TODO: Not clear to me if this should be done before or after
     % background subtraction? Doing it after, consistent with Ha lab IDL
     % code.
