@@ -665,32 +665,12 @@ close all
                            clear thresh
                            close
                        end
-
-                       if debug
-                           PutBoxesOnImageV4(mat2gray(imgRMinusBkgnd),newspotsR,params.DNASize);
-                           title('Red Channel, start')
-                           figure,bar(xoutR,nR)
-                           hold on
-                           plot([threshholdR threshholdR],[0 max(nR)],'--k')
-                           hold off
-                           title('Red Channel, start')
-                           if ~params.UseCombinedImage && ~isempty(newspotsG)
-                               PutBoxesOnImageV4(mat2gray(imgGMinusBkgnd),newspotsG,params.DNASize);
-                               title('Green Channel, start')
-                               figure,bar(xoutG,nG)
-                               hold on
-                               plot([threshholdG threshholdG],[0 max(nG)],'--k')
-                               hold off
-                               title('Green Channel, start')
-                           end
-
-                       end
+                       
                        clear nR xoutR nG xoutG
+                       
                    elseif mod(ff-params.EndInjectFrame,params.CheckSpotFindingEveryXFrames)==0
-                       % For each subsequent set of frames, don't fit a
-                       % Gaussian to find the center during spotfinding,
-                       % since it just makes it take longer. Will do that
-                       % below for any new spots:
+                       % This is one of the frames at which the user wants
+                       % to check the threshold value
                         [tempnewspotsR,nR,xoutR,threshholdR] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
                             'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
                             'UserThresh',threshholdR,'Method','GaussFit');
@@ -743,60 +723,8 @@ close all
 
                         if debug && ff>1 && ...
                                 mod(ff-params.EndInjectFrame,params.CheckSpotFindingEveryXFrames)==0
-                            if ~isempty(newspotsR)
-                               PutBoxesOnImageV4(mat2gray(imgRMinusBkgnd),newspotsR,params.DNASize);
-                            end
-                           title('Red Channel, current')
-                           figure('Position',[200 200 325 625])
-                           hold on
-                           if ~isempty(RefinedCentersR)
-                            plot(RefinedCentersR(2,:),0-RefinedCentersR(1,:),'xg')
-                           end
-                           if ~isempty(newspotsR)
-                            plot(newspotsR(2,:),0-newspotsR(1,:),'xr')
-                           end
-                           hold off
-                            ylim([-512 0])
-                            xlim([0 256])
-                            title('Red Channel,current')
-                            if ~params.UseCombinedImage 
-                                if ~isempty(newspotsG)
-                                   PutBoxesOnImageV4(mat2gray(imgGMinusBkgnd),newspotsG,params.DNASize);
-                                end
-                               title('Green Channel, current')
-                               figure('Position',[200 200 325 625])
-                               hold on
-                               if ~isempty(RefinedCentersG)
-                                    plot(RefinedCentersG(2,:),0-RefinedCentersG(1,:),'xg')
-                               end
-                               if ~isempty(newspotsG)
-                                    plot(newspotsG(2,:),0-newspotsG(1,:),'xr')
-                               end
-                                hold off
-                                ylim([-512 0])
-                                xlim([0 256])
-                                title('Green Channel,current')
-
-                                figure,bar(xoutR,nR)
-                                hold on
-                                plot([threshholdR threshholdR],[0 max(nR)],'--k')
-                                hold off
-                                title('Red Channel,current')
-                                figure,bar(xoutG,nG)
-                                hold on
-                                plot([threshholdG threshholdG],[0 max(nG)],'--k')
-                                hold off
-                                title('Green Channel,current')
-                            end
-                            pause
-                            close
-                            close
-                            close
-                            if ~params.UseCombinedImage
-                                close
-                                close
-                                close
-                            end
+                           PlotDebugFigures(3,RefinedCentersR,newspotsR)
+                           PlotDebugFigures(3,RefinedCentersG,newspotsG)
                         end
                     clear nR xoutR nG xoutG
 
