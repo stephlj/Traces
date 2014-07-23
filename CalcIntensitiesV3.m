@@ -50,8 +50,8 @@ end
 
 % It can happen that a red channel spot, when transformed to the green
 % channel, is too close to the edge to be useable.  Remove any such spots:
-[Gspots,Rspots,spotVars,~] = CheckSpotBoundaries(Gspots,...
-    Rspots,spotVars,spotVars,params,PathToMovie);
+%[Gspots,Rspots,spotVars,~] = CheckSpotBoundaries(Gspots,...
+%    Rspots,spotVars,spotVars,params,PathToMovie);
 
     % Subfunction to do the actual intensity calculation:
     function I = CalcSpotIntensityInternal(kind,img,spotcen,spotvar,params,bkgnd)

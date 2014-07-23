@@ -728,10 +728,7 @@ close all
                         end
                     clear nR xoutR nG xoutG
 
-                   % Update 5/2014: As noted above, stopped fitting a gaussian
-                   % to subsequent sets of frames, since you'll be fitting
-                   % largely all the spots you found last round.  Doing that
-                   % here instead.  
+                   % For any new spot found, calculate its variance: 
                    % Some notes on variances: It looks like the fits are much more
                        % likely to be poor if I use single frames, rather than
                        % an average of ~10 frames, to find the variances. It's
@@ -783,9 +780,24 @@ close all
                clear totframes SptFindIncrement threshhold threshholdR threshholdG
                clear newspotsR newspotsG newVarsR newVarsG
                
+               % Save all spots found in both channels:
                save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),...
                    'RefinedCentersR','RefinedCentersG','VarsR','VarsG');
+               
+            else
+               prevspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
+               %spots = prevspots.spots;
+               %Vars = prevspots.Vars;
+               RefinedCentersR = prevspots.RefinedCentersR;
+               RefinedCentersG = prevspots.RefinedCentersG;
+               VarsR = prevspots.VarsR;
+               VarsG = prevspots.VarsG;
+               clear prevspots
+            end
 
+     % Now that all DNA spots are found, make a single list of them (in the
+     % coordinates of the acceptor channel) to pass into the function that
+     % calculates intensities:
                if ~params.UseCombinedImage
                    % Step 1.3: Add any spots in green channel that weren't
                    % paired to a red channel spot to our list of spots. Or, put
@@ -814,17 +826,25 @@ close all
                    end
 
                    % Check that the transformed G spots are reasonable
-                   % edges from the red channel boundaries: note that the same
-                   % is done for red spots in CalcIntensitiesV2
+                   % edges from the red channel boundaries: 
                    if ~isempty(spotsGinR)
                        [spotsGinR,~,Vars,~] = CheckSpotBoundaries(spotsGinR,...
                             spotsGinR,Vars,Vars,params,fullfile(D_Data,ToAnalyze(i).name));
                    else
                        Vars = [];
                    end
+                   % Do the same check for transformed R spots and the
+                   % green channel boundaries:
+                   if ~isempty(RefinedCentersR)
+                       spotsRinG = tformPoly.FRETmapInv(RefinedCentersR);
+                       [spotsRinG,~,VarsR,~] = CheckSpotBoundaries(spotsRinG,...
+                            spotsRinG,VarsR,VarsR,params,fullfile(D_Data,ToAnalyze(i).name));
+                       clear RefinedCentersR
+                       RefinedCentersR = tformPoly.FRETmapFwd(spotsRinG);
+                   end
                    Vars(:,end+1:end+size(VarsR,2)) = VarsR;
                    spots = [spotsGinR, RefinedCentersR];
-                   clear spotsGinR
+                   clear spotsGinR spotsRinG
                    
                else
                   % From now on I have to use the affine transformation to
@@ -834,15 +854,9 @@ close all
                    spots = RefinedCentersR;
                end
 
-               disp(sprintf('Found %d total spots',size(spots,2)))
+               disp(sprintf('Keeping %d total spots',size(spots,2)))
                save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),...
                    'spots','Vars','-append');
-            else
-               prevspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
-               spots = prevspots.spots;
-               Vars = prevspots.Vars;
-               clear prevspots
-            end
            
            % Step 2: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
