@@ -66,16 +66,20 @@
 % (4) Return either the position of the max intensity or the center
 % position refined by centroid calculation or 2D Gaussian fit.
 %
-% V5, compared to V3, lets spots be closer together (or further apart) than
-% the scale defined by neighborhoods for ordfilt2.
-%
-% Updated 2/2014 to give the option of refining spot centers by 2D-Gaussian
-% fit.
-% Updated 5/2014 to use FindRefinedSpotCenters to do the Gauss-fit
-% refinement.
-%
-% Steph 8/2013, updated 5/2014
-% Copyright 2013 Stephanie Johnson, University of California, San Francisco
+% Copyright (C) 2014 Stephanie Johnson, University of California, San Francisco
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% A copy of the GNU General Public License can be found in the LICENSE.txt 
+% file that accompanies this software; it can also be found at 
+% <http://www.gnu.org/licenses/>.
 
 function [spots,n,xout,truemaxthresh] = FindSpotsV5(img,varargin)
 

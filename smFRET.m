@@ -1,4 +1,4 @@
-% function smFRET
+% function smFRET(rootname,debug)
 %
 % Wrapper function for analyzing smFRET data--loads data, calls the
 % functions that do the analysis, etc.
@@ -9,13 +9,26 @@
 % have to be in the same folder.
 %
 % Inputs are:
-% Root filename (the movies it analyzes will be rootname_1, rootname_2 etc)
+% Rootname: root filename (the movies it analyzes will be rootname_1, rootname_2 etc)
 % Optionally: if you want it to run all the various debugging things, pass
 % "1" as the second input.
 %
-% Steph 9/2013, updated 2/2014 to use a polynomial transformation rather
-% than affine to do mapping
-% Copyright 2013 Stephanie Johnson, University of California, San Francisco
+% Copyright (C) 2014 Stephanie Johnson, University of California, San Francisco
+% Contact: Stephanie.Johnson@ucsf.edu
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% A copy of the GNU General Public License can be found in the LICENSE.txt 
+% file that accompanies this software; it can also be found at 
+% <http://www.gnu.org/licenses/>.
 
 function smFRET(rootname,debug)
 

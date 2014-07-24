@@ -3,11 +3,27 @@
 %
 % It can happen that some spots, when transformed to the other channel, are
 % too close to the image boundaries to be useable. This function checks all
-% spots in spots for being too close to the edge, where too close is defined
-% by floor(boxdim/2). 
+% spots in testspots for being too close to the edge, where too close is defined
+% by floor(boxdim/2); it then removes any such spots from both testspots and 
+% goodspots, where it is assumed that testspots and goodspots are the same list
+% of spots but in the two channels  It also removes the variances for any spots
+% too close to the edge from testVars and goodVars, so that the outputs
+% are all matrices of the same size. 
 %
-% Steph 6/2014
-% Copyright 2014 Stephanie Johnson, University of California, San Francisco
+% Copyright (C) 2014 Stephanie Johnson, University of California, San Francisco
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% A copy of the GNU General Public License can be found in the LICENSE.txt 
+% file that accompanies this software; it can also be found at 
+% <http://www.gnu.org/licenses/>.
 
 function [newtestspots,newgoodspots,newtestVars,newgoodVars] = CheckSpotBoundaries(testspots,...
     goodspots,testVars,goodVars,params,PathToMovie)

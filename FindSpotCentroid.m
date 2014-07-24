@@ -1,12 +1,25 @@
-%function center = FindSpotCentroid(spot,varargin)
+% function center = FindSpotCentroid(spot,varargin)
 %
-%Takes as its input an image of a single spot and returns the [x,y] coordinates
-%of the centroid of the spot.
+% Takes as its input an image of a single spot and returns the [x,y] coordinates
+% of the centroid of the spot.
 %
-%Optional input is a threshold value to apply to the spots before
-%calculating the centroid.
+% Optional input is a threshold value to apply to the spots before
+% calculating the centroid.
 %
-%Steph 6/2013
+% Copyright (C) 2014 Stephanie Johnson, University of California, San Francisco
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% A copy of the GNU General Public License can be found in the LICENSE.txt 
+% file that accompanies this software; it can also be found at 
+% <http://www.gnu.org/licenses/>.
 
 function center = FindSpotCentroid(spot,varargin)
 

@@ -1,5 +1,5 @@
-% function [RedI,GrI] = CalcIntensitiesV2(PathToMovie, Rspots, spotVars,...
-%       tform,params,varargin)
+% function [RedI,GrI] = CalcIntensitiesV3(PathToMovie, Rspots, spotVars,...
+%       tform,params)
 %
 % Calculates intensities for all spots in a movie.
 %
@@ -7,15 +7,26 @@
 % PathToMovie: a path to a directory with the movie
 % Rspots: locations of the spots in the acceptor channel
 % spotVars: x,y variances to use for each spot for the Gaussian weighting
-%   performed by CalcSpotIntensityV4
 % tform: mapping information for finding spots in the donor channel
 % params: file saved by smFRETsetup
 %
 % Outputs:
 % RedI, GrI: Intensity-vs-time information for each spot
 %
-% Steph 6/2014
-% Copyright 2014 Stephanie Johnson, University of California, San Francisco
+% Copyright (C) 2014 Stephanie Johnson, University of California, San Francisco
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% A copy of the GNU General Public License can be found in the LICENSE.txt 
+% file that accompanies this software; it can also be found at 
+% <http://www.gnu.org/licenses/>.
 
 function [RedI, GrI] = CalcIntensitiesV3(PathToMovie, Rspots, spotVars, ...
     tform,params)
