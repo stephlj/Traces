@@ -73,24 +73,22 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        rawRedI = allRedI(k,:)-Rbkgnd(k);
        rawGrI = allGrI(k,:)-Gbkgnd(k);
        % Correct for gamma and alpha as user wants:
-       RedI = rawRedI - params.alpha*rawGrI;
-       GrI = rawGrI;
-       FRET = RedI./(GrI+params.gamma*RedI);
-       rawFRET = FRET; % Note the raw FRET will be corrected for alpha and gamma, but
+       unsmoothedRedI = rawRedI - params.alpha*rawGrI;
+       unsmoothedGrI = rawGrI;
+       unsmoothedFRET = unsmoothedRedI./(unsmoothedGrI+params.gamma*unsmoothedRedI);% Note the raw FRET will be corrected for alpha and gamma, but
         % because the raw intensities are also saved, you can always
         % recalculate FRET from those.  rawFRET just means not smoothed.
        if params.SmoothIntensities>0
-           SmoothIntensities = round(params.SmoothIntensities); % User error handling
-           clear RedI GrI
-           RedI = smooth(rawRedI,SmoothIntensities); % Moving average with span = SmoothIntensities
-           GrI = smooth(rawGrI,SmoothIntensities);
-           clear SmoothIntensities
+           RedI = smooth(unsmoothedRedI,round(params.SmoothIntensities)); % Moving average with span = SmoothIntensities
+           GrI = smooth(unsmoothedGrI,round(params.SmoothIntensities));
+       else
+           RedI = unsmoothedRedI;
+           GrI = unsmoothedGrI;
        end
        if params.SmoothFRET>0
-           SmoothFRET = round(params.SmoothFRET); % User error handling
-           clear FRET
-           FRET = smooth(rawFRET,SmoothFRET);
-           clear SmoothFRET
+           FRET = smooth(unsmoothedFRET,round(params.SmoothFRET));
+       else
+           FRET = unsmoothedFRET;
        end
        
        if ends(k)~=0
@@ -222,7 +220,9 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         FRETtoSave = FRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                         rawRedToSave = rawRedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                         rawGrToSave = rawGrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
-                        rawFRETtoSave = rawFRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        rawFRETtoSave = unsmoothedFRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        unsmthRedToSave = unsmoothedRedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                        unsmthGrToSave = unsmoothedGrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                     else
                         RedToSave = RedI;
                         GrToSave = GrI;
@@ -230,21 +230,26 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         rawRedToSave = rawRedI;
                         rawGrToSave = rawGrI;
                         rawFRETtoSave = rawFRET;
+                        unsmthRedToSave = unsmoothedRedI;
+                        unsmthGrToSave = unsmoothedGrI;
                     end 
-                    clear RedI GrI FRET rawRedI rawGrI rawFRET
+                    clear RedI GrI FRET rawRedI rawGrI unsmoothedFRET unsmoothedRedI unsmoothedGrI
                     RedI = RedToSave;
                     GrI = GrToSave;
                     FRET = FRETtoSave;
                     rawRedI = rawRedToSave;
                     rawGrI = rawGrToSave;
-                    rawFRET = rawFRETtoSave;
+                    unsmoothedRedI = unsmthRedToSave;
+                    unsmoothedGrI = unsmthGrToSave;
+                    unsmoothedFRET = rawFRETtoSave;
                     Rspot = spots(:,k);
                     Gspot = GrSpots(:,k);
                     variance = spotVars(:,k);
                     save(fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k),'.mat')),...
-                        'RedI','GrI','FRET','rawRedI','rawGrI','rawFRET','fps',...
-                        'Rspot','Gspot','variance')
+                        'RedI','GrI','FRET','rawRedI','rawGrI','unsmoothedRedI','unsmoothedGrI',...
+                        'unsmoothedFRET','fps','Rspot','Gspot','variance')
                     clear RedToSave GrToSave FRETtoSave rawRedToSave rawGrToSave rawFRETtoSave
+                    clear unsmthRedToSave unsmthGrToSave
                     clear Rspot Gspot variance
                     cc=13;
                 % Zoom
@@ -345,10 +350,18 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                             newcoords = GlobalToROICoords([],[yIlocal;xIlocal],spots(:,k),zoomsizeR,zoomsizeR);
                             [imgs,~] = LoadScaledMovie(PathToMovie,[starttime endtime]);
                             [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
+                            % Check the new spot isn't too close to the
+                            % boundary
                             if ~isempty(tempnewspot)
-                                spots(:,k) = tempnewspot;
-                                [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
-                                    spots(:,k), spotVars(:,k),[],params);
+                                [tempnewspot,~,~,~] = CheckSpotBoundaries(tempnewspot,...
+                                        [],[],[],params,PathToMovie);
+                                if ~isempty(tempnewspot)
+                                    spots(:,k) = tempnewspot;
+                                    [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
+                                        spots(:,k), spotVars(:,k),[],params);
+                                else
+                                    disp('New spot center too close to edge.')
+                                end
                             else
                                 disp('Failed to find new spot center.')
                             end
@@ -357,10 +370,16 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                             [~,imgs] = LoadScaledMovie(PathToMovie,[starttime endtime]);
                             [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
                             if ~isempty(tempnewspot)
-                                % if the fit fails, tempnewspot will be empty
-                                GrSpots(:,k) = tempnewspot;
-                            [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
-                                GrSpots(:,k), spotVars(:,k),[],params);
+                                [tempnewspot,~,~,~] = CheckSpotBoundaries(tempnewspot,...
+                                        [],[],[],params,PathToMovie);
+                                if ~isempty(tempnewspot)
+                                    % if the fit fails, tempnewspot will be empty
+                                    GrSpots(:,k) = tempnewspot;
+                                [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
+                                    GrSpots(:,k), spotVars(:,k),[],params);
+                                else
+                                    disp('New spot center too close to edge.')
+                                end
                             else
                                 disp('Failed to find new spot center.')
                             end
