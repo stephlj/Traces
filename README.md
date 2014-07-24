@@ -6,7 +6,7 @@ The general outline of the analysis workflow is: (1) Calculate a map that correl
 
 More information (including detailed derivations of, for example, the channel mapping linear algebra) can be found in the documentation/manual  that accompanies this repository.
 
-I would be very grateful if you would [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find bugs in the code or find it doesn't work well with your data.
+I would be very grateful if you would [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find bugs in the code or find it doesn't work well with your data. Also, a port of parts or all of this software to Python (rather than Matlab), or some other freely available language, would be a great help to the scientific community.
 
 ##System Requirements##
 
