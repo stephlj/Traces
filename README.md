@@ -12,6 +12,7 @@ I would be very grateful if you would [open an issue](http://www.youtube.com/wat
 
 Requires Matlab with the following toolbox installed:
 * Image Processing Toolbox
+
 and will use the following if available:
 * Curve Fitting Toolbox
 * Optimization Toolbox
@@ -20,7 +21,7 @@ This code was written for analyzing prism-based TIRF images; it may not work wel
 
 ##Data Format Requirements##
 
-This software assumes that images from the camera were acquired using the open-source UCSF software [Micro-Manager](http://www.micro-manager.org), using its Multi-D acquisition tool. You will have to modify or re-write `LoadUManagerTifs' and `GetInfoFromMetaData' if you use different acquisition software.
+This software assumes that images from the camera were acquired using the open-source UCSF software [Micro-Manager](http://www.micro-manager.org), using its Multi-D acquisition tool. You will have to modify or re-write `LoadUManagerTifs` and `GetInfoFromMetaData` if you use different acquisition software.
 
 More information can be found in the accompanying manual.
 
@@ -29,14 +30,14 @@ More information can be found in the accompanying manual.
 Sample data that can be analyzed by my code can be found in my [smFRETdata](https://github.com/stephlj/smFRETdata) repository. To analyze the sample data in that  repository, run
 
 ```matlab
-smFRET('Nucleosomes4000xdil')
+smFRET('HighFRET25pM')
 ```
 
 from the command line and then follow the instructions in the manual.
 
 ##Acknowledgements##
 
-This project was a collaborative effort with [Matt Johnson](http://www.themattjohnson.com/) and [Luke Breuer](http://luke.breuer.com).  I am also  indebted to TJ Ha's lab at UIUC, which has made what I consider to be "industry-standard" [smFRET code](http://cplc.illinois.edu/software/) freely available on their website. In this repository I make frequent allusions to the Ha lab code, noting where my code differs from theirs and where I have followed their lead. Thanks also to the UCSF SMUG crew (Margaret Elvekrog, Thomas Noriega, Megan Mayerle, Sarah Ledoux, Daniel Elnatan) and the Narlikar lab, especially John Leonard, for helpful discussions about code as well as experimental development, and to Sarah Ledoux for the DNAs used for the sample data. Finally I am grateful for financial support through NIH grants to my PI, Dr. Geeta Narlikar, and a Leukemia and Lymphoma Society Career Development Program fellowship.
+This project was a collaborative effort with [Matt Johnson](http://www.themattjohnson.com/) and [Luke Breuer](http://luke.breuer.com), who made significant intellectual and time contributions to its development.  I am also indebted to TJ Ha's lab at UIUC, which has made what I consider to be "industry-standard" [smFRET code](http://cplc.illinois.edu/software/) freely available on their website. In this repository I make frequent allusions to the Ha lab code, noting where my code differs from theirs and where I have followed their lead. Thanks also to the UCSF SMUG crew (Margaret Elvekrog, Thomas Noriega, Megan Mayerle, Sarah Ledoux, Daniel Elnatan) and the Narlikar lab, especially John Leonard, for helpful discussions about code as well as experimental development, and to Sarah Ledoux for the DNAs used for the sample data. Finally I am grateful for financial support through NIH grants to my PI, Dr. Geeta Narlikar, and a Leukemia and Lymphoma Society Career Development Program fellowship.
 
 ##Licensing and Copyright Information##
 
