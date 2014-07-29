@@ -24,9 +24,11 @@ function smFRETsetup()
 
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
-defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
+%defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
+defaultsavedir = '/Volumes/SPEEDY/data analysis';
 % Where to load data from:
-defaultdatadir = '/Volumes/smFRET/smFRET data';
+%defaultdatadir = '/Volumes/smFRET/smFRET data';
+defaultdatadir = '/Volumes/SPEEDY';
 % Where the code is (which is where it saves this parameter file)
 codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
 

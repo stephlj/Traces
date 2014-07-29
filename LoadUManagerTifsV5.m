@@ -71,14 +71,14 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
     classtype = class(temp);
     clear temp
 
-    if isempty(varargin) || (StartStop(2)-StartStop(1)+1)>=length(alltifs)
+    if ~exist('StartStop','var') || (StartStop(2)-StartStop(1)+1)>=length(alltifs)
         allimgs = zeros(xpxls,ypxls,length(alltifs),classtype);
     else
         allimgs = zeros(xpxls,ypxls,(StartStop(2)-StartStop(1)+1),classtype);
     end
 
     % Load all the images into a 3d matrix:
-    if isempty(varargin)
+    if ~exist('StartStop','var')
         for i = 1:length(alltifs)
             img = imread(fullfile(D,alltifs(i).name));
             % img = mat2gray(img);
