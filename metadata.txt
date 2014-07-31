@@ -1,7 +1,8 @@
-"Interval_ms": 150,
+"Interval_ms": 150
 "ROI": [
   0,
   0,
   512,
   512,
 ]
+"Precision": uint8

@@ -10,6 +10,9 @@
 %    imgsize ->output ("val") will be a vector of xpxls,ypxls
 %    fps -> output ("val") will be frames per MILLIsecond not frames per
 %       second (I know, bad nomenclature ... )
+%    precision -> output ("val") will be the numeric type of the raw
+%       images. THIS IS ONLY AN OPTION IF YOU CREATED YOUR OWN METADATA FILE,
+%       and only necessary if you're loading pma's instead of tif's.
 %
 % Update 7/2014: To (hopefully) make loading large data sets faster, this
 % function now saves the result to disk as a .mat file, so that the next 
@@ -20,27 +23,30 @@
 % GetInfoFromMetaData can read:
 % Create a text file that has the following lines: (copy them exactly as
 % here, except change the "150" to be whatever your frame interval is, in 
-% milliseconds, and change the last two numbers to be the pixel size of 
-% your camera's field of view. The lines below are for 150 ms frame interval,
-% and a 512x512 camera. See also the sample metadata.txt file that 
-% accompanies this software package):
+% milliseconds, change the last two numbers to be the pixel size of 
+% your camera's field of view, and change the precision to whatever your 
+% raw images' numeric type is. NOTE you only need that last line if you're
+% going to load pma files! The lines below are for 150 ms frame interval,
+% a 512x512 camera, and for raw image files saved in pma's as uint8's. 
+% See also the sample metadata.txt file that accompanies this software package):
 %
 %%%%% SAMPLE METADATA.TXT CONTENT %%%%%%
-% "Interval_ms": 150, 
+% "Interval_ms": 150 
 % "ROI": [
 %    0,
 %    0,
 %    512,
 %    512
 % ]
+% "Precision": uint8
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Save the above as "metadata.txt".  Each data-containing directory will 
 % need its own metadata file.
 %
 % Alternatively, you can create a metadata.mat file that has fields fps,
-% xsize and ysize, since GetInfoFromMetaData checks first for a metadata.mat 
-% file before looking for a .txt file. Create such a metadata.mat file as
-% follows, from the Matlab command line:
+% xsize and ysize, and precision (if you need it), since GetInfoFromMetaData 
+% checks first for a metadata.mat file before looking for a .txt file. 
+% Create such a metadata.mat file as follows, from the Matlab command line:
 %
 %%%%% SAMPLE METADATA.MAT CREATION COMMANDS %%%%%%
 % fps = 150;
@@ -86,6 +92,7 @@ if ~exist(fullfile(dirname,'metadata.mat'),'file')
     fid = fopen(fullfile(dirname,'metadata.txt'));
     alllines = textscan(fid,'%s','Delimiter','\n');
     fclose(fid);
+    clear fid
     % First extract image size:
         % The way our metadata files are written, the size of the image
         % will be in different places in the file depending on whether it
@@ -110,7 +117,7 @@ if ~exist(fullfile(dirname,'metadata.mat'),'file')
         %val(2) = str2double(ymatch);
         xsize = str2double(xmatch);
         ysize = str2double(ymatch);
-        clear tempx tempy tempx2 tempxy xmatch ymatch fid
+        clear tempx tempy tempx2 tempxy xmatch ymatch
         %%%%TODO: the above part needs some error handling ... 
     %elseif strcmpi(paramname,'fps')
     
@@ -140,12 +147,41 @@ if ~exist(fullfile(dirname,'metadata.mat'),'file')
                 return
             end
         end
-    save(fullfile(dirname,'metadata.mat'),'xsize','ysize','fps')
+        clear temp temp2
+        
+    % Lastly, get numeric type, if available:
+        try
+            temp = regexpi(alllines{1}(8),'Precision');
+            if ~isempty(temp{1})
+                thisline = char(alllines{1}(8));
+                % Doing the following so it doesn't matter if the user put
+                % a space after the : or not:
+                temp2 = regexpi(thisline(13:end),'[uids]*');
+                precision = thisline(13+temp2-1:end);
+            else
+                disp('GetInfoFromMetaData: Unexpected metadata format for precision.')
+                val = -1;
+                return
+            end
+            clear temp
+        catch
+        end
+    
+    % Save all this to a .mat file for future use:
+    if ~exist('precision','var')
+        save(fullfile(dirname,'metadata.mat'),'xsize','ysize','fps')
+    else
+        save(fullfile(dirname,'metadata.mat'),'xsize','ysize','fps','precision')
+    end
+    
+    % Finally, return the value that the user asked for:
     if strcmpi(paramname,'imgsize')
         val(1) = xsize;
         val(2) = ysize;
     elseif strcmpi(paramname,'fps')
         val = fps;
+    elseif strcmpi(paramname,'precision') && exist('precision','var')
+        val = precision;
     else
         disp('GetInfoFromMetaData: Invalid paramname.')
         val = -1;
@@ -158,6 +194,8 @@ else
         val(2) = info.ysize;
     elseif strcmpi(paramname,'fps')
         val = info.fps;
+    elseif strcmpi(paramname,'precision') && isfield(info,'precision')
+        val = info.precision;
     else
         disp('GetInfoFromMetaData: Invalid paramname.')
         val = -1;

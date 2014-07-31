@@ -1,9 +1,9 @@
 % function ScaleMovie(PathToMovie,numframes,params)
 %
-% Given the path to a directory with images, PathToMovie, and the total number of
-% frames in this directory, numframes, calculate the min and max over the
+% Given the path to a directory with images (PathToMovie) and the total number of
+% frames in this directory (numframes) calculate the min and max over the
 % whole movie, and then scale the whole movie between this min and max.
-% Saves it in 100-frame increments to the same folder as PathToMovie.
+% Saves it in FrameLoadMax-frame increments to the same folder as PathToMovie.
 %
 % Copyright (C) 2014 Stephanie Johnson, University of California, San Francisco
 % This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     MovieMax = 0;
     % To get the maximum possible value, load one frame and figure out the
     % numeric type:
-    tempfr = LoadUManagerTifsV5(PathToMovie,'FramesToLoad',[1 1]);
+    tempfr = LoadRawImgs(PathToMovie,'FramesToLoad',[1 1]);
     if strcmpi(class(tempfr),'uint16')
         MovieMin = 2^16-1;
     elseif strcmpi(class(tempfr),'uint8')
@@ -56,7 +56,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     end
 
     for jj = 1:FrameLoadMax:numframes
-        moviebit = double(LoadUManagerTifsV5(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
+        moviebit = double(LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
             'FrameSize',framesize));
         % Do I want to scale the entire image to the same max and min, or
         % do I want to scale the two channels separately?  The Ha lab code
@@ -141,7 +141,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     
     % Re-load everything and actually do the scaling:
     for jj = 1:FrameLoadMax:numframes
-        moviebit = double(LoadUManagerTifsV5(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
+        moviebit = double(LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
             'FrameSize',framesize));
                 
         % Update 4/2014: Allowing a normalization option--see note about

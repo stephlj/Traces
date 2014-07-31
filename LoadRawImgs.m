@@ -10,9 +10,6 @@
 % D: the full path to the directory containg the pma file or the tifs
 %
 % Optional inputs: Pass these as '<name>',<val> pairs, in any order.
-% 'numtype','<precision>': THIS IS NOT OPTIONAL FOR LOADING PMAS! You must
-%    specify the precision, as a string, of the intensity values in the
-%    .pma. For us, this should be 'uint8'.
 % 'FramesToLoad',[start end]: allows the user to specify how many images to
 %    load, in the form of [start end] vector. Optional for both LoadPMA and
 %    LoadUManagerTifs.
@@ -51,20 +48,13 @@ function allimgs = LoadRawImgs(D,varargin)
             elseif strcmpi(varargin{p},'FrameSize')
                 xpxls = varargin{p+1}(1);
                 ypxls = varargin{p+1}(2);
-            elseif strcmpi(varargin{p},'numtype')
-                numtype = varargin{p+1};
             end
         end
     end
 
     % Decide whether to call LoadPMA or LoadUManagerTifs
     if exist(fullfile(D,'*.pma'),'file')
-        if ~exist('numtype','var')
-            disp('LoadRawImgs: Attempted to load the pma file, but numeric type not passed as an input.')
-            disp('LoadRawImgs: Remember LoadRawImgs defaults to analyzing pmas if present.')
-            allimgs = -1;
-            return
-        end
+        numtype = GetInfoFromMetaData(D,'precision');
         dirinfo = dir(fullfile(D,'*.pma'));
         if ~exist('StartStop','var')
             allimgs = LoadPMA(fullfile(D,dirinfo.name),numtype);
