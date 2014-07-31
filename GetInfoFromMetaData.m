@@ -158,10 +158,6 @@ if ~exist(fullfile(dirname,'metadata.mat'),'file')
                 % a space after the : or not:
                 temp2 = regexpi(thisline(13:end),'[uids]*');
                 precision = thisline(13+temp2-1:end);
-            else
-                disp('GetInfoFromMetaData: Unexpected metadata format for precision.')
-                val = -1;
-                return
             end
             clear temp
         catch
