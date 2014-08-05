@@ -236,7 +236,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         FRETtoSave = FRET;
                         rawRedToSave = rawRedI;
                         rawGrToSave = rawGrI;
-                        rawFRETtoSave = rawFRET;
+                        rawFRETtoSave = unsmoothedFRET;
                         unsmthRedToSave = unsmoothedRedI;
                         unsmthGrToSave = unsmoothedGrI;
                     end 
