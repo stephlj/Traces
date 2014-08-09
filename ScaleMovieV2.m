@@ -55,7 +55,6 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         FrameLoadMax = params.FrameLoadMax;
     end
 
-    profile on
     for jj = 1:FrameLoadMax:numframes
         moviebit = double(LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
             'FrameSize',framesize));
@@ -87,7 +86,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         
         clear moviebit
     end
-    keyboard
+    
     % Check that the calculated Max isn't way larger than the rest of the
     % maxes (it happens):
     sortedMaxes = sort(allMaxes); % Sort defaults to ascending order
@@ -143,6 +142,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     disp('Continuing with the scaling ...')
     
     % Re-load everything and actually do the scaling:
+    profile on
     for jj = 1:FrameLoadMax:numframes
         moviebit = double(LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
             'FrameSize',framesize));
@@ -167,4 +167,5 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         clear moviebit imgR imgG ScaledMovie imgRBkgnd imgGBkgnd
         
     end
+    keyboard
 end
