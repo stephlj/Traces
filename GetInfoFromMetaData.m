@@ -16,8 +16,8 @@
 %
 % Update 7/2014: To (hopefully) make loading large data sets faster, this
 % function now saves the result to disk as a .mat file, so that the next 
-% time you have to get this information out of the metadata file, it'll be 
-% faster.
+% time you have to get this information out of the metadata file, it won't 
+% have to parse a text file.
 %
 % IF YOU DON'T USE MICROMANAGER: Here's how to create a metadata file that
 % GetInfoFromMetaData can read:
