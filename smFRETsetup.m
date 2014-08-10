@@ -45,20 +45,20 @@ Fig1Pos = [25,400,600,500];
 %%%%%%%% Microscope-specific parameters: %%%%%%%%
 % Note: This code hasn't really been de-bugged for settings other than
 % splitx = 1, Acceptor = 0.
-splitx = 1; % This means red-green channels are left and right (not top and bottom)
-Acceptor = 1; % This means the acceptor channel is the one on the left 
-    % (or on the top if splitx is 0)
-% Our acquisition procedure automatically saves other necessary variables
+splitx = 1; % If this is 1, red-green channels are left and right (not top and bottom)
+Acceptor = 1; % If this is 1, the acceptor channel is the one on the right 
+    % (or on the bottom if splitx is 0)
+% (Our acquisition procedure automatically saves other necessary variables
 % like how many pixels on each side our images our, the frame rate, etc.
 % But those could be coded in here and then smFRET rewritten to use values
-% from smFRETsetup rather than from the acquisition file.
+% from smFRETsetup rather than from the metadata file.  See manual for more details.)
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-SmoothIntensities = 10; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal. 
+SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal. 
 EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
     % to bump the stage, you can set this to the value of a frame that you 
     % know is after theinjection is over, and spotfinding will start at EndInjectFrame. 
@@ -108,7 +108,7 @@ GaussWeightAmp = 2; % If IntensityGaussWeight is 1, this determines the amplitud
     % this just scales the intensity values--the Ha lab code uses an
     % amplitude of 2, probably so that changes in intensity are more
     % noticeable. I haven't noticed much of a difference bewteeen 1 vs 2.
-FixSpotVar = [0.3;0.3]; % If IntensityGaussWeight is 1, and FixSpotVar is not
+FixSpotVar = []; % If IntensityGaussWeight is 1, and FixSpotVar is not
     % the empty matrix, all spot intensities will be weighted by a Gaussian
     % with [xvar;yvar] = 1./(2.*FixSpotVar). The Ha lab always uses a fixed
     % FixSpotVar = [0.3; 0.3]; I haven't found it to make a huge
@@ -129,14 +129,14 @@ BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in l
     % pixels) for the beads.  Needs to be a perfect square, and best if
     % sqrt(BeadNeighborhood) is odd.  Should be a little bigger than we
     % expect beads to be.
-DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
+DNASize = 10; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
     % if IntensityGaussWeight=1, this is also the side of a square over which
     % a Gaussian is fit and the intensity calculated. However, if IntensityGaussWeight=0,
     % the intensity is summed over a 5-pixel diameter circle and this parameter
     % has no effect.  In both cases DNASize also determines how close two 
     % spots can be and still be included in the analysis.
     % I have found that 6 or 8 is a good number.
-DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
+DNANeighborhood = 13^2; % Same as BeadNeighborhood but for DNA.
 alpha = 0; % Crosstalk between channels: Corrects for bleed-through of donor intensity
     % into acceptor channel.  Corrects raw acceptor intensities I_A,raw
     % according to the formula I_A = I_A,raw - alpha*I_D, where I_D is the

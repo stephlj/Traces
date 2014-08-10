@@ -113,6 +113,11 @@ classdef FRETmap < handle
                     if size(EndData,1)~=2
                         EndData = transpose(EndData);
                     end
+                    if size(StartData,2)~=size(EndData,2)
+                        disp('FRETmap class: StartData and EndData must contain the same numbers of points.')
+                        self = -1;
+                        return
+                    end
                 self.StartData = StartData;
                 self.EndData = EndData;
                 self.StartChannel = StartChannel;
@@ -129,6 +134,13 @@ classdef FRETmap < handle
             
             % If Kind is Affine or MatlabAffine:
             if strcmpi(Kind,'affine') || strcmpi(Kind,'MatlabAffine')
+                % Check that there are at least three points:
+                if size(StartData,2)<3
+                    disp('FRETmap class: Minimum three pairs of points required for affine transformation')
+                    self.A = -1;
+                    self.Ainv = -1;
+                    return
+                end
                 % Calculate the transformation:
                 % Embed in a linear space
                 if strcmpi(Kind,'affine')
@@ -177,6 +189,16 @@ classdef FRETmap < handle
                 else
                     self.MaxDegree = MaxDegree;
                     self.TotalDegree = TotalDegree;
+                end
+                % Check that enough points were supplied: this is an upper
+                % bound (depending on whether the user cares about max or 
+                % total degree)
+                if size(StartData,2) < self.MaxDegree^2
+                    disp('FRETmap class: Too few spots for chosen polynomial transform.')
+                    disp('Reduce degree of desired polynomial or use affine.')
+                    self.A = -1;
+                    self.Ainv = -1;
+                    return
                 end
                 % Calculate the transformation
                 if strcmpi(Kind,'poly')

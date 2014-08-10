@@ -32,16 +32,16 @@ function [RedI, GrI] = CalcIntensitiesV3(PathToMovie, Rspots, spotVars, ...
     tform,params)
 
 % Figure out the total number of image files in this movie:
-alltifs = dir(fullfile(PathToMovie,'img*.tif'));
+[~,totframes] = LoadRawImgs(PathToMovie,'FramesToLoad',[1 1]);
 
-if params.FrameLoadMax > length(alltifs)
-    FrameLoadMax = length(alltifs);
+if params.FrameLoadMax > totframes
+    FrameLoadMax = totframes;
 else
     FrameLoadMax = params.FrameLoadMax;
 end
 
-RedI = zeros(size(Rspots,2),length(alltifs));
-GrI = zeros(size(Rspots,2),length(alltifs));
+RedI = zeros(size(Rspots,2),totframes);
+GrI = zeros(size(Rspots,2),totframes);
 % Find the spots in the coordinate system of the other (green) channel:
 if ~isempty(tform)
     Gspots = tform.FRETmapInv(Rspots);
@@ -97,7 +97,7 @@ end
         
     end
 
-for jj = 1:FrameLoadMax:length(alltifs)
+for jj = 1:FrameLoadMax:totframes
     [imgR,imgG,bkgndR,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+FrameLoadMax-1],'bkgnd');
     
     for kk = 1:size(Rspots,2)
@@ -129,7 +129,7 @@ for jj = 1:FrameLoadMax:length(alltifs)
        clear spotimgG spotimgR
     end
    
-   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+size(imgR,3)-1,length(alltifs)))
+   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+size(imgR,3)-1,totframes))
    clear imgR imgG bkgndR bkgndG
 end
 end

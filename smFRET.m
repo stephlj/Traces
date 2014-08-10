@@ -526,7 +526,12 @@ close all
     
     % Make sure not saving over old data:
     if ~exist(fullfile(params.defaultsavedir,rootname),'dir')
-        savedir = fullfile(params.defaultsavedir,rootname);
+        if exist(params.defaultsavedir,'dir')
+            savedir = fullfile(params.defaultsavedir,rootname);
+        else
+            savedirroot = uigetdir('','Save data where?:');
+            savedir = fullfile(savedirroot,rootname);
+        end
         mkdir(savedir)
     else
         saveover = input('Save directory exists; save over? (y/n)','s');
@@ -589,7 +594,8 @@ close all
                end
 
                % Update 5/2014: Added the option to find spots throughout the movie
-               totframes = length(dir(fullfile(D_Data,ToAnalyze(i).name,'*.tif')));
+               [~,totframes] = LoadRawImgs(fullfile(D_Data,ToAnalyze(i).name),...
+                   'FramesToLoad',[1 1]);
                if params.FindSpotsEveryXFrames==0
                    SptFindIncrement = totframes;
                else

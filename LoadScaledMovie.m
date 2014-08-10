@@ -43,8 +43,8 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
         frames(2)=frames(1)+1;
     end
     % Make sure all files and frames exist
-    alltifs = dir(fullfile(PathToMovie,'*.tif'));
-    if frames(1) > length(alltifs)
+    [~,totframes] = LoadRawImgs(PathToMovie,'FramesToLoad',[1 1]);
+    if frames(1) > totframes
         disp('LoadScaledMovie: Movie not that long?')
         movRed = -1;
         movGreen = -1;
@@ -53,13 +53,12 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
         movGrBkgnd = -1;
         return
     end
-    if frames(2) > length(alltifs)
-        frames(2) = length(alltifs);
+    if frames(2) > totframes
+        frames(2) = totframes;
         if frames(1) == frames(2)
             frames(2) = frames(2)+1;
         end
     end
-    clear alltifs
     
     % Figure out how many frames were saved per file:
     allfiles = dir(fullfile(PathToMovie,'ScaledMovie*.mat'));

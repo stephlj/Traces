@@ -23,20 +23,20 @@
 
 function [imgR,imgG] = SplitImg(img,params_struct)
     if params_struct.splitx
-            if ~params_struct.Acceptor
-                imgG = img(:,(size(img,2)/2)+1+params_struct.PxlsToExclude:end-params_struct.PxlsToExclude,:); 
-                imgR = img(:,1+params_struct.PxlsToExclude:(size(img,2)/2-params_struct.PxlsToExclude),:);
-            else
-                imgR = img(:,(size(img,2)/2)+1+params_struct.PxlsToExclude:end-params_struct.PxlsToExclude,:); 
-                imgG = img(:,1+params_struct.PxlsToExclude:(size(img,2)/2)-params_struct.PxlsToExclude,:);
-            end
+        if ~params_struct.Acceptor
+            imgG = img(:,(size(img,2)/2)+1+params_struct.PxlsToExclude:end-params_struct.PxlsToExclude,:); 
+            imgR = img(:,1+params_struct.PxlsToExclude:(size(img,2)/2-params_struct.PxlsToExclude),:);
         else
-            if ~params_struct.Acceptor
-                imgG = img((size(img,2)/2)+1+params_struct.PxlsToExclude:end-params_struct.PxlsToExclude,:,:); 
-                imgR = img(1+params_struct.PxlsToExclude:(size(img,2)/2)-params_struct.PxlsToExclude,:,:);
-            else
-                imgR = img((size(img,2)/2)+1+params_struct.PxlsToExclude:end-params_struct.PxlsToExclude,:,:); 
-                imgG = img(1+params_struct.PxlsToExclude:(size(img,2)/2)-params_struct.PxlsToExclude,:,:);
-            end
+            imgR = img(:,(size(img,2)/2)+1+params_struct.PxlsToExclude:end-params_struct.PxlsToExclude,:); 
+            imgG = img(:,1+params_struct.PxlsToExclude:(size(img,2)/2)-params_struct.PxlsToExclude,:);
+        end
+    else
+        if ~params_struct.Acceptor
+            imgG = img((size(img,2)/2)+1+params_struct.PxlsToExclude:end-params_struct.PxlsToExclude,:,:); 
+            imgR = img(1+params_struct.PxlsToExclude:(size(img,2)/2)-params_struct.PxlsToExclude,:,:);
+        else
+            imgR = img((size(img,2)/2)+1+params_struct.PxlsToExclude:end-params_struct.PxlsToExclude,:,:); 
+            imgG = img(1+params_struct.PxlsToExclude:(size(img,2)/2)-params_struct.PxlsToExclude,:,:);
+        end
     end
 end
