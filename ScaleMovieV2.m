@@ -67,14 +67,15 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         % NormImage in smFRETsetup.m. (The real normalization is done
         % below, this just makes sure MovieMax and MovieMin are
         % appropriately scaled if necessary):
-        allMedians(jj:jj+size(moviebit,3)-1) = median(median(moviebit,2),1);
+        rmoviebit = reshape(moviebit,size(moviebit,1)*size(moviebit,2),size(moviebit,3));
+        allMedians(jj:jj+size(moviebit,3)-1) = median(rmoviebit,1);
         if params.NormImage
-            moviebit = moviebit./repmat(median(median(moviebit,2),1),...
-                size(moviebit,1),size(moviebit,2),1);
+            moviebit = bsxfun(@rdivide,moviebit,...
+                reshape(allMedians(jj:jj+size(moviebit,3)-1),1,1,size(moviebit,3)));
         end
         
-        MovieMax = max(MovieMax,double(max(max(max(moviebit)))));
-        MovieMin = min(MovieMin,double(min(min(min(moviebit)))));
+        MovieMax = max(MovieMax,double(max(moviebit(:))));
+        MovieMin = min(MovieMin,double(min(moviebit(:))));
 
         allMaxes(jj:jj+size(moviebit,3)-1) = max(max(moviebit,[],2),[],1);
         allMins(jj:jj+size(moviebit,3)-1) = min(min(moviebit,[],2),[],1);
@@ -85,6 +86,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         
         clear moviebit
     end
+    
     % Check that the calculated Max isn't way larger than the rest of the
     % maxes (it happens):
     sortedMaxes = sort(allMaxes); % Sort defaults to ascending order
@@ -140,6 +142,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     disp('Continuing with the scaling ...')
     
     % Re-load everything and actually do the scaling:
+    profile on
     for jj = 1:FrameLoadMax:numframes
         moviebit = double(LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
             'FrameSize',framesize));
@@ -164,4 +167,5 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         clear moviebit imgR imgG ScaledMovie imgRBkgnd imgGBkgnd
         
     end
+    keyboard
 end
