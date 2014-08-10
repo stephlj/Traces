@@ -24,6 +24,8 @@
 %
 % Output is an image matrix. Images returned are NOT scaled between 0 and 1 
 % (or scaled at all), and are returned as the same integer type in the pma file.
+% Acceptor channel ends up on the left (at least if you created a pma using
+% the Ha lab code or UCSF's mrc to pma converter).
 %
 % Note that this does not make use of the FrameLoadMax parameter in 
 % smFRETsetup!  You can load as many frames as you want with this function,
@@ -115,8 +117,11 @@ function allimgs = LoadPMA(D,numtype,varargin)
     if isempty(varargin)
         for i = 1:totframes
             img = zeros(xpxls,ypxls,numtype);
-            img = transpose(fread(pmafile,size(img),strcat('*',numtype))); % img is filled COLUMN-WISE;
-                % the asterisk is so the output is returned in the same
+            img = flipud(transpose(fread(pmafile,size(img),strcat('*',numtype)))); 
+                % img is filled COLUMN-WISE, hence the transpose (the pma's
+                % are created row-wise); flipud is because they're also
+                % filled bottom to top, whereas fread pulls them out top to
+                % bottom; the asterisk is so the output is returned in the same
                 % format as the input
             allimgs(:,:,i) = img;
             clear img
@@ -134,9 +139,7 @@ function allimgs = LoadPMA(D,numtype,varargin)
         end
         for i = StartStop(1):StartStop(2);
             img = zeros(xpxls,ypxls,numtype);
-            img = fread(pmafile,size(img),strcat('*',numtype)); % img is filled COLUMN-WISE;
-                % the asterisk is so the output is returned in the same
-                % format as the input
+            img = flipud(transpose(fread(pmafile,size(img),strcat('*',numtype)))); 
             allimgs(:,:,incr) = img;
             clear img
             incr = incr+1;
