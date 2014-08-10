@@ -46,7 +46,7 @@ Fig1Pos = [25,400,600,500];
 % Note: This code hasn't really been de-bugged for settings other than
 % splitx = 1, Acceptor = 0.
 splitx = 1; % If this is 1, red-green channels are left and right (not top and bottom)
-Acceptor = 1; % If this is 1, the acceptor channel is the one on the right 
+Acceptor = 0; % If this is 1, the acceptor channel is the one on the right 
     % (or on the bottom if splitx is 0)
 % (Our acquisition procedure automatically saves other necessary variables
 % like how many pixels on each side our images our, the frame rate, etc.
@@ -54,11 +54,11 @@ Acceptor = 1; % If this is 1, the acceptor channel is the one on the right
 % from smFRETsetup rather than from the metadata file.  See manual for more details.)
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 10; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal. 
+SmoothFRET = 10; % Same as SmoothIntensities but for the FRET signal. 
 EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
     % to bump the stage, you can set this to the value of a frame that you 
     % know is after theinjection is over, and spotfinding will start at EndInjectFrame. 
@@ -129,15 +129,15 @@ BeadNeighborhood = 9^2; % Our spot-finding algorithm looks for local maxima in l
     % pixels) for the beads.  Needs to be a perfect square, and best if
     % sqrt(BeadNeighborhood) is odd.  Should be a little bigger than we
     % expect beads to be.
-DNASize = 10; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
+DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note that
     % if IntensityGaussWeight=1, this is also the side of a square over which
     % a Gaussian is fit and the intensity calculated. However, if IntensityGaussWeight=0,
     % the intensity is summed over a 5-pixel diameter circle and this parameter
     % has no effect.  In both cases DNASize also determines how close two 
     % spots can be and still be included in the analysis.
     % I have found that 6 or 8 is a good number.
-DNANeighborhood = 13^2; % Same as BeadNeighborhood but for DNA.
-alpha = 0; % Crosstalk between channels: Corrects for bleed-through of donor intensity
+DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
+alpha = 0.1; % Crosstalk between channels: Corrects for bleed-through of donor intensity
     % into acceptor channel.  Corrects raw acceptor intensities I_A,raw
     % according to the formula I_A = I_A,raw - alpha*I_D, where I_D is the
     % donor intensity. Set to 0 to not correct for channel cross-talk.
@@ -171,7 +171,7 @@ FrameLoadMax = 500; % Maximum number of frames to load into Matlab's memory
     % if, for example, you scaled movies in 500-frame chunks, but then change 
     % this to 100 and rerun the same data set, the play movie feature in
     % the GUI will only load 100 frames at a time).
-NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
+NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
     % intensity over time, which may be due to laser power fluctuations;
