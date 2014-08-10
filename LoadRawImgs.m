@@ -1,7 +1,8 @@
-% function allimgs = LoadRawImgs(D,varargin)
+% function [allimgs,numframes] = LoadRawImgs(D,varargin)
 %
 % Calls either LoadPMA or LoadUManagerTifs and returns an intensity matrix
-% as allimgs.  More details about the inputs can be found by calling "help
+% as allimgs, and the total number of frames as numframes.  
+% More details about the inputs can be found by calling "help
 % LoadPMA" and "help LoadUManagerTifs" from the command line.
 %
 % The default is to load the pma, if one exists.
@@ -16,8 +17,8 @@
 % 'FrameSize',[xpxls ypxls]: size of each frame to be loaded. Only an option
 %    for LoadUManagerTifs.
 %
-% Output is an image matrix. Images returned are NOT scaled between 0 and 1 
-% (or scaled at all), and are returned as the same integer type as the raw
+% Output image matrix returned is NOT scaled between 0 and 1 
+% (or scaled at all), and is returned as the same integer type as the raw
 % images.
 %
 % Copyright (C) 2014 Stephanie Johnson, University of California, San Francisco
@@ -35,7 +36,7 @@
 % file that accompanies this software; it can also be found at 
 % <http://www.gnu.org/licenses/>.
 
-function allimgs = LoadRawImgs(D,varargin)
+function [allimgs,numframes] = LoadRawImgs(D,varargin)
 
     % Input handling:
     if ~isempty(varargin)
@@ -53,16 +54,21 @@ function allimgs = LoadRawImgs(D,varargin)
     end
 
     % Decide whether to call LoadPMA or LoadUManagerTifs
-    if exist(fullfile(D,'*.pma'),'file')
+    % irritatingly, can't use regular expressions with exist:
+    templist = dir(fullfile(D,'*.pma'));
+    if ~isempty(templist)
         numtype = GetInfoFromMetaData(D,'precision');
         dirinfo = dir(fullfile(D,'*.pma'));
         if ~exist('StartStop','var')
-            allimgs = LoadPMA(fullfile(D,dirinfo.name),numtype);
+            [allimgs,numframes] = LoadPMA(fullfile(D,dirinfo.name),numtype);
         else
-            allimgs = LoadPMA(fullfile(D,dirinfo.name),numtype,...
+            [allimgs,numframes] = LoadPMA(fullfile(D,dirinfo.name),numtype,...
                 'FramesToLoad',StartStop);
         end
     else
+        % Get the total number of tifs
+        alltifs = dir(fullfile(D,'img*.tif'));
+        numframes = length(alltifs);
         if ~exist('StartStop','var') && ~exist('FrameSize','var')
             allimgs = LoadUManagerTifsV5(D);
         elseif ~exist('StartStop','var')

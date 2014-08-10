@@ -1,4 +1,4 @@
-% function allimgs = LoadPMA(D,numtype,varargin)
+% function [allimgs,numframes] = LoadPMA(D,numtype,varargin)
 %
 % Loads frames from a .pma file (the binary filetype used in the Ha lab's 
 % IDL code) into a 3-d matrix.  It is assumed that the first four bytes of 
@@ -22,10 +22,13 @@
 % 'FramesToLoad',[start end]: allows the user to specify how many images to
 %    load, in the form of [start end] vector.
 %
-% Output is an image matrix. Images returned are NOT scaled between 0 and 1 
-% (or scaled at all), and are returned as the same integer type in the pma file.
-% Acceptor channel ends up on the left (at least if you created a pma using
-% the Ha lab code or UCSF's mrc to pma converter).
+% Outputs:
+% allimgs: an image matrix. Images returned are NOT scaled between 0 and 1 
+%    (or scaled at all), and are returned as the same integer type in the pma file.
+%    Acceptor channel ends up on the left (at least if you created a pma using
+%    the Ha lab code or UCSF's mrc to pma converter).
+% numframes: total number of frames in this pma (regardless of how many you
+%    load)
 %
 % Note that this does not make use of the FrameLoadMax parameter in 
 % smFRETsetup!  You can load as many frames as you want with this function,
@@ -47,7 +50,7 @@
 % file that accompanies this software; it can also be found at 
 % <http://www.gnu.org/licenses/>.
 
-function allimgs = LoadPMA(D,numtype,varargin)
+function [allimgs,totframes] = LoadPMA(D,numtype,varargin)
 
     % Deal with inputs
     if ~strcmpi(D(end-2:end),'pma')
@@ -67,8 +70,8 @@ function allimgs = LoadPMA(D,numtype,varargin)
         allimgs = -1;
         return
     end
-    if ~isempty(varargin) && strcmpi(varargin{p},'FramesToLoad')
-        StartStop = sort(varargin{p+1});
+    if ~isempty(varargin) && strcmpi(varargin{1},'FramesToLoad')
+        StartStop = sort(varargin{1+1});
         if StartStop(1)<=0
             StartStop(1)=1;
         end
@@ -106,6 +109,9 @@ function allimgs = LoadPMA(D,numtype,varargin)
         allimgs = -1;
         return
     end
+    if StartStop(2)>totframes
+        StartStop(2) = totframes;
+    end
 
     if isempty(varargin) || (StartStop(2)-StartStop(1)+1)>=totframes
         allimgs = zeros(xpxls,ypxls,totframes,numtype);
@@ -128,13 +134,9 @@ function allimgs = LoadPMA(D,numtype,varargin)
         end
     else
         incr = 1;
-        throwawayincr = 1;
-        if StartStop(2)>totframes
-            StartStop(2) = totframes;
-        end
         % Get the pointer to the right place in the file:
         if StartStop(1) > 1
-            junk = fread(pmafile,xpxls*ypxls*StartStop(1)-1,numtype);
+            junk = fread(pmafile,xpxls*ypxls*(StartStop(1)-1),numtype);
             clear junk
         end
         for i = StartStop(1):StartStop(2);

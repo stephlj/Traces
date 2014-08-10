@@ -1,7 +1,7 @@
-% function ScaleMovie(PathToMovie,numframes,params)
+% function ScaleMovie(PathToMovie,params)
 %
-% Given the path to a directory with images (PathToMovie) and the total number of
-% frames in this directory (numframes) calculate the min and max over the
+% Given the path to a directory with images (PathToMovie) and a parameter
+% structure created by smFRETsetup (params), calculate the min and max over the
 % whole movie, and then scale the whole movie between this min and max.
 % Saves it in FrameLoadMax-frame increments to the same folder as PathToMovie.
 %
@@ -20,7 +20,7 @@
 % file that accompanies this software; it can also be found at 
 % <http://www.gnu.org/licenses/>.
 
-function ScaleMovieV2(PathToMovie,numframes,params)
+function ScaleMovieV2(PathToMovie,params)
 
     % Get some preliminary info:
     framesize = GetInfoFromMetaData(PathToMovie,'imgsize');
@@ -30,7 +30,7 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     MovieMax = 0;
     % To get the maximum possible value, load one frame and figure out the
     % numeric type:
-    tempfr = LoadRawImgs(PathToMovie,'FramesToLoad',[1 1]);
+    [tempfr,numframes] = LoadRawImgs(PathToMovie,'FramesToLoad',[1 1]);
     if strcmpi(class(tempfr),'uint16')
         MovieMin = 2^16-1;
     elseif strcmpi(class(tempfr),'uint8')
@@ -56,8 +56,9 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     end
 
     for jj = 1:FrameLoadMax:numframes
-        moviebit = double(LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
-            'FrameSize',framesize));
+        [moviebit,~] = LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
+            'FrameSize',framesize);
+        moviebit = double(moviebit);
         % Do I want to scale the entire image to the same max and min, or
         % do I want to scale the two channels separately?  The Ha lab code
         % does the whole image together, I believe.  So only calculating
@@ -142,10 +143,10 @@ function ScaleMovieV2(PathToMovie,numframes,params)
     disp('Continuing with the scaling ...')
     
     % Re-load everything and actually do the scaling:
-    profile on
     for jj = 1:FrameLoadMax:numframes
-        moviebit = double(LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
-            'FrameSize',framesize));
+        [moviebit,~] = LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
+            'FrameSize',framesize);
+        moviebit = double(moviebit);
                 
         % Update 4/2014: Allowing a normalization option--see note about
         % NormImage in smFRETsetup.m
@@ -167,5 +168,4 @@ function ScaleMovieV2(PathToMovie,numframes,params)
         clear moviebit imgR imgG ScaledMovie imgRBkgnd imgGBkgnd
         
     end
-    keyboard
 end

@@ -46,7 +46,7 @@ Fig1Pos = [25,400,600,500];
 % Note: This code hasn't really been de-bugged for settings other than
 % splitx = 1, Acceptor = 0.
 splitx = 1; % This means red-green channels are left and right (not top and bottom)
-Acceptor = 0; % This means the acceptor channel is the one on the left 
+Acceptor = 1; % This means the acceptor channel is the one on the left 
     % (or on the top if splitx is 0)
 % Our acquisition procedure automatically saves other necessary variables
 % like how many pixels on each side our images our, the frame rate, etc.
@@ -137,7 +137,7 @@ DNASize = 8; % Same as BeadSize but for DNA: diameter of expected spots.  Note t
     % spots can be and still be included in the analysis.
     % I have found that 6 or 8 is a good number.
 DNANeighborhood = 9^2; % Same as BeadNeighborhood but for DNA.
-alpha = 0.1; % Crosstalk between channels: Corrects for bleed-through of donor intensity
+alpha = 0; % Crosstalk between channels: Corrects for bleed-through of donor intensity
     % into acceptor channel.  Corrects raw acceptor intensities I_A,raw
     % according to the formula I_A = I_A,raw - alpha*I_D, where I_D is the
     % donor intensity. Set to 0 to not correct for channel cross-talk.
@@ -171,7 +171,7 @@ FrameLoadMax = 500; % Maximum number of frames to load into Matlab's memory
     % if, for example, you scaled movies in 500-frame chunks, but then change 
     % this to 100 and rerun the same data set, the play movie feature in
     % the GUI will only load 100 frames at a time).
-NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
+NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
     % intensity over time, which may be due to laser power fluctuations;

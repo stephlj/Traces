@@ -584,9 +584,8 @@ close all
                    % Update 4/2014: Scaling the movie first, before finding spots,
                    % so that the background value calculated when the spot centers
                    % are refined by a GaussFit are meaningful:
-                   alltifs = dir(fullfile(D_Data,ToAnalyze(i).name,'img*.tif'));
                    disp('Scaling movie ...')
-                   ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),length(alltifs),params);
+                   ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
                end
 
                % Update 5/2014: Added the option to find spots throughout the movie
