@@ -48,6 +48,9 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
                 if StartStop(1)<=0
                     StartStop(1)=1;
                 end
+                if StartStop(2)>length(alltifs)
+                    StartStop(2) = length(alltifs);
+                end
             elseif strcmpi(varargin{p},'FrameSize')
                 xpxls = varargin{p+1}(1);
                 ypxls = varargin{p+1}(2);
@@ -87,9 +90,6 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
         end
     else
         incr = 1;
-        if StartStop(2)>length(alltifs)
-            StartStop(2) = length(alltifs);
-        end
         for i = StartStop(1):StartStop(2);
             img = imread(fullfile(D,alltifs(i).name));
             % img = mat2gray(img);

@@ -24,9 +24,9 @@ function smFRETsetup()
 
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
-defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
+defaultsavedir = '/Volumes/smFRET 1/smFRET data analysis';
 % Where to load data from:
-defaultdatadir = '/Volumes/smFRET/smFRET data';
+defaultdatadir = '/Volumes/smFRET 1/smFRET data';
 %defaultdatadir = '/Volumes/SPEEDY';
 % Where the code is (which is where it saves this parameter file)
 codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
@@ -54,7 +54,7 @@ Acceptor = 0; % If this is 1, the acceptor channel is the one on the right
 % from smFRETsetup rather than from the metadata file.  See manual for more details.)
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-SmoothIntensities = 10; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 5; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
@@ -68,10 +68,10 @@ EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
 FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted. 10-20 is a good value
     % for me.
-FindSpotsEveryXFrames = 0; % If this is greater than 0,
+FindSpotsEveryXFrames = 500; % If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
-CheckSpotFindingEveryXFrames = 0; % If this is greater than zero, smFRET will ask
+CheckSpotFindingEveryXFrames = 500; % If this is greater than zero, smFRET will ask
     % the user to check the fidelity of the spotfinding threshhold every
     % this many frames. I recommend if FindSpotsEveryXFrames is greater
     % than 0, that this is set to something like 5*FindSpotsEveryXFrames.

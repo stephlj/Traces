@@ -49,6 +49,7 @@ function [allimgs,numframes] = LoadRawImgs(D,varargin)
             elseif strcmpi(varargin{p},'FrameSize')
                 xpxls = varargin{p+1}(1);
                 ypxls = varargin{p+1}(2);
+                FrameSize = [xpxls, ypxls];
             end
         end
     end
@@ -72,11 +73,11 @@ function [allimgs,numframes] = LoadRawImgs(D,varargin)
         if ~exist('StartStop','var') && ~exist('FrameSize','var')
             allimgs = LoadUManagerTifsV5(D);
         elseif ~exist('StartStop','var')
-            allimgs = LoadUManagerTifsV5(D,'FrameSize',[xpxls ypxls]);
+            allimgs = LoadUManagerTifsV5(D,'FrameSize',FrameSize);
         elseif ~exist('FrameSize','var')
             allimgs = LoadUManagerTifsV5(D,'FramesToLoad',StartStop);
         else
-            allimgs = LoadUManagerTifsV5(D,'FrameSize',[xpxls ypxls],...
+            allimgs = LoadUManagerTifsV5(D,'FrameSize',FrameSize,...
                 'FramesToLoad',StartStop);
         end
     end
