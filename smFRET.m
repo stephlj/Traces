@@ -576,19 +576,12 @@ close all
 
                UseScaledMov = 'n';
 
-               % wow. this is irritating. You can't use regular expressions
-               % in combination with "exist".
-               % Workaround:
-               templist = dir(fullfile(D_Data,ToAnalyze(i).name,'ScaledMovieFrames*.mat'));
-               if ~isempty(templist)
+               if exist(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'file')
                    UseScaledMov = input('Load scaled movie? (y/n)','s');
                end
                clear templist
 
                if strcmpi(UseScaledMov,'n')
-                   % Update 4/2014: Scaling the movie first, before finding spots,
-                   % so that the background value calculated when the spot centers
-                   % are refined by a GaussFit are meaningful:
                    disp('Scaling movie ...')
                    ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
                end
@@ -627,10 +620,6 @@ close all
                    imgRedavg = mat2gray(mean(imgRed,3)); 
                    imgGreenavg = mat2gray(mean(imgGreen,3));
 
-                   % Step 0: subtract background:
-                   %[imgRbkgnd,imgGbkgnd,imgRMinusBkgnd,imgGMinusBkgnd] = SubBkgnd(imgRedavg,imgGreenavg,params);
-                   % If you don't want to subtract background, uncomment these
-                    % lines:
                    imgRMinusBkgnd = imgRedavg;
                    imgGMinusBkgnd = imgGreenavg;
 

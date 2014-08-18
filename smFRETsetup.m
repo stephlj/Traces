@@ -171,6 +171,14 @@ FrameLoadMax = 500; % Maximum number of frames to load into Matlab's memory
     % if, for example, you scaled movies in 500-frame chunks, but then change 
     % this to 100 and rerun the same data set, the play movie feature in
     % the GUI will only load 100 frames at a time).
+ScaleChannelsSeparately = 1; % If this is 0, ScaleMovieV2 will scale every intensity
+    % in every frame between the maximum and minimum values across the
+    % entire movie.  If this is 1, it will scale the donor channel to the
+    % max and min of the donor side only, and the acceptor to the max and
+    % min of the acceptor side only.  I believe the convention in the field
+    % has been to scale both channels together, but it appears for our
+    % system that that will lead to donor intensities that are consistently
+    % half those of the acceptor channel.
 NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
@@ -211,4 +219,5 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'FrameLoadMax','UseCombinedImage','IntensityGaussWeight','NormImage',...
     'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
     'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','alpha','gamma',...
-    'CheckSpotFindingEveryXFrames','GaussWeightAmp','FixSpotVar');
+    'CheckSpotFindingEveryXFrames','GaussWeightAmp','FixSpotVar',...
+    'ScaleChannelsSeparately');

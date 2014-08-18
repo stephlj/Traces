@@ -45,50 +45,71 @@ function ScaleMovieV2(PathToMovie,params)
     % Just for visualization:
     allMins = zeros(1,numframes);
         
-    % For debugging
-    %totI = zeros(1,numframes);
-    %allMeans = zeros(1,numframes);
+    % Update 8/2014: Now allowing the option of scaling each channel
+    % separately. Note that because of the random spikes in maxes that we
+    % currently observe, I have to record the max for each channel in each
+    % frame ... 
+    allGrMaxes = zeros(1,numframes);
+    allRedMaxes = zeros(1,numframes);
     
     if params.FrameLoadMax > numframes
         FrameLoadMax = numframes;
     else
         FrameLoadMax = params.FrameLoadMax;
     end
+    
+    % Using SplitImg below to get red and green channels--note that this will
+    % clip the image by params.PxlsToExclude before calculating the min
+    % and the max, unless I mess with the params structure a bit before
+    % calling SplitImg:
+    realPxlsToExclude = params.PxlsToExclude;
+    params.PxlsToExclude = 0;
 
     for jj = 1:FrameLoadMax:numframes
         [moviebit,~] = LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
             'FrameSize',framesize);
         moviebit = double(moviebit);
-        % Do I want to scale the entire image to the same max and min, or
-        % do I want to scale the two channels separately?  The Ha lab code
-        % does the whole image together, I believe.  So only calculating
-        % one max and one min.
+        
+        [redbit,grbit] = SplitImg(moviebit,params);
         
         % Update 4/2014: Allowing a normalization option--see note about
         % NormImage in smFRETsetup.m. (The real normalization is done
-        % below, this just makes sure MovieMax and MovieMin are
+        % in LoadScaledMovie, this just makes sure MovieMax and MovieMin are
         % appropriately scaled if necessary):
         rmoviebit = reshape(moviebit,size(moviebit,1)*size(moviebit,2),size(moviebit,3));
         allMedians(jj:jj+size(moviebit,3)-1) = median(rmoviebit,1);
         if params.NormImage
             moviebit = bsxfun(@rdivide,moviebit,...
                 reshape(allMedians(jj:jj+size(moviebit,3)-1),1,1,size(moviebit,3)));
+            redbit = bsxfun(@rdivide,redbit,...
+                reshape(allMedians(jj:jj+size(redbit,3)-1),1,1,size(redbit,3)));
+            grbit = bsxfun(@rdivide,grbit,...
+                reshape(allMedians(jj:jj+size(grbit,3)-1),1,1,size(grbit,3)));
         end
         
         MovieMax = max(MovieMax,double(max(moviebit(:))));
         MovieMin = min(MovieMin,double(min(moviebit(:))));
+        
+        %MovieMaxGr = max(MovieMax,double(max(grbit(:))));
+        MovieMinGr = min(MovieMin,double(min(grbit(:))));
+        %MovieMaxRed = max(MovieMax,double(max(redbit(:))));
+        MovieMinRed = min(MovieMin,double(min(redbit(:))));
 
         allMaxes(jj:jj+size(moviebit,3)-1) = max(max(moviebit,[],2),[],1);
         allMins(jj:jj+size(moviebit,3)-1) = min(min(moviebit,[],2),[],1);
         
-        % For debugging: 
-        %totIR(jj:jj+size(moviebit,3)-1) = sum(sum(moviebit,2),1);
-        %allMeans(jj:jj+size(moviebit,3)-1) = sum(sum(moviebit,2),1)./(size(moviebit,1)+size(moviebit,2));
+        allGrMaxes(jj:jj+size(moviebit,3)-1) = max(max(grbit,[],2),[],1);
+        allRedMaxes(jj:jj+size(moviebit,3)-1) = max(max(redbit,[],2),[],1);
+        allGrMins(jj:jj+size(moviebit,3)-1) = max(max(grbit,[],2),[],1);
+        allRedMins(jj:jj+size(moviebit,3)-1) = max(max(redbit,[],2),[],1);
         
-        clear moviebit
+        clear moviebit redbit grbit
     end
     
-    % Check that the calculated Max isn't way larger than the rest of the
+    params.PxlsToExclude = realPxlsToExclude;
+    clear realPxlsToExclude
+    
+    % Check that the calculated Max(es) isn't/aren't way larger than the rest of the
     % maxes (it happens):
     sortedMaxes = sort(allMaxes); % Sort defaults to ascending order
     MaxDiffs = sortedMaxes(2:end)-sortedMaxes(1:end-1);
@@ -98,7 +119,7 @@ function ScaleMovieV2(PathToMovie,params)
             MovieMax>(mean(allMaxes)+6*std(allMaxes))
         MovieMax = sortedMaxes(end-1);
         sortedMaxes = sortedMaxes(1:end-1);
-        if length(sortedMaxes)<(length(allMaxes)-5)
+        if length(sortedMaxes)<(length(allMaxes)-7)
             disp('ScaleMovieV2: A lot of max outliers?')
             figure
             plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
@@ -116,31 +137,81 @@ function ScaleMovieV2(PathToMovie,params)
     end
     clear sortedMaxes MaxDiffs meanDiff stdDiff
     
+    % The above procedure should have removed all wildly different maxes
+    % and mins from the list of total maxes.  Now make lists of maxes and
+    % mins from each channel that are less than (or equal to) the new
+    % moviemax:
+    
+    allGrMaxesClipped = sort(allGrMaxes(find(allGrMaxes<=MovieMax)));
+    allRedMaxesClipped = sort(allRedMaxes(find(allRedMaxes<=MovieMax)));
+    MovieMaxGr = allGrMaxesClipped(end);
+    MovieMaxRed = allRedMaxesClipped(end);
+    clear allGrMaxesClipped allRedMaxesClipped
+    
     % Plot a figure so the user can check whether normalization was
     % necessary or not:
-    disp(sprintf('Using max=%d, min=%d',MovieMax,MovieMin))
-    figure
-    subplot(2,1,1)
-    plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
-    legend('Maxes','Mins')
-    set(gca,'FontSize',14)
-    xlabel('Frame','FontSize',14)
-    if params.NormImage
-        ylabel('Normalized Intensity (a.u.)','FontSize',14)
+    if ~params.ScaleChannelsSeparately
+        disp(sprintf('Using max=%d, min=%d',MovieMax,MovieMin))
+        figure
+        subplot(2,1,1)
+        plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
+        legend('Maxes','Mins')
+        set(gca,'FontSize',14)
+        xlabel('Frame','FontSize',14)
+        if params.NormImage
+            ylabel('Normalized Intensity (a.u.)','FontSize',14)
+        else
+            ylabel('Raw intensity (a.u.)','FontSize',14)
+        end
+        subplot(2,1,2)
+        plot(1:numframes,allMedians,'.g')
+        legend('Median')
+        set(gca,'FontSize',14)
+        xlabel('Frame','FontSize',14)
+        ylabel('Raw Intensity (a.u.)','FontSize',14)
+        print('-depsc',fullfile(PathToMovie,'ScalingFig'))
     else
-        ylabel('Raw intensity (a.u.)','FontSize',14)
+        disp(sprintf('Using acceptor max=%d, min=%d',MovieMaxRed,MovieMinRed))
+        disp(sprintf('Using donor max=%d, min=%d',MovieMaxGr,MovieMinGr))
+        
+        figure
+        subplot(3,1,1)
+        plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
+        legend('Maxes','Mins')
+        set(gca,'FontSize',14)
+        xlabel('Frame','FontSize',14)
+        if params.NormImage
+            ylabel('Normalized Intensity (a.u.)','FontSize',14)
+        else
+            ylabel('Raw intensity (a.u.)','FontSize',14)
+        end
+        subplot(3,1,2)
+        plot(1:numframes,allRedMaxes,'or',1:numframes,allGrMaxes,'og',...
+            1:numframes,allRedMins,'xr',1:numframes,allGrMins,'xg')
+        legend('Acceptor maxes','Donor maxes','Acceptor mins','Donor mins')
+        set(gca,'FontSize',14)
+        xlabel('Frame','FontSize',14)
+        if params.NormImage
+            ylabel('Normalized Intensity (a.u.)','FontSize',14)
+        else
+            ylabel('Raw intensity (a.u.)','FontSize',14)
+        end
+        subplot(3,1,3)
+        plot(1:numframes,allMedians,'.g')
+        legend('Median')
+        set(gca,'FontSize',14)
+        xlabel('Frame','FontSize',14)
+        ylabel('Raw Intensity (a.u.)','FontSize',14)
+        print('-depsc',fullfile(PathToMovie,'ScalingFig'))
     end
-    subplot(2,1,2)
-    plot(1:numframes,allMedians,'.g')
-    legend('Median')
-    set(gca,'FontSize',14)
-    xlabel('Frame','FontSize',14)
-    ylabel('Raw Intensity (a.u.)','FontSize',14)
-    print('-depsc',fullfile(PathToMovie,'ScalingFig'))
     pause
     close
     
-    disp('Continuing with the scaling ...')
+    % Save the scaling information to disk for use by LoadScaledMovie:
+    save(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'allMedians',...
+        'MovieMin','MovieMax','MovieMinRed','MovieMaxRed','MovieMinGr','MovieMaxGr')
+    
+    disp('Calculating background ...')
     
     % Re-load everything and actually do the scaling:
     for jj = 1:FrameLoadMax:numframes

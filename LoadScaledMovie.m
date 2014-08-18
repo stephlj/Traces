@@ -60,19 +60,19 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
         end
     end
     
-    % Figure out how many frames were saved per file:
-    allfiles = dir(fullfile(PathToMovie,'ScaledMovie*.mat'));
-    sample_filename = allfiles(1).name; % This isn't necessarily ScaledMovieFrames1to100!!
-    first_num = regexpi(sample_filename,'Frames\d+to','match');
-    second_num = regexpi(sample_filename,'to\d+.mat','match');
-    FrameSaveIncr = str2double(second_num{1}(3:end-4))-str2double(first_num{1}(7:end-2))+1;
-    clear sample_filename first_num second_num
-    % Decided to remove the restriction on how many frames you can load at
-    % one time. Whatever function calls LoadScaledMovie has to do that
-    % check.
-%     if frames(2)-frames(1)>FrameSaveIncr
-%         frames(2)=frames(1)+FrameSaveIncr-1;
-%     end
+    % Make sure the scaling information is available:
+    if ~exist(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'file')
+        disp('LoadScaledMovie: Scaling info not saved?')
+        movRed = -1;
+        movGreen = -1;
+        lastframe = -1;
+        movRedBkgnd = -1;
+        movGrBkgnd = -1;
+        return
+    else
+        load(fullfile(PathToMovie,strcat('ScalingInfo.mat')));
+    end
+
     totfiles = length(allfiles);
     % If there's only one file, life is pretty easy:
     if totfiles == 1;
