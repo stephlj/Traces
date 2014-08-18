@@ -78,7 +78,7 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,FrameLoadM
     while lastframe<=frames(2)
         disp('Loading movie part ... ')
         [movRed,movGreen,~,~,lastframe] = LoadScaledMovie(PathToMovie,...
-            [lastframe min(lastframe+FrameLoadMax, frames(2))]);
+            [lastframe min(lastframe+FrameLoadMax, frames(2))],params);
         
         for i=1:size(movRed,3)
             if isempty(varargin)

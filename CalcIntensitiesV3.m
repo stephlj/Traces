@@ -98,7 +98,7 @@ end
     end
 
 for jj = 1:FrameLoadMax:totframes
-    [imgR,imgG,bkgndR,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+FrameLoadMax-1],'bkgnd');
+    [imgR,imgG,bkgndR,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+FrameLoadMax-1],params,'bkgnd');
     
     for kk = 1:size(Rspots,2)
         

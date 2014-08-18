@@ -1,4 +1,4 @@
-% function [movRed,movGreen,movRedBkgnd,movGrBkgnd,firstframe,lastframe] = LoadScaledMovie(PathToMovie,frames)
+% function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(PathToMovie,frames,params,varargin)
 %
 % Loads the scaled and background-subtracted movie frames saved by
 % ScaleMovie.m. 
@@ -6,6 +6,7 @@
 % Inputs:
 % PathToMovie: Full path to folder with the "ScaledMovieFrames..." files
 % frames: [start end] vector of frames to return. 
+% params: parameters file saved by smFRETsetup.
 % Optional: you must also pass 'bkgnd' as the last input, if you want it
 %   to return the third and fourth outputs (see below).
 %
@@ -32,7 +33,7 @@
 % file that accompanies this software; it can also be found at 
 % <http://www.gnu.org/licenses/>.
 
-function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(PathToMovie,frames,varargin)
+function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(PathToMovie,frames,params,varargin)
 
     % Input error handling
     frames = sort(frames);
@@ -72,39 +73,6 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
     else
         load(fullfile(PathToMovie,strcat('ScalingInfo.mat')));
     end
-
-    totfiles = length(allfiles);
-    % If there's only one file, life is pretty easy:
-    if totfiles == 1;
-        if frames(1) > FrameSaveIncr
-            disp('LoadScaledMovie: Movie not that long?')
-            movRed = -1;
-            movGreen = -1;
-            lastframe = -1;
-            movRedBkgnd = -1;
-            movGrBkgnd = -1;
-            return
-        end
-        if isempty(varargin)
-            temp = load(fullfile(PathToMovie,strcat('ScaledMovieFrames1to',int2str(FrameSaveIncr),'.mat')),'imgR','imgG');
-        else
-            temp = load(fullfile(PathToMovie,strcat('ScaledMovieFrames1to',int2str(FrameSaveIncr),'.mat')));
-        end
-        lastframe = min(frames(2),size(temp.imgR,3)); %Can't load frames that don't exist, even if the user asked for them
-        movRed = temp.imgR(:,:,frames(1):lastframe);
-        movGreen = temp.imgG(:,:,frames(1):lastframe);
-        if ~isempty(varargin)
-            movRedBkgnd = temp.imgRBkgnd(:,:,frames(1):lastframe);
-            movGrBkgnd = temp.imgGBkgnd(:,:,frames(1):lastframe);
-        else
-            movRedBkgnd = [];
-            movGrBkgnd = [];
-        end
-        return
-    end
-    
-    firstframe = frames(1);
-    lastframe = firstframe;
     
     % For some reason, if you initialize movRed to be
     % movRed = [];
@@ -114,37 +82,64 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
     movRedBkgnd = zeros(0,0,0);
     movGrBkgnd = zeros(0,0,0);
     
-    % Converts global frame number to per-file frame number
-    FileFrame = @(frame) rem(frame - 1, FrameSaveIncr) + 1;
-
-    % Figure out which file(s) to load:
+    % First, load and scale images:
+    firstframe = frames(1);
+    lastframe = firstframe;
     while lastframe<frames(2)
-        FileNum = firstframe-FileFrame(firstframe) + 1;
+        lastframe = min(firstframe+params.FrameLoadMax-1, frames(2))+1;
+        [moviebit,~] = LoadRawImgs(PathToMovie,'FramesToLoad',[firstframe lastframe]);
+        moviebit = double(moviebit);
         
-        if isempty(varargin)
-            temp = load(fullfile(PathToMovie,sprintf('ScaledMovieFrames%dto%d.mat',...
-                FileNum,FileNum+FrameSaveIncr-1)),'imgR','imgG');
-        else
-            temp = load(fullfile(PathToMovie,sprintf('ScaledMovieFrames%dto%d.mat',...
-                FileNum,FileNum+FrameSaveIncr-1)));
+        if params.NormImage
+            tempMeds(1,1,:) = allMedians(firstframe:lastframe);
+            moviebit = moviebit./repmat(tempMeds,size(moviebit,1),size(moviebit,2),1);
+            clear tempMeds
         end
         
-        lastframe = min(FileNum + FrameSaveIncr-1, frames(2));
+        if ~params.ScaleChannelsSeparately
+            ScaledMovie = mat2gray(moviebit,[MovieMin MovieMax]); % This also converts it to double precision,
+                % but need to explicitly do so earlier in case NormImage is 1
+            [movRed,movGreen] = SplitImg(ScaledMovie,params);
+        else
+            [movRed,movGreen] = SplitImg(moviebit,params);
+            movRed = mat2gray(movRed,[MovieMinRed,MovieMaxRed]);
+            movGreen = mat2gray(movGreen,[MovieMinGr,MovieMaxGr]);
+        end
+        clear ScaledMovie
+    end
+    
+    % Then, load and return background images if requested:
+    if ~isempty(varargin) %User wants to load background images, which are saved
+            % in separate files
+        % Figure out how many frames were saved per file:
+        allfiles = dir(fullfile(PathToMovie,'BackgroundImgs*.mat'));
+        sample_filename = allfiles(1).name; % This isn't necessarily ScaledMovieFrames1to100!!
+        first_num = regexpi(sample_filename,'Frames\d+to','match');
+        second_num = regexpi(sample_filename,'to\d+.mat','match');
+        FrameSaveIncr = str2double(second_num{1}(3:end-4))-str2double(first_num{1}(7:end-2))+1;
+        clear sample_filename first_num second_num
+    
+        % Converts global frame number to per-file frame number
+        FileFrame = @(frame) rem(frame - 1, FrameSaveIncr) + 1;
         
-        %disp(sprintf('movRed(:,:,%d:%d) = temp.imgR(:,:,%d:%d)', size(movRed, 3)+1, size(movRed, 3)+1+lastframe-firstframe, FileFrame(firstframe), FileFrame(lastframe)))
-        movRed(  :,:,end+1:end+1+lastframe-firstframe) = temp.imgR(:,:,FileFrame(firstframe):FileFrame(lastframe));
-        movGreen(:,:,end+1:end+1+lastframe-firstframe) = temp.imgG(:,:,FileFrame(firstframe):FileFrame(lastframe));
-        if ~isempty(varargin)
+        firstframe = frames(1);
+        lastframe = firstframe;
+
+        while lastframe<frames(2)
+            FileNum = firstframe-FileFrame(firstframe) + 1;
+
+            temp = load(fullfile(PathToMovie,sprintf('BackgroundImgs%dto%d.mat',...
+                    FileNum,FileNum+FrameSaveIncr-1)));
+
+            lastframe = min(FileNum + FrameSaveIncr-1, frames(2));
+
             movRedBkgnd(:,:,end+1:end+1+lastframe-firstframe) = temp.imgRBkgnd(:,:,FileFrame(firstframe):FileFrame(lastframe));
             movGrBkgnd (:,:,end+1:end+1+lastframe-firstframe) = temp.imgGBkgnd(:,:,FileFrame(firstframe):FileFrame(lastframe));
-        else
-            movRedBkgnd = [];
-            movGrBkgnd = [];
+            
+            firstframe = lastframe+1;
+
+            clear temp
         end
-        firstframe = lastframe+1;
-        
-        clear temp
-        
     end
 end
     

@@ -46,7 +46,7 @@ end
 GrSpots = tform.FRETmapInv(spots);
 
 % Get an average image of the first 10 frames to display:
-[imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg]);
+[imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg],params);
 imgRinitavg = mat2gray(mean(imgRinit,3));
 imgGinitavg = mat2gray(mean(imgGinit,3));
 imgRinit = imgRinitavg;
@@ -326,7 +326,8 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         % x will be in seconds, not frames. Convert to frame:
                         x = x*fps/10^-3; % fps is actually frames per ms
                         [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,...
-                            [round(x)-ceil(params.FramesToAvg/2) round(x)+ceil(params.FramesToAvg/2)]);
+                            [round(x)-ceil(params.FramesToAvg/2) round(x)+ceil(params.FramesToAvg/2)],...
+                            params);
                         imgRinit = mat2gray(mean(imgRinit,3));
                         imgGinit = mat2gray(mean(imgGinit,3));
                         clear x
@@ -355,7 +356,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         [xIlocal,yIlocal] = ginput(1);
                         if strcmpi(spottorefit,'r') && isequal(imgRzoom_axes,gca)
                             newcoords = GlobalToROICoords([],[yIlocal;xIlocal],spots(:,k),zoomsizeR,zoomsizeR);
-                            [imgs,~] = LoadScaledMovie(PathToMovie,[starttime endtime]);
+                            [imgs,~] = LoadScaledMovie(PathToMovie,[starttime endtime],params);
                             [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
                             % Check the new spot isn't too close to the
                             % boundary
@@ -374,7 +375,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                             end
                         elseif strcmpi(spottorefit,'g') && isequal(imgGzoom_axes,gca)
                             newcoords = GlobalToROICoords([],[yIlocal;xIlocal],GrSpots(:,k),zoomsizeG,zoomsizeG);
-                            [~,imgs] = LoadScaledMovie(PathToMovie,[starttime endtime]);
+                            [~,imgs] = LoadScaledMovie(PathToMovie,[starttime endtime],params);
                             [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
                             if ~isempty(tempnewspot)
                                 [tempnewspot,~,~,~] = CheckSpotBoundaries(tempnewspot,...

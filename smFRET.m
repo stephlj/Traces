@@ -576,7 +576,7 @@ close all
 
                UseScaledMov = 'n';
 
-               if exist(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'file')
+               if exist(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')),'file')
                    UseScaledMov = input('Load scaled movie? (y/n)','s');
                end
                clear templist
@@ -616,7 +616,7 @@ close all
                %for ff = [1,EndInjectFrame:SptFindIncrement:totframes]
                for ff = EndInjectFrame:SptFindIncrement:totframes
                    [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),...
-                       [ff ff+params.FramesToAvg]);
+                       [ff ff+params.FramesToAvg],params);
                    imgRedavg = mat2gray(mean(imgRed,3)); 
                    imgGreenavg = mat2gray(mean(imgGreen,3));
 
