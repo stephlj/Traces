@@ -86,7 +86,7 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
     firstframe = frames(1);
     lastframe = firstframe;
     while lastframe<frames(2)
-        lastframe = min(firstframe+params.FrameLoadMax-1, frames(2))+1;
+        lastframe = min(firstframe+params.FrameLoadMax-1, frames(2));
         [moviebit,~] = LoadRawImgs(PathToMovie,'FramesToLoad',[firstframe lastframe]);
         moviebit = double(moviebit);
         
@@ -114,9 +114,9 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
         % Figure out how many frames were saved per file:
         allfiles = dir(fullfile(PathToMovie,'BackgroundImgs*.mat'));
         sample_filename = allfiles(1).name; % This isn't necessarily ScaledMovieFrames1to100!!
-        first_num = regexpi(sample_filename,'Frames\d+to','match');
+        first_num = regexpi(sample_filename,'Imgs\d+to','match');
         second_num = regexpi(sample_filename,'to\d+.mat','match');
-        FrameSaveIncr = str2double(second_num{1}(3:end-4))-str2double(first_num{1}(7:end-2))+1;
+        FrameSaveIncr = str2double(second_num{1}(3:end-4))-str2double(first_num{1}(5:end-2))+1;
         clear sample_filename first_num second_num
     
         % Converts global frame number to per-file frame number

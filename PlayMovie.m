@@ -1,14 +1,13 @@
-% function PlayMovie(PathToMovie,frames,varargin)
+% function PlayMovie(PathToMovie,frames,params,varargin)
 %
 % Plays a movie of smFRET data from frames(1) to frames(2), with the
 % optional input allowing the user to display this movie in an existing
 % figure.
 %
 % Inputs:
-% PathToMovie: Full path to folder with the "ScaledMovieFrames..." files
+% PathToMovie: Full path to folder with the image files
 % frames: [start end] vector of frames to show
-% FrameLoadMax: Max number of frames to load into memory at any one time,
-%   so you don't kill Matlab
+% params: parameter structure saved by smFRETsetup
 % Optional inputs: must have either the first three only, or all seven
 %   varargin{1}: handle to a figure to play the movie into
 %   varargin{2}: a string containing 'subplot(blah)' to play the red
@@ -45,7 +44,7 @@
 % file that accompanies this software; it can also be found at 
 % <http://www.gnu.org/licenses/>.
 
-function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,FrameLoadMax,varargin)
+function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,params,varargin)
 
     % Input error handling
     frames = sort(frames);
@@ -78,7 +77,7 @@ function [LastRedFrame,LastGreenFrame] = PlayMovie(PathToMovie,frames,FrameLoadM
     while lastframe<=frames(2)
         disp('Loading movie part ... ')
         [movRed,movGreen,~,~,lastframe] = LoadScaledMovie(PathToMovie,...
-            [lastframe min(lastframe+FrameLoadMax, frames(2))],params);
+            [lastframe min(lastframe+params.FrameLoadMax, frames(2))],params);
         
         for i=1:size(movRed,3)
             if isempty(varargin)
