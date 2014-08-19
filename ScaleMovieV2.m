@@ -207,9 +207,12 @@ function ScaleMovieV2(PathToMovie,params)
     pause
     close
     
+    NormImage = params.NormImage;
     % Save the scaling information to disk for use by LoadScaledMovie:
     save(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'allMedians',...
-        'MovieMin','MovieMax','MovieMinRed','MovieMaxRed','MovieMinGr','MovieMaxGr')
+        'MovieMin','MovieMax','MovieMinRed','MovieMaxRed','MovieMinGr','MovieMaxGr',...
+        'NormImage')
+    clear NormImage
     
     disp('Calculating background ...')
     

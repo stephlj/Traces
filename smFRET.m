@@ -584,6 +584,10 @@ close all
                if strcmpi(UseScaledMov,'n')
                    disp('Scaling movie ...')
                    ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
+               else
+                   tempinfo = load(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')));
+                   params.NormImage = tempinfo.NormImage;
+                   clear tempinfo
                end
 
                % Update 5/2014: Added the option to find spots throughout the movie
