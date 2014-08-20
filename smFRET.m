@@ -872,7 +872,7 @@ close all
            tempfiles = dir(fullfile(D_Data,ToAnalyze(i).name,'BackgroundImgs*.mat'));
            tempinfo = load(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')));
            if isempty(tempfiles) 
-               ComputeBackgroundImgs(PathToMovie,params)
+               ComputeBackgroundImgs(fullfile(D_Data,ToAnalyze(i).name),params)
            elseif params.ScaleChannelsSeparately ~= tempinfo.ScaleChannelsSeparately || ...
                    params.NormImage ~= tempinfo.NormImage
                disp('NormImage and/or ScaleChannelsSeparately do not match what was used to calculate background.')
@@ -881,7 +881,7 @@ close all
                    params.NormImage = tempinfo.NormImage;
                    params.ScaleChannelsSeparately = tempinfo.ScaleChannelsSeparately;
                else
-                   ComputeBackgroundImgs(PathToMovie,params)
+                   ComputeBackgroundImgs(fullfile(D_Data,ToAnalyze(i).name),params)
                end
                clear redobkgnd
            end
