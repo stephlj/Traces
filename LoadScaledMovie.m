@@ -8,7 +8,9 @@
 % frames: [start end] vector of frames to return. 
 % params: parameters file saved by smFRETsetup.
 % Optional: you must also pass 'bkgnd' as the last input, if you want it
-%   to return the third and fourth outputs (see below).
+%   to return the third and fourth outputs (see below). Update 8/2014:
+%   pass 'rbkgnd' to only load the acceptor background image, 'gbkgnd' to
+%   only load the donor bkgnd image, 'bkgnd' to load both.
 %
 % Outputs:
 % movRed, movGreen: x-by-y-by-frames matrix of intensities for the red and
@@ -128,13 +130,31 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
         while lastframe<frames(2)
             FileNum = firstframe-FileFrame(firstframe) + 1;
 
-            temp = load(fullfile(PathToMovie,sprintf('BackgroundImgs%dto%d.mat',...
-                    FileNum,FileNum+FrameSaveIncr-1)));
+            if strcmpi(varargin{1},'rbkgnd')
+                temp = load(fullfile(PathToMovie,sprintf('BackgroundImgs%dto%d.mat',...
+                        FileNum,FileNum+FrameSaveIncr-1)),'imgRBkgnd');
+            elseif strcmpi(varargin{1},'gbkgnd')
+                temp = load(fullfile(PathToMovie,sprintf('BackgroundImgs%dto%d.mat',...
+                        FileNum,FileNum+FrameSaveIncr-1)),'imgGBkgnd');
+            else
+                temp = load(fullfile(PathToMovie,sprintf('BackgroundImgs%dto%d.mat',...
+                        FileNum,FileNum+FrameSaveIncr-1)));
+            end
 
             lastframe = min(FileNum + FrameSaveIncr-1, frames(2));
 
-            movRedBkgnd(:,:,end+1:end+1+lastframe-firstframe) = temp.imgRBkgnd(:,:,FileFrame(firstframe):FileFrame(lastframe));
-            movGrBkgnd (:,:,end+1:end+1+lastframe-firstframe) = temp.imgGBkgnd(:,:,FileFrame(firstframe):FileFrame(lastframe));
+            if strcmpi(varargin{1},'rbkgnd')
+                movRedBkgnd(:,:,end+1:end+1+lastframe-firstframe) = temp.imgRBkgnd(:,:,...
+                    FileFrame(firstframe):FileFrame(lastframe));
+            elseif strcmpi(varargin{1},'gbkgnd')
+                movGrBkgnd (:,:,end+1:end+1+lastframe-firstframe) = temp.imgGBkgnd(:,:,...
+                    FileFrame(firstframe):FileFrame(lastframe));
+            else
+                movRedBkgnd(:,:,end+1:end+1+lastframe-firstframe) = temp.imgRBkgnd(:,:,...
+                    FileFrame(firstframe):FileFrame(lastframe));
+                movGrBkgnd (:,:,end+1:end+1+lastframe-firstframe) = temp.imgGBkgnd(:,:,...
+                    FileFrame(firstframe):FileFrame(lastframe));
+            end
             
             firstframe = lastframe+1;
 

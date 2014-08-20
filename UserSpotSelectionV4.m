@@ -366,7 +366,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 if ~isempty(tempnewspot)
                                     spots(:,k) = tempnewspot;
                                     [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
-                                        spots(:,k), spotVars(:,k),[],params);
+                                        spots(:,k), spotVars(:,k),-1,params);
                                 else
                                     disp('New spot center too close to edge.')
                                 end
@@ -384,7 +384,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                     % if the fit fails, tempnewspot will be empty
                                     GrSpots(:,k) = tempnewspot;
                                 [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
-                                    GrSpots(:,k), spotVars(:,k),[],params);
+                                    GrSpots(:,k), spotVars(:,k),1,params);
                                 else
                                     disp('New spot center too close to edge.')
                                 end

@@ -7,7 +7,10 @@
 % PathToMovie: a path to a directory with the movie
 % Rspots: locations of the spots in the acceptor channel
 % spotVars: x,y variances to use for each spot for the Gaussian weighting
-% tform: mapping information for finding spots in the donor channel
+% tform: mapping information for finding spots in the donor channel. If you
+%   only want to calculate the intensities for the acceptor channel, pass -1 for
+%   tform; if you want to only calculate intensities for the donor, pass 1.
+%   Otherwise tform must be a FRETmap class object.
 % params: file saved by smFRETsetup
 %
 % Outputs:
@@ -43,45 +46,65 @@ end
 RedI = zeros(size(Rspots,2),totframes);
 GrI = zeros(size(Rspots,2),totframes);
 % Find the spots in the coordinate system of the other (green) channel:
-if ~isempty(tform)
+if isa(tform,'FRETmap')
     Gspots = tform.FRETmapInv(Rspots);
-else
+elseif tform == 1
     Gspots = Rspots;
+    Rspots = [];
+elseif tform == -1
+    Gspots = [];
 end    
 
 for jj = 1:FrameLoadMax:totframes
-    [imgR,imgG,bkgndR,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+FrameLoadMax-1],params,'bkgnd');
+    
+    if tform == 1
+        [~,imgG,~,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+FrameLoadMax-1],params,'gbkgnd');
+        framesdone = jj+size(imgG,3)-1;
+    elseif tform == -1
+        [imgR,~,bkgndR,~] = LoadScaledMovie(PathToMovie,[jj jj+FrameLoadMax-1],params,'rbkgnd');
+        framesdone = jj+size(imgR,3)-1;
+    else
+        [imgR,imgG,bkgndR,bkgndG] = LoadScaledMovie(PathToMovie,[jj jj+FrameLoadMax-1],params,'bkgnd');
+        framesdone = jj+size(imgR,3)-1;
+    end
     
     for kk = 1:size(Rspots,2)
         
        if params.IntensityGaussWeight==1
-            % Get ROI in red channel
-           [spotimgR,localcenR] = ExtractROI(imgR,params.DNASize,Rspots(:,kk));
-           [spotRbkgnd,~] = ExtractROI(bkgndR,params.DNASize,Rspots(:,kk));
-           % Get ROI in green channel:
-           [spotimgG,localcenG] = ExtractROI(imgG,params.DNASize,Gspots(:,kk));
-           [spotGbkgnd,~] = ExtractROI(bkgndG,params.DNASize,Rspots(:,kk));
+
+           if ~isempty(Rspots)
+               [spotimgR,localcenR] = ExtractROI(imgR,params.DNASize,Rspots(:,kk));
+               [spotRbkgnd,~] = ExtractROI(bkgndR,params.DNASize,Rspots(:,kk));
+               RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('Gauss',...
+                   spotimgR-spotRbkgnd,localcenR,spotVars(:,kk),params);
+           end
            
-           RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('Gauss',...
-               spotimgR-spotRbkgnd,localcenR,spotVars(:,kk),params);
-           GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('Gauss',...
-               spotimgG-spotGbkgnd,localcenG,spotVars(:,kk),params);
+           if ~isempty(Gspots)
+               [spotimgG,localcenG] = ExtractROI(imgG,params.DNASize,Gspots(:,kk));
+               [spotGbkgnd,~] = ExtractROI(bkgndG,params.DNASize,Rspots(:,kk));
+               GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('Gauss',...
+                   spotimgG-spotGbkgnd,localcenG,spotVars(:,kk),params);
+           end
 
        else
-           % Get ROI in red channel
-           [spotimgR,localcenR] = ExtractROI(imgR,5,Rspots(:,kk));
+           if ~isempty(Rspots)
+               [spotimgR,localcenR] = ExtractROI(imgR,5,Rspots(:,kk));
+               [spotRbkgnd,~] = ExtractROI(bkgndR,params.DNASize,Rspots(:,kk));
+               RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('NoGauss',...
+                   spotimgR-spotRbkgnd,localcenR,[],params);
+           end
            % Get ROI in green channel:
-           [spotimgG,localcenG] = ExtractROI(imgG,5,Gspots(:,kk));
-
-           RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('NoGauss',...
-               spotimgR,localcenR,[],params);
-           GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('NoGauss',...
-               spotimgG,localcenG,[],params);
+           if ~isempty(Gspots)
+               [spotimgG,localcenG] = ExtractROI(imgG,5,Gspots(:,kk));
+               [spotGbkgnd,~] = ExtractROI(bkgndG,params.DNASize,Rspots(:,kk));
+               GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('NoGauss',...
+                   spotimgG-spotGbkgnd,localcenG,[],params);
+           end
        end
-       clear spotimgG spotimgR
+       clear spotimgG spotimgR spotRbkgnd spotRbgknd
     end
-   
-   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, jj+size(imgR,3)-1,totframes))
-   clear imgR imgG bkgndR bkgndG
+    
+   disp(sprintf('Calculated intensity for frames %d to %d of %d', jj, framesdone,totframes))
+   clear imgR imgG bkgndR bkgndG framesdone
 end
 end
