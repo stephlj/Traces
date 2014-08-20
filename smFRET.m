@@ -584,10 +584,6 @@ close all
                if strcmpi(UseScaledMov,'n')
                    disp('Scaling movie ...')
                    ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
-               else
-                   tempinfo = load(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')));
-                   params.NormImage = tempinfo.NormImage;
-                   clear tempinfo
                end
 
                % Update 5/2014: Added the option to find spots throughout the movie
@@ -872,7 +868,26 @@ close all
            % Step 2: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
            
-           disp('Calculating frame-by-frame intensities')
+           % Update 8/2014: Calculating background here
+           tempfiles = dir(fullfile(D_Data,ToAnalyze(i).name,'BackgroundImgs*.mat'));
+           tempinfo = load(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')));
+           if isempty(tempfiles) 
+               ComputeBackgroundImgs(PathToMovie,params)
+           elseif params.ScaleChannelsSeparately ~= tempinfo.ScaleChannelsSeparately || ...
+                   params.NormImage ~= tempinfo.NormImage
+               disp('NormImage and/or ScaleChannelsSeparately do not match what was used to calculate background.')
+               redobkgnd = input('Recalculate background with new parameters? (y/n): ','s');
+               if strcmpi(redobkgnd,'n')
+                   params.NormImage = tempinfo.NormImage;
+                   params.ScaleChannelsSeparately = tempinfo.ScaleChannelsSeparately;
+               else
+                   ComputeBackgroundImgs(PathToMovie,params)
+               end
+               clear redobkgnd
+           end
+           clear tempinfo tempfiles
+           
+           disp('Calculating frame-by-frame intensities ... ')
            
            [RedI, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
                spots, Vars, tformPoly,params);

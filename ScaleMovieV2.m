@@ -213,44 +213,4 @@ function ScaleMovieV2(PathToMovie,params)
         'MovieMin','MovieMax','MovieMinRed','MovieMaxRed','MovieMinGr','MovieMaxGr',...
         'NormImage')
     clear NormImage
-    
-    disp('Calculating background ...')
-    
-    % Re-load everything and actually do the scaling:
-    % Update 8/2014: I'm not going to save the scaled version, because it's
-    % actually faster to load tifs and scale on the fly.  However, I do
-    % need to scale before I calculate background images.
-    for jj = 1:FrameLoadMax:numframes
-        [moviebit,~] = LoadRawImgs(PathToMovie,'FramesToLoad',[jj jj+FrameLoadMax-1],...
-            'FrameSize',framesize);
-        moviebit = double(moviebit);
-                
-        % Update 4/2014: Allowing a normalization option--see note about
-        % NormImage in smFRETsetup.m
-        if params.NormImage
-            tempMeds(1,1,:) = allMedians(jj:jj+size(moviebit,3)-1);
-            moviebit = moviebit./repmat(tempMeds,size(moviebit,1),size(moviebit,2),1);
-            clear tempMeds
-        end
-        
-        if ~params.ScaleChannelsSeparately
-            ScaledMovie = mat2gray(moviebit,[MovieMin MovieMax]); % This also converts it to double precision,
-                % but need to explicitly do so earlier in case NormImage is 1
-            [imgR,imgG] = SplitImg(ScaledMovie,params);
-        else
-            [imgR,imgG] = SplitImg(moviebit,params);
-            imgR = mat2gray(imgR,[MovieMinRed,MovieMaxRed]);
-            imgG = mat2gray(imgG,[MovieMinGr,MovieMaxGr]);
-        end
-        clear ScaledMovie
-        
-        % Now calculate background:
-        [imgRBkgnd,imgGBkgnd] = CalcBkgnd(imgR,imgG,params);
-        
-        save(fullfile(PathToMovie,strcat('BackgroundImgs',int2str(jj),...
-            'to',int2str(jj+FrameLoadMax-1),'.mat')),'imgRBkgnd','imgGBkgnd')
-        
-        clear moviebit imgR imgG imgRBkgnd imgGBkgnd
-        
-    end
 end
