@@ -22,6 +22,36 @@
 
 function ScaleMovieV2(PathToMovie,params)
 
+        % Subfunction to check for and remove intensity spikes:
+        function newMax = CheckMaxes(Maxes,Mins,oldMax,xaxislim,NormImage)
+            sortedMaxes = sort(Maxes); % Sort defaults to ascending order
+            MaxDiffs = sortedMaxes(2:end)-sortedMaxes(1:end-1);
+            meanDiff = mean(MaxDiffs);
+            stdDiff = std(MaxDiffs);
+            newMax = oldMax;
+            while (sortedMaxes(end)-sortedMaxes(end-1))>(meanDiff+3*stdDiff) ||...
+                    newMax>(mean(Maxes)+6*std(Maxes))
+                newMax = sortedMaxes(end-1);
+                sortedMaxes = sortedMaxes(1:end-1);
+                if length(sortedMaxes)<(length(Maxes)-7)
+                    disp('ScaleMovieV2: A lot of max outliers?')
+                    figure
+                    plot(1:xaxislim,Maxes,'ob',1:xaxislim,Mins,'xr')
+                    if NormImage
+                        ylabel('Normalized Intensity (a.u.)','FontSize',14)
+                    else
+                        ylabel('Raw intensity (a.u.)','FontSize',14)
+                    end
+                    legend('Maxes','Mins')
+                    set(gca,'FontSize',14)
+                    xlabel('Frame','FontSize',14)
+                    keyboard
+                    close
+                end
+            end
+            clear sortedMaxes MaxDiffs meanDiff stdDiff
+        end
+
     % Get some preliminary info:
     framesize = GetInfoFromMetaData(PathToMovie,'imgsize');
  
@@ -90,9 +120,9 @@ function ScaleMovieV2(PathToMovie,params)
         MovieMax = max(MovieMax,double(max(moviebit(:))));
         MovieMin = min(MovieMin,double(min(moviebit(:))));
         
-        %MovieMaxGr = max(MovieMax,double(max(grbit(:))));
+        MovieMaxGr = max(MovieMax,double(max(grbit(:))));
         MovieMinGr = min(MovieMin,double(min(grbit(:))));
-        %MovieMaxRed = max(MovieMax,double(max(redbit(:))));
+        MovieMaxRed = max(MovieMax,double(max(redbit(:))));
         MovieMinRed = min(MovieMin,double(min(redbit(:))));
 
         allMaxes(jj:jj+size(moviebit,3)-1) = max(max(moviebit,[],2),[],1);
@@ -111,42 +141,9 @@ function ScaleMovieV2(PathToMovie,params)
     
     % Check that the calculated Max(es) isn't/aren't way larger than the rest of the
     % maxes (it happens):
-    sortedMaxes = sort(allMaxes); % Sort defaults to ascending order
-    MaxDiffs = sortedMaxes(2:end)-sortedMaxes(1:end-1);
-    meanDiff = mean(MaxDiffs);
-    stdDiff = std(MaxDiffs);
-    while (sortedMaxes(end)-sortedMaxes(end-1))>(meanDiff+3*stdDiff) ||...
-            MovieMax>(mean(allMaxes)+6*std(allMaxes))
-        MovieMax = sortedMaxes(end-1);
-        sortedMaxes = sortedMaxes(1:end-1);
-        if length(sortedMaxes)<(length(allMaxes)-7)
-            disp('ScaleMovieV2: A lot of max outliers?')
-            figure
-            plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
-            if params.NormImage
-                ylabel('Normalized Intensity (a.u.)','FontSize',14)
-            else
-                ylabel('Raw intensity (a.u.)','FontSize',14)
-            end
-            legend('Maxes','Mins')
-            set(gca,'FontSize',14)
-            xlabel('Frame','FontSize',14)
-            keyboard
-            close
-        end
-    end
-    clear sortedMaxes MaxDiffs meanDiff stdDiff
-    
-    % The above procedure should have removed all wildly different maxes
-    % and mins from the list of total maxes.  Now make lists of maxes and
-    % mins from each channel that are less than (or equal to) the new
-    % moviemax:
-    
-    allGrMaxesClipped = sort(allGrMaxes(find(allGrMaxes<=MovieMax)));
-    allRedMaxesClipped = sort(allRedMaxes(find(allRedMaxes<=MovieMax)));
-    MovieMaxGr = allGrMaxesClipped(end);
-    MovieMaxRed = allRedMaxesClipped(end);
-    clear allGrMaxesClipped allRedMaxesClipped
+    MovieMax = CheckMaxes(allMaxes,allMins,MovieMax,numframes,params.NormImage);
+    MovieMaxGr = CheckMaxes(allGrMaxes,allGrMins,MovieMaxGr,numframes,params.NormImage);
+    MovieMaxRed = CheckMaxes(allRedMaxes,allRedMins,MovieMaxRed,numframes,params.NormImage);
     
     % Plot a figure so the user can check whether normalization was
     % necessary or not:
