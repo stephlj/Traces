@@ -927,7 +927,7 @@ close all
                % etc is actually 1/(2*the real variance))
                Vars = ones(size(spots));
            elseif ~isempty(params.FixSpotVar)
-               Vars = repmat(params.FixSpotVar,1,size(spots,2));
+               Vars = repmat(params.FixSpotVar',1,size(spots,2));
            end
                UserSpotSelectionV4(RedI,GrI,spots,Vars,...
                    fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
@@ -946,7 +946,7 @@ close all
                if isempty(params.FixSpotVar)
                    Vars = oldspots.SpotVars;
                else 
-                   Vars = repmat(params.FixSpotVar,1,size(oldspots.SpotsInR,2));
+                   Vars = repmat(params.FixSpotVar',1,size(oldspots.SpotsInR,2));
                end
            else
                Vars = ones(size(spots));

@@ -48,11 +48,14 @@ GrI = zeros(size(Rspots,2),totframes);
 % Find the spots in the coordinate system of the other (green) channel:
 if isa(tform,'FRETmap')
     Gspots = tform.FRETmapInv(Rspots);
+    numspots = size(Rspots,2);
 elseif tform == 1
     Gspots = Rspots;
     Rspots = [];
+    numspots = size(Gspots,2);
 elseif tform == -1
     Gspots = [];
+    numspots = size(Rspots,2);
 end    
 
 for jj = 1:FrameLoadMax:totframes
@@ -68,21 +71,21 @@ for jj = 1:FrameLoadMax:totframes
         framesdone = jj+size(imgR,3)-1;
     end
     
-    for kk = 1:size(Rspots,2)
+    for kk = 1:numspots
         
        if params.IntensityGaussWeight==1
 
            if ~isempty(Rspots)
                [spotimgR,localcenR] = ExtractROI(imgR,params.DNASize,Rspots(:,kk));
                [spotRbkgnd,~] = ExtractROI(bkgndR,params.DNASize,Rspots(:,kk));
-               RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('Gauss',...
+               RedI(kk,jj:framesdone) = CalcSpotIntensity('Gauss',...
                    spotimgR-spotRbkgnd,localcenR,spotVars(:,kk),params);
            end
            
            if ~isempty(Gspots)
                [spotimgG,localcenG] = ExtractROI(imgG,params.DNASize,Gspots(:,kk));
-               [spotGbkgnd,~] = ExtractROI(bkgndG,params.DNASize,Rspots(:,kk));
-               GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('Gauss',...
+               [spotGbkgnd,~] = ExtractROI(bkgndG,params.DNASize,Gspots(:,kk));
+               GrI(kk,jj:framesdone) = CalcSpotIntensity('Gauss',...
                    spotimgG-spotGbkgnd,localcenG,spotVars(:,kk),params);
            end
 
@@ -90,14 +93,14 @@ for jj = 1:FrameLoadMax:totframes
            if ~isempty(Rspots)
                [spotimgR,localcenR] = ExtractROI(imgR,5,Rspots(:,kk));
                [spotRbkgnd,~] = ExtractROI(bkgndR,params.DNASize,Rspots(:,kk));
-               RedI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('NoGauss',...
+               RedI(kk,jj:framesdone) = CalcSpotIntensity('NoGauss',...
                    spotimgR-spotRbkgnd,localcenR,[],params);
            end
            % Get ROI in green channel:
            if ~isempty(Gspots)
                [spotimgG,localcenG] = ExtractROI(imgG,5,Gspots(:,kk));
-               [spotGbkgnd,~] = ExtractROI(bkgndG,params.DNASize,Rspots(:,kk));
-               GrI(kk,jj:jj+size(imgR,3)-1) = CalcSpotIntensity('NoGauss',...
+               [spotGbkgnd,~] = ExtractROI(bkgndG,params.DNASize,Gspots(:,kk));
+               GrI(kk,jj:framesdone) = CalcSpotIntensity('NoGauss',...
                    spotimgG-spotGbkgnd,localcenG,[],params);
            end
        end
