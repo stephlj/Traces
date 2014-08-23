@@ -130,8 +130,8 @@ function ScaleMovieV2(PathToMovie,params)
         
         allGrMaxes(jj:jj+size(moviebit,3)-1) = max(max(grbit,[],2),[],1);
         allRedMaxes(jj:jj+size(moviebit,3)-1) = max(max(redbit,[],2),[],1);
-        allGrMins(jj:jj+size(moviebit,3)-1) = max(max(grbit,[],2),[],1);
-        allRedMins(jj:jj+size(moviebit,3)-1) = max(max(redbit,[],2),[],1);
+        allGrMins(jj:jj+size(moviebit,3)-1) = min(min(grbit,[],2),[],1);
+        allRedMins(jj:jj+size(moviebit,3)-1) = min(min(redbit,[],2),[],1);
         
         clear moviebit redbit grbit
     end

@@ -58,7 +58,7 @@ SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.
-SmoothFRET = 0; % Same as SmoothIntensities but for the FRET signal. 
+SmoothFRET = 5; % Same as SmoothIntensities but for the FRET signal. 
 EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
     % to bump the stage, you can set this to the value of a frame that you 
     % know is after theinjection is over, and spotfinding will start at EndInjectFrame. 
@@ -68,10 +68,10 @@ EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
 FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted. 10-20 is a good value
     % for me.
-FindSpotsEveryXFrames = 0; % If this is greater than 0,
+FindSpotsEveryXFrames = 500; % If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
-CheckSpotFindingEveryXFrames = 0; % If this is greater than zero, smFRET will ask
+CheckSpotFindingEveryXFrames = 500; % If this is greater than zero, smFRET will ask
     % the user to check the fidelity of the spotfinding threshhold every
     % this many frames. I recommend if FindSpotsEveryXFrames is greater
     % than 0, that this is set to something like 5*FindSpotsEveryXFrames.
