@@ -68,10 +68,10 @@ EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
 FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted. 10-20 is a good value
     % for me.
-FindSpotsEveryXFrames = 500; % If this is greater than 0,
+FindSpotsEveryXFrames = 0; % If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
-CheckSpotFindingEveryXFrames = 500; % If this is greater than zero, smFRET will ask
+CheckSpotFindingEveryXFrames = 0; % If this is greater than zero, smFRET will ask
     % the user to check the fidelity of the spotfinding threshhold every
     % this many frames. I recommend if FindSpotsEveryXFrames is greater
     % than 0, that this is set to something like 5*FindSpotsEveryXFrames.

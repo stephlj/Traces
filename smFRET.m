@@ -518,7 +518,7 @@ close all
     ToAnalyze = dir(fullfile(D_Data,strcat(rootname,'*')));
     % Get framerate for plotting:
     if isempty(ToAnalyze)
-        disp('Did not find data to analyze; remember not to include _<number> at the end of rootname!') %error handling
+        disp('Did not find data to analyze.') %error handling
         return
     end
     fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze(1).name),'fps');
