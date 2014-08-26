@@ -151,7 +151,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('Intensity (a.u.)','Fontsize',12)
        title(strcat('Spot',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)
-       if xlims(k,1)~=0
+       if xlims(k,2)~=0
            xlim([xlims(k,1) xlims(k,2)])
        end
        
@@ -160,7 +160,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
            [xvect(1) xvect(end)],[1 1],'--k')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('FRET','Fontsize',12)
-       if xlims(k,1)~=0
+       if xlims(k,2)~=0
            xlim([xlims(k,1) xlims(k,2)])
        end
        ylim([-.2 1.2])
@@ -221,7 +221,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                 elseif cc=='s'
                     saveas(gca,fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))),'fig')
                     print('-depsc',fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))))
-                    if xlims(k,1)~=0
+                    if xlims(k,2)~=0
                         RedToSave = RedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                         GrToSave = GrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
                         FRETtoSave = FRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
@@ -264,6 +264,12 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     [x,~] = ginput(2);
                     if isequal(trace_axes,gca)
                         x = sort(x);
+                        if x(1)<0
+                            x(1)=0;
+                        end
+                        if x(2)>size(allRedI,2)
+                            x(2)=size(allRedI,2);
+                        end
                         xlims(k,1) = x(1);
                         xlims(k,2) = x(2);
                     end
