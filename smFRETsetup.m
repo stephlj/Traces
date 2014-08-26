@@ -24,9 +24,9 @@ function smFRETsetup()
 
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
-defaultsavedir = '/Volumes/smFRET 1/smFRET data analysis';
+defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
 % Where to load data from:
-defaultdatadir = '/Volumes/smFRET 1/smFRET data';
+defaultdatadir = '/Volumes/smFRET/smFRET data';
 %defaultdatadir = '/Volumes/SPEEDY';
 % Where the code is (which is where it saves this parameter file)
 codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
@@ -54,7 +54,7 @@ Acceptor = 0; % If this is 1, the acceptor channel is the one on the right
 % from smFRETsetup rather than from the metadata file.  See manual for more details.)
     
 %%%%%%%% Analysis parameters: %%%%%%%%
-SmoothIntensities = 0; % If this is zero (or negative), don't do any smoothing 
+SmoothIntensities = 5; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, moving
     % average smoothing filter of width specified by this variable.  Must be
     % an integer.

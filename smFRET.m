@@ -217,7 +217,7 @@ function smFRET(rootname,debug)
             end
             clear Map prevmapdir
         else
-            disp(strcat('Map not found in',D_Beads))
+            disp('Map not found.')
             return
         end
     else
@@ -871,7 +871,7 @@ close all
            % Update 8/2014: Calculating background here
            tempfiles = dir(fullfile(D_Data,ToAnalyze(i).name,'BackgroundImgs*.mat'));
            tempinfo = load(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')));
-           if isempty(tempfiles) 
+           if isempty(tempfiles) || strcmpi(UseScaledMov,'n')
                ComputeBackgroundImgs(fullfile(D_Data,ToAnalyze(i).name),params)
            elseif params.ScaleChannelsSeparately ~= tempinfo.ScaleChannelsSeparately || ...
                    params.NormImage ~= tempinfo.NormImage
