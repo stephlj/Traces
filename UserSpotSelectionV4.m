@@ -265,7 +265,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     if isequal(trace_axes,gca)
                         x = sort(x);
                         if x(1)<0
-                            x(1)=0;
+                            x(1)=1;
                         end
                         if x(2)>size(allRedI,2)
                             x(2)=size(allRedI,2);
