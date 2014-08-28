@@ -125,6 +125,12 @@ function smFRET(rootname,debug)
         % quality of the fitted transform, even for ~750 spots. With
         % perfect matching and our current alignment, the residuals should
         % be <0.008 per spot (note that the residuals will increase with more spots!):
+        if oldtform.A == -1
+            newtform = -1;
+            matchedG = -1;
+            matchedR = -1;
+            return
+        end
         PrevResid = oldtform.ResidualsFwd;
         ResidGtoR = oldtform.ResidualsFwd;
         ResidRtoG = oldtform.ResidualsInv;
@@ -391,6 +397,9 @@ function smFRET(rootname,debug)
             matchG{1} = matchGall;
             matchR{1} = matchRall;
             [tformPoly,matchG,matchR] = RefineTform(matchG,matchR,tformPoly,params);
+            if tformPoly == -1
+                return
+            end
             matchGall = matchG{1};
             matchRall = matchR{1};
         end
@@ -871,7 +880,7 @@ close all
            % Update 8/2014: Calculating background here
            tempfiles = dir(fullfile(D_Data,ToAnalyze(i).name,'BackgroundImgs*.mat'));
            tempinfo = load(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')));
-           if isempty(tempfiles) || strcmpi(UseScaledMov,'n')
+           if isempty(tempfiles) || (exist('UseScaledMov','var') && strcmpi(UseScaledMov,'n'))
                ComputeBackgroundImgs(fullfile(D_Data,ToAnalyze(i).name),params)
            elseif params.ScaleChannelsSeparately ~= tempinfo.ScaleChannelsSeparately || ...
                    params.NormImage ~= tempinfo.NormImage

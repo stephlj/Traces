@@ -85,7 +85,7 @@ UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % always does worse at creating a combined image. It's probably better
     % to just adjust the spotfinding threshold to capture mid-FRET spots.
 TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
-    % (caps insensitive; the Matlab_ versions use built-in Matlab functions
+    % (caps insensitive; the Matlab* versions use built-in Matlab functions
     % instead of my hand-written code)
 TformMaxDeg = 4; % If TransformToCalc is Poly or MatlabPoly, max degree of the polynomial
     % (note if using built-in Matlab functions, this should equal TformTotDeg)
