@@ -131,6 +131,7 @@ function smFRET(rootname,debug)
             matchedR = -1;
             return
         end
+        StdDevMultiplier = 5;
         PrevResid = oldtform.ResidualsFwd;
         ResidGtoR = oldtform.ResidualsFwd;
         ResidRtoG = oldtform.ResidualsInv;
@@ -155,7 +156,7 @@ function smFRET(rootname,debug)
             % Using a threshold based only on the G to R transformation,
             % because while the residuals for the two directions do usually
             % differ, it's not usaully by much
-            MismatchThresh = mean(CurrErrors)+5*std(CurrErrors);
+            MismatchThresh = mean(CurrErrors)+StdDevMultiplier*std(CurrErrors);
             clear tempRs
 
             allmatchesG = [];
@@ -185,6 +186,8 @@ function smFRET(rootname,debug)
                 disp('Channel mapping: having to exclude lots of beads to get residuals down.')
                 disp('If histogram looks ok, you can increase tolerance, for example, enter:')
                 disp('params.ResidTolerance = ResidualsGtoR/size(matchGall,2)+0.001; dbcont')
+                disp('If you want it to remove more spots with higher residuals, reduce StdDevMultiplier')
+                disp('(e.g., enter StdDevMultiplier = 3; dbcont into the command line)')
                 keyboard
                 % If the histogram looks ok, best thing to do is just to
                 % manually increase the tolerance:
