@@ -55,9 +55,8 @@ Acceptor = 0; % If this is 1, the acceptor channel is the one on the right
     
 %%%%%%%% Analysis parameters: %%%%%%%%
 SmoothIntensities = 5; % If this is zero (or negative), don't do any smoothing 
-    % of the acceptor and donor intensities; if greater than zero, moving
-    % average smoothing filter of width specified by this variable.  Must be
-    % an integer.
+    % of the acceptor and donor intensities; if greater than zero, median
+    % filter of width specified by this variable.  Must be an integer.
 SmoothFRET = 5; % Same as SmoothIntensities but for the FRET signal. 
 EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
     % to bump the stage, you can set this to the value of a frame that you 

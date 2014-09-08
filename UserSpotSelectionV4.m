@@ -92,14 +92,37 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
         % because the raw intensities are also saved, you can always
         % recalculate FRET from those.  rawFRET just means not smoothed.
        if params.SmoothIntensities>0
-           RedI = smooth(unsmoothedRedI,round(params.SmoothIntensities)); % Moving average with span = SmoothIntensities
-           GrI = smooth(unsmoothedGrI,round(params.SmoothIntensities));
+           % Update 9/2014: using a median filter if possible instead
+           if exist('medfilt1') % Part of the signal processing toolbox
+               RedI = medfilt1(unsmoothedRedI,round(params.SmoothIntensities));
+               GrI = medfilt1(unsmoothedGrI,round(params.SmoothIntensities));
+           elseif exist('medfilt2') % Part of the image processing toolbox, which is required for 
+                % other parts of UserSpotsSelection, but just in case ... 
+               RedI = medfilt2(unsmoothedRedI,[round(params.SmoothIntensities),1]);
+               GrI = medfilt2(unsmoothedGrI,[round(params.SmoothIntensities),1]);
+           elseif exist('smooth') % Part of the curve fitting toolbox
+               RedI = smooth(unsmoothedRedI,round(params.SmoothIntensities)); % Moving average with span = SmoothIntensities
+               GrI = smooth(unsmoothedGrI,round(params.SmoothIntensities));
+           else
+               disp('Cannot smooth data with current toolboxes; displaying unsmoothed.')
+               RedI = unsmoothedRedI;
+               GrI = unsmoothedGrI;
+           end
        else
            RedI = unsmoothedRedI;
            GrI = unsmoothedGrI;
        end
        if params.SmoothFRET>0
-           FRET = smooth(unsmoothedFRET,round(params.SmoothFRET));
+           if exist('medfilt1')
+               FRET = medfilt1(unsmoothedFRET,round(params.SmoothFRET));
+           elseif exist('medfilt2')
+               FRET = medfilt2(unsmoothedFRET,[round(params.SmoothFRET),1]);
+           elseif exist('smooth')
+               FRET = smooth(unsmoothedFRET,round(params.SmoothFRET));
+           else
+               disp('Cannot smooth data with current toolboxes; displaying unsmoothed.')
+               FRET = unsmoothedFRET;
+           end
        else
            FRET = unsmoothedFRET;
        end
