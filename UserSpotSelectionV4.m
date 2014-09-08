@@ -43,7 +43,13 @@ if size(spots,1)~=2
 end
 
 % Find spots in green channel:
-GrSpots = tform.FRETmapInv(spots);
+temp = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')));
+if isfield(temp,'SpotsInG')
+    GrSpots = temp.SpotsInG;
+else
+    GrSpots = tform.FRETmapInv(spots);
+end
+clear temp
 
 % Get an average image of the first 10 frames to display:
 [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg],params);
@@ -361,6 +367,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         figure(h2)
                         [xIlocal,yIlocal] = ginput(1);
                         if strcmpi(spottorefit,'r') && isequal(imgRzoom_axes,gca)
+                            InitSpot = spots(:,k);
                             newcoords = GlobalToROICoords([],[yIlocal;xIlocal],spots(:,k),zoomsizeR,zoomsizeR);
                             [imgs,~] = LoadScaledMovie(PathToMovie,[starttime endtime],params);
                             [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
@@ -371,8 +378,15 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                         [],[],[],params,PathToMovie);
                                 if ~isempty(tempnewspot)
                                     spots(:,k) = tempnewspot;
+                                    NewSpot = spots(:,k);
+                                    ChangeInSpotLoc = sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)
                                     [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
                                         spots(:,k), spotVars(:,k),-1,params);
+                                    SpotsInR = spots;
+                                    RedI = allRedI;
+                                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInR',...
+                                        'RedI','-append')
+                                    clear SpotsInR RedI
                                 else
                                     disp('New spot center too close to edge.')
                                 end
@@ -380,6 +394,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 disp('Failed to find new spot center.')
                             end
                         elseif strcmpi(spottorefit,'g') && isequal(imgGzoom_axes,gca)
+                            InitSpot = GrSpots(:,k);
                             newcoords = GlobalToROICoords([],[yIlocal;xIlocal],GrSpots(:,k),zoomsizeG,zoomsizeG);
                             [~,imgs] = LoadScaledMovie(PathToMovie,[starttime endtime],params);
                             [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
@@ -389,8 +404,15 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 if ~isempty(tempnewspot)
                                     % if the fit fails, tempnewspot will be empty
                                     GrSpots(:,k) = tempnewspot;
-                                [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
-                                    GrSpots(:,k), spotVars(:,k),1,params);
+                                    NewSpot = GrSpots(:,k);
+                                    ChangeInSpotLoc = sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)
+                                    [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
+                                        GrSpots(:,k), spotVars(:,k),1,params);
+                                    SpotsInG = GrSpots;
+                                    GrI = allGrI;
+                                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInG',...
+                                        'GrI','-append')
+                                    clear SpotsInG GrI
                                 else
                                     disp('New spot center too close to edge.')
                                 end
