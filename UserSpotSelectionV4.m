@@ -98,8 +98,8 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                GrI = medfilt1(unsmoothedGrI,round(params.SmoothIntensities));
            elseif exist('medfilt2') % Part of the image processing toolbox, which is required for 
                 % other parts of UserSpotsSelection, but just in case ... 
-               RedI = medfilt2(unsmoothedRedI,[round(params.SmoothIntensities),1]);
-               GrI = medfilt2(unsmoothedGrI,[round(params.SmoothIntensities),1]);
+               RedI = medfilt2(unsmoothedRedI,[1,round(params.SmoothIntensities)]);
+               GrI = medfilt2(unsmoothedGrI,[1,round(params.SmoothIntensities)]);
            elseif exist('smooth') % Part of the curve fitting toolbox
                RedI = smooth(unsmoothedRedI,round(params.SmoothIntensities)); % Moving average with span = SmoothIntensities
                GrI = smooth(unsmoothedGrI,round(params.SmoothIntensities));
@@ -116,7 +116,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
            if exist('medfilt1')
                FRET = medfilt1(unsmoothedFRET,round(params.SmoothFRET));
            elseif exist('medfilt2')
-               FRET = medfilt2(unsmoothedFRET,[round(params.SmoothFRET),1]);
+               FRET = medfilt2(unsmoothedFRET,[1,round(params.SmoothFRET)]);
            elseif exist('smooth')
                FRET = smooth(unsmoothedFRET,round(params.SmoothFRET));
            else
@@ -177,6 +177,11 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        trace_axes = subplot(2,1,1);
        plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k',...
            [xvect(1) xvect(end)],[0 0],'--k')
+       if isfield(params,'InjectTime') && params.InjectTime>0
+           hold on
+           plot([params.InjectTime, params.InjectTime], [0 max(RedI+GrI+offset)+0.1],'-m')
+           hold off
+       end
        xlabel('Time (sec)','Fontsize',12)
        ylabel('Intensity (a.u.)','Fontsize',12)
        title(strcat('Spot',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)
@@ -187,6 +192,11 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        fret_axes = subplot(2,1,2);
        plot(xvect,FRET,'-b',[xvect(1) xvect(end)],[0 0],'--k',...
            [xvect(1) xvect(end)],[1 1],'--k')
+       if isfield(params,'InjectTime') && params.InjectTime>0
+           hold on
+           plot([params.InjectTime, params.InjectTime], [-0.2 1.2],'-m')
+           hold off
+       end
        xlabel('Time (sec)','Fontsize',12)
        ylabel('FRET','Fontsize',12)
        if xlims(k,2)~=0
@@ -402,7 +412,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 if ~isempty(tempnewspot)
                                     spots(:,k) = tempnewspot;
                                     NewSpot = spots(:,k);
-                                    ChangeInSpotLoc = sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)
+                                    disp(sprintf('Change in spot center = %d pixels',sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)))
                                     [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
                                         spots(:,k), spotVars(:,k),-1,params);
                                     SpotsInR = spots;
@@ -428,7 +438,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                     % if the fit fails, tempnewspot will be empty
                                     GrSpots(:,k) = tempnewspot;
                                     NewSpot = GrSpots(:,k);
-                                    ChangeInSpotLoc = sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)
+                                    disp(sprintf('Change in spot center = %d pixels',sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)))
                                     [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
                                         GrSpots(:,k), spotVars(:,k),1,params);
                                     SpotsInG = GrSpots;

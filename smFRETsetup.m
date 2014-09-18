@@ -64,6 +64,9 @@ EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
     % I usually know when I'm done injecting in seconds (usually about 25 seconds, 
     % add a couple for safety), and I collect data at 0.15 seconds per frame, 
     % so I usually set this to round(27/0.15).
+InjectTime = 11; % Time that injection began, in SECONDS. The only thing this
+    % parameter does is plot in the GUI a vertical line when injection occured.
+    % To plot nothing, make this 0.
 FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
     % the local background that will be subtracted. 10-20 is a good value
     % for me.
@@ -219,4 +222,4 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
     'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','alpha','gamma',...
     'CheckSpotFindingEveryXFrames','GaussWeightAmp','FixSpotVar',...
-    'ScaleChannelsSeparately');
+    'ScaleChannelsSeparately','InjectTime');
