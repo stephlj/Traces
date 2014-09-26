@@ -239,6 +239,7 @@ function smFRET(rootname,debug)
             if isempty(num_BeadDir) || num_BeadDir >= length(AllBeads)
                 BdDir = length(AllBeads);
                 num_BeadDir = length(AllBeads);
+                checkTform = 'n';
             elseif num_BeadDir < length(AllBeads)
                 checkTform = input(strcat('Use remaining ',int2str(length(AllBeads)-num_BeadDir),...
                     ' movies to check transform? (y/n)'),'s');

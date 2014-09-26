@@ -30,7 +30,7 @@ function ScaleMovieV2(PathToMovie,params)
             stdDiff = std(MaxDiffs);
             newMax = oldMax;
             while (sortedMaxes(end)-sortedMaxes(end-1))>(meanDiff+3*stdDiff) ||...
-                    newMax>(mean(Maxes)+3*std(Maxes))
+                    newMax>(mean(Maxes)+5*std(Maxes))
                 newMax = sortedMaxes(end-1);
                 sortedMaxes = sortedMaxes(1:end-1);
                 if length(sortedMaxes)<(length(Maxes)-7)
@@ -205,9 +205,10 @@ function ScaleMovieV2(PathToMovie,params)
     close
     
     NormImage = params.NormImage;
+    ScaleChannelsSeparately = params.ScaleChannelsSeparately;
     % Save the scaling information to disk for use by LoadScaledMovie:
     save(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'allMedians',...
         'MovieMin','MovieMax','MovieMinRed','MovieMaxRed','MovieMinGr','MovieMaxGr',...
-        'NormImage')
-    clear NormImage
+        'NormImage','ScaleChannelsSeparately')
+    clear NormImage ScaleChannelsSeparately
 end
