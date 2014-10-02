@@ -81,7 +81,14 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
         spotsGforAffine = [];
 
         % Plot the two images side by side, with circles around all the spots:
-        figure('Position',[200 200 700 625])
+        % Update 10/2014: To make this more compatible with both PC's and
+        % Mac's,
+        figure
+        DefaultFigPos = get(gcf,'Position');
+        set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
+            DefaultFigPos(3)*1.25, DefaultFigPos(4)*1.5])
+        clear DefaultFigPos
+        %figure('Position',[200 200 700 625])
         t = 0:pi/100:2*pi;
 
         Raxes = subplot(1,2,1);

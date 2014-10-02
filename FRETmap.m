@@ -479,7 +479,14 @@ classdef FRETmap < handle
         % Plot, as a scatter plot, a set of data points and their
         % transformation
         function PlotTform(Data1,Data2)
-            figure('Position',[200 200 325 625])
+            % Update 10/2014: Making this show up on both macs and pc's
+            % better
+            %figure('Position',[200 200 325 625])
+            figure
+            DefaultFigPos = get(gcf,'Position');
+            set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
+                DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
+            clear DefaultFigPos
             plot(Data1(2,:),0-Data1(1,:),'xg')
             hold on
             plot(Data2(2,:),0-Data2(1,:),'xr')

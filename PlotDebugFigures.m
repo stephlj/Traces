@@ -58,7 +58,13 @@ elseif FigID == 2 %Box in green the ones that were matched:
         % point it got matched to in the red channel is.  This is also a
         % great way of looking at the distortion between the two
         % channels
-        figure('Position',[200 200 325 625])
+        % Update 10/2014 making this more universal for macs and pcs
+        %figure('Position',[200 200 325 625])
+        figure
+        DefaultFigPos = get(gcf,'Position');
+        set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
+            DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
+        clear DefaultFigPos
         plot([varargin{5}(2,:);varargin{6}(2,:)],0-[varargin{5}(1,:);varargin{6}(1,:)],'-b')
         hold on
         plot(varargin{5}(2,:),0-varargin{5}(1,:),'xr')
@@ -73,7 +79,14 @@ elseif FigID == 2 %Box in green the ones that were matched:
     end
 elseif FigID==3
     if length(varargin)==3
-        figure('Position',[200 200 325 625])
+        % Update 10/2014 making these figures show up properly on both macs
+        % and pcs
+        % figure('Position',[200 200 325 625])
+        figure
+        DefaultFigPos = get(gcf,'Position');
+        set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
+            DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
+        clear DefaultFigPos
         hold on
         if ~isempty(varargin{1})
             plot(varargin{1}(2,:),0-varargin{1}(1,:),'xg')
