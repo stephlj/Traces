@@ -86,6 +86,10 @@ UseCombinedImage = 0; % If this is 1, use an image of one (transformed) channel
     % this currently uses an affine transformation only, since polynomial
     % always does worse at creating a combined image. It's probably better
     % to just adjust the spotfinding threshold to capture mid-FRET spots.
+    % Finally, only Matlab 2013 and later has imwarp, the overlay
+    % functionality; if you don't have 2013 or later, you can't use this
+    % functionality (you'll get a warning if you try and UseCombinedImage
+    % will be automatically reset to 0).
 TransformToCalc = 'MatlabPoly'; % Options are Affine, Poly, MatlabAffine, MatlabPoly
     % (caps insensitive; the Matlab* versions use built-in Matlab functions
     % instead of my hand-written code)

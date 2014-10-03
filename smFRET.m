@@ -91,7 +91,7 @@ function smFRET(rootname,debug)
         newthresh = oldthresh;
         happy = 0;
         while happy==0
-            answer = input('Press enter if satisfied, anything else+enter if not:','s');
+            answer = input('Press enter if satisfied, anything else+enter if not: ','s');
             if ~isempty(answer)
                 close all
                 figure,bar(thisxout,thisn)
@@ -101,10 +101,13 @@ function smFRET(rootname,debug)
                 title('Choose a threshold between background and true spots:','Fontsize',12)
                 xlabel('<-Background intensities ... Real spot intensities->')
                 ylabel('Counts')
-                newthresh = input('Enter new threshold to use:');
+                % Update 10/2014: at Kai-Chun's suggestion, printing out
+                % the old threshold
+                disp(sprintf('Current threshold: %d',newthresh))
+                newthresh = input('Enter new threshold to use: ');
                 % Error handling:
                 while isempty(newthresh) ||  newthresh <=0 || newthresh >= 1
-                    newthresh = input('Enter new threshold to use:');
+                    newthresh = input('Enter new threshold to use: ');
                 end
                 close
                 [newspots,thisn,thisxout,newthresh] = FindSpotsV5(SpotImg,'ShowResults',1,...
