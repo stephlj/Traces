@@ -1,4 +1,4 @@
-% function [matched1,matched2] = FindSpotMatches(spots1,spots2)
+% function [matched1,matched2] = FindSpotMatches(spots1,spots2,maxDist)
 %
 % Given two sets of spots (e.g., a set of spots found in the red channel and
 % a set of spots in the green channel), find a matching between them.

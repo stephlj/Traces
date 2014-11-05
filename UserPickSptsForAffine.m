@@ -73,6 +73,7 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
         end
 
     done = 0;
+    attempts = 0;
     
     while done==0
         unusedspotsR = spotsR; % Start out assuming user wants to keep all spots
@@ -167,9 +168,39 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
         tformAffine = FRETmap(spotsGforAffine,spotsRforAffine,'Green','MatlabAffine');
 
         % Re-pair spots and return new matches:
+        attempts = attempts+1;
         [newspotsGtemp,newspotsR] = FindSpotMatches(tformAffine.FRETmapFwd(spotsG),spotsR);
-        if newspotsGtemp == -1 % Still didn't work
+        if size(newspotsGtemp,1) == 1 && newspotsGtemp == -1 && attempts==1 % Still didn't work, but maybe the user should try picking different spots
             disp('Affine transformation not good enough, try picking different spot-pairs.')
+        elseif newspotsGtemp == -1 % still didn't work, but user has already tried a different set of spots
+            disp('Affine transformation still not good enough, picking a random sub-selection of spots to try with')
+            % Randomly generate a subset of spots, 10% fewer than before:
+            initnumpairs = min(size(spotsG,2),size(spotsR,2));
+            while size(spotsG,2)>0.5*initnumpairs && size(spotsG,2)>50 && attempts < 5
+                indices = randperm(min(size(spotsG,2),size(spotsR,2)),round(0.9*min(size(spotsG,2),size(spotsR,2))));
+                oldspotsG = spotsG;
+                oldspotsR = spotsR;
+                clear spotsG spotsR
+                spotsG = oldspotsG(:,indices);
+                spotsR = oldspotsR(:,indices);
+                attempts = attempts+1;
+                [newspotsGtemp,newspotsR] = FindSpotMatches(tformAffine.FRETmapFwd(spotsG),spotsR);
+                if newspotsGtemp ~= -1
+                    done = 1;
+                    break
+                end
+            end
+            if newspotsGtemp == -1 % Went through the whole while loop again and didn't get a good set of matches
+                if size(spotsG,2)<=0.5*initnumpairs
+                    disp('Reduced number of spots to pair by 50% and still cannot find good matches')
+                elseif size(spotsG,2)<=50
+                    disp('Reduced number of spots to pair to 50 and still cannot find good matches')
+                elseif attempts >= 5
+                    disp('Made more than 3 attempts to reduce number of spots to pair and still cannot find good matches')
+                end
+                disp('Either exclude this dataset or change the limit set for maxDist in FindSpotMatches to greater than 10')
+                keyboard
+            end
         else
             done = 1;
         end
