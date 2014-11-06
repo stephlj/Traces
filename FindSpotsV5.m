@@ -200,7 +200,7 @@ temppeaks = find((imggray==maxes).*truemaxes);
 peaks = [peaks_i,peaks_j]';
 
 if ShowResults
-    disp(strcat('Number of peaks found: ',int2str(size(peaks,2))))
+    disp(sprintf('Number of peaks found: %d',size(peaks,2)))
 end
 
 % SPOT REFINEMENT
@@ -259,7 +259,7 @@ for i = 1:size(peaks,2)
 end
 
 if ShowResults
-    disp(strcat('Number of peaks kept: ',int2str(size(spots,2))))
+    disp(sprintf('Number of peaks kept: %d',size(spots,2)))
 end
 
 % For checking the results: make a figure that puts a box around each spot

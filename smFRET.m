@@ -237,15 +237,15 @@ function smFRET(rootname,debug)
             D_Beads = uigetdir(params.defaultdatadir,'Select directory with beads');
             % Figure out how many bead files to analyze there are:
             AllBeads = dir(fullfile(D_Beads,'Bead*'));
-            num_BeadDir = input(strcat('How many bead files to use for transformation? Max:',...
-                int2str(length(AllBeads)),' (Enter to use max)'));
+            num_BeadDir = input(sprintf('How many bead files to use for transformation? Max: %d (Enter to use max) ',...
+                length(AllBeads)));
             if isempty(num_BeadDir) || num_BeadDir >= length(AllBeads)
                 BdDir = length(AllBeads);
                 num_BeadDir = length(AllBeads);
                 checkTform = 'n';
             elseif num_BeadDir < length(AllBeads)
-                checkTform = input(strcat('Use remaining ',int2str(length(AllBeads)-num_BeadDir),...
-                    ' movies to check transform? (y/n)'),'s');
+                checkTform = input(sprintf('Use remaining %d movies to check transform? (y/n) ',...
+                    length(AllBeads)-num_BeadDir),'s');
                 if strcmpi(checkTform,'y')
                     BdDir = length(AllBeads); % But num_BeadDir will still be the 
                         % number of movie files the user wants to include in
@@ -339,8 +339,22 @@ function smFRET(rootname,debug)
                 % in donor to spots in acceptor:
                 [matchG{i},matchR{i}] = FindSpotMatches(spotsG{i},spotsR{i});
                 if matchG{i} == -1 % Greedy algorithm failed
-                    [matchR{i},matchG{i}] = UserPickSptsForAffine(imgRed,...
-                        imgGreen,spotsR{i},spotsG{i},params.BeadSize);
+                    if i~=1 % If we've already gotten through one data set, so we have a temporary map:
+                        disp('Using map generated from previous data instead:')
+                        [newspotsGtemp,newspotsR] = FindSpotMatches(tformtemp.FRETmapFwd(spotsG{i}),spotsR{i});
+                        if size(newspotsGtemp,1) == 1 && newspotsGtemp == -1
+                            [matchR{i},matchG{i}] = UserPickSptsForAffine(imgRed,...
+                                imgGreen,spotsR{i},spotsG{i},params.BeadSize);
+                        else
+                            newspotsG = tformtemp.FRETmapInv(newspotsGtemp);
+                            matchR{i} = newspotsR;
+                            matchG{i} = newspotsG;
+                            clear newspotsR newspotsGtemp
+                        end
+                    else
+                        [matchR{i},matchG{i}] = UserPickSptsForAffine(imgRed,...
+                            imgGreen,spotsR{i},spotsG{i},params.BeadSize);
+                    end
                 end
                 if i<=num_BeadDir
                     matchGall = [matchGall, matchG{i}];
@@ -354,6 +368,12 @@ function smFRET(rootname,debug)
                         matchR{i},matchG{i},size(imgRed))
                     clear matchG_abs matchR_abs
                 end
+                
+                % Update 11/5/2014: creating a temporary map that can be
+                % used if the greedy algorithm fails on the next data
+                % set(s)
+                tformtemp = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
+                    params.TformMaxDeg,params.TformTotDeg);
 
                 clear TotImg TotImg2 imgGreen imgRed spotsGabs
             end
@@ -376,6 +396,7 @@ function smFRET(rootname,debug)
         % Step three: calculate the transformation using all pairs of beads,
         % from all bead movies or snapshots that were loaded.
         % Update 4/2014 to use my FRETmap class
+        clear tformtemp
         tformPoly = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
             params.TformMaxDeg,params.TformTotDeg);
         % Affine tends to do better for overlay images using imwarp, so

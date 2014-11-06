@@ -183,6 +183,7 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
                 clear spotsG spotsR
                 spotsG = oldspotsG(:,indices);
                 spotsR = oldspotsR(:,indices);
+                disp(sprintf('Reduced to %d acceptor spots and %d donor spots',size(spotsR,2),size(spotsG,2)))
                 attempts = attempts+1;
                 [newspotsGtemp,newspotsR] = FindSpotMatches(tformAffine.FRETmapFwd(spotsG),spotsR);
                 if newspotsGtemp ~= -1
