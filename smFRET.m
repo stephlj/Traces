@@ -602,246 +602,261 @@ close all
             useoldspots = 'n';
             if exist(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),'file')
                 useoldspots = input('Load previously found spots? (y/n)','s');
+                useoldTform = 'n';
+                if strcmpi(useoldspots,'y')
+                    useoldTform = input('Use same channel mapping as last time but recompute: scaling, background, intensities? (y/n)','s');
+                end
             end
             
-            if strcmpi(useoldspots,'n')
-               % Finding spots and local background values
+            % Option 1: keep all old spots (so that data will have all the
+            % same labels as last time), just re-scale and recompute
+            % background and intensities
+            if strcmpi(useoldspots,'y') && strcmpi(useoldTform,'y')
+               prevRspots = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')));
+               spots = prevRspots.SpotsInR;
+               Vars = prevRspots.SpotVars;
+               clear prevRspots
+               disp('Scaling movie ...')
+               ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
+            
+            % Option 2: either re-map, or find all new spots and then re-map
+            else
+               % Find all new spots
+               if strcmpi(useoldspots,'n')
+                   % Finding spots and local background values
 
-               % Update 4/2014: Since the movie scaling now takes a while, provide
-               % the option to load the previously scaled movie, but a separate
-               % option to re-find spots
+                   % Update 4/2014: Since the movie scaling now takes a while, provide
+                   % the option to load the previously scaled movie, but a separate
+                   % option to re-find spots
 
-               UseScaledMov = 'n';
+                   UseScaledMov = 'n';
 
-               if exist(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')),'file')
-                   UseScaledMov = input('Load scaled movie? (y/n)','s');
-               end
-               clear templist
-
-               if strcmpi(UseScaledMov,'n')
-                   disp('Scaling movie ...')
-                   ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
-               end
-
-               % Update 5/2014: Added the option to find spots throughout the movie
-               [~,totframes] = LoadRawImgs(fullfile(D_Data,ToAnalyze(i).name),...
-                   'FramesToLoad',[1 1]);
-               if params.FindSpotsEveryXFrames==0
-                   SptFindIncrement = totframes;
-               else
-                   SptFindIncrement = params.FindSpotsEveryXFrames;
-               end
-               % This option was to always find spots in the first
-               % FramesToAvg frames, even if EndInjectFrame is bigger than
-               % 1. Decided not to allow this.
-%                if params.EndInjectFrame == 1
-%                    EndInjectFrame = SptFindIncrement+1;
-%                else
-                   EndInjectFrame = params.EndInjectFrame;
-               %end
-               RefinedCentersR = [];
-               RefinedCentersG = [];
-               VarsR = [];
-               VarsG = [];
-               newspotsR = [];
-               newspotsG = [];
-               newVarsR = [];
-               newVarsG = [];
-               % This goes with the option of insisting spotfinding happen
-               % in the first FramesToAvg frames, regardless of the value
-               % of EndInjectFrame.
-               %for ff = [1,EndInjectFrame:SptFindIncrement:totframes]
-               for ff = EndInjectFrame:SptFindIncrement:totframes
-                   [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),...
-                       [ff ff+params.FramesToAvg],params);
-                   imgRedavg = mat2gray(mean(imgRed,3)); 
-                   imgGreenavg = mat2gray(mean(imgGreen,3));
-
-                   imgRMinusBkgnd = imgRedavg;
-                   imgGMinusBkgnd = imgGreenavg;
-
-                   % Step 1: find spots
-                   % Find spots in both channels, but don't double-count. Allow
-                   % user to decide whether to find spots separately in each
-                   % channel, or using a combined image (see notes on the
-                   % UseCombinedImage parameter in smFRETsetup.m).
-                   if params.UseCombinedImage
-                       disp('Reminder: Using a combined image to find spots does not currently work well.')
-                       % Finding spots in a composite image, so that
-                       % mid-FRET spots don't get lost.  NOTE that the combined image
-                       % will have a frame of reference of the acceptor image, which
-                       % is fine because that's what I pass into UserSpotSelectionV4.
-
-                       % Step 1.1 Create a combined image
-                       imgRMinusBkgnd = CalcCombinedImage(tformAffine,imgGMinusBkgnd,imgRMinusBkgnd);
-                       % The built-in Matlab function imfuse used to create the output
-                       % of CalcCombinedImage only returns uint8 images, but fminsearch
-                       % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
-                       % double, so convert back to doubles:
-                       if imgRMinusBkgnd~=-1
-                           imgRMinusBkgnd = mat2gray(imgRMinusBkgnd);
-                       else
-                           disp('smFRET: Calculation of combined image failed.')
-                           return
-                       end
+                   if exist(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')),'file')
+                       UseScaledMov = input('Load scaled movie? (y/n)','s');
                    end
 
-               % Step 1.1 Identify spots in acceptor channel, and refine centers by
-                   % fitting to a Gaussian, regardless of whether or not user
-                   % wants to weight intensities by a Gaussian:
-                   %if ff == 1
-                   if ff == EndInjectFrame
-                       [newspotsR,nR,xoutR,thresh] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
-                             'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                             'Method','GaussFit');
-                       [newspotsR,threshholdR] = SptFindUserThresh(newspotsR,imgRMinusBkgnd,nR,xoutR,'Red Channel',...
-                           params.DNANeighborhood,params.DNASize,'GaussFit',thresh);
-                       clear thresh
-                       close
-                       % And in donor channel
+                   if strcmpi(UseScaledMov,'n')
+                       disp('Scaling movie ...')
+                       ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
+                   end
 
-                       if ~params.UseCombinedImage
-                           [newspotsG,nG,xoutG,thresh] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
+                   % Update 5/2014: Added the option to find spots throughout the movie
+                   [~,totframes] = LoadRawImgs(fullfile(D_Data,ToAnalyze(i).name),...
+                       'FramesToLoad',[1 1]);
+                   if params.FindSpotsEveryXFrames==0
+                       SptFindIncrement = totframes;
+                   else
+                       SptFindIncrement = params.FindSpotsEveryXFrames;
+                   end
+                   % This option was to always find spots in the first
+                   % FramesToAvg frames, even if EndInjectFrame is bigger than
+                   % 1. Decided not to allow this.
+    %                if params.EndInjectFrame == 1
+    %                    EndInjectFrame = SptFindIncrement+1;
+    %                else
+                       EndInjectFrame = params.EndInjectFrame;
+                   %end
+                   RefinedCentersR = [];
+                   RefinedCentersG = [];
+                   VarsR = [];
+                   VarsG = [];
+                   newspotsR = [];
+                   newspotsG = [];
+                   newVarsR = [];
+                   newVarsG = [];
+                   % This goes with the option of insisting spotfinding happen
+                   % in the first FramesToAvg frames, regardless of the value
+                   % of EndInjectFrame.
+                   %for ff = [1,EndInjectFrame:SptFindIncrement:totframes]
+                   for ff = EndInjectFrame:SptFindIncrement:totframes
+                       [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),...
+                           [ff ff+params.FramesToAvg],params);
+                       imgRedavg = mat2gray(mean(imgRed,3)); 
+                       imgGreenavg = mat2gray(mean(imgGreen,3));
+
+                       imgRMinusBkgnd = imgRedavg;
+                       imgGMinusBkgnd = imgGreenavg;
+
+                       % Step 1: find spots
+                       % Find spots in both channels, but don't double-count. Allow
+                       % user to decide whether to find spots separately in each
+                       % channel, or using a combined image (see notes on the
+                       % UseCombinedImage parameter in smFRETsetup.m).
+                       if params.UseCombinedImage
+                           disp('Reminder: Using a combined image to find spots does not currently work well.')
+                           % Finding spots in a composite image, so that
+                           % mid-FRET spots don't get lost.  NOTE that the combined image
+                           % will have a frame of reference of the acceptor image, which
+                           % is fine because that's what I pass into UserSpotSelectionV4.
+
+                           % Step 1.1 Create a combined image
+                           imgRMinusBkgnd = CalcCombinedImage(tformAffine,imgGMinusBkgnd,imgRMinusBkgnd);
+                           % The built-in Matlab function imfuse used to create the output
+                           % of CalcCombinedImage only returns uint8 images, but fminsearch
+                           % (called in Fit2DGaussToSpot in GetGaussParams below) needs a 
+                           % double, so convert back to doubles:
+                           if imgRMinusBkgnd~=-1
+                               imgRMinusBkgnd = mat2gray(imgRMinusBkgnd);
+                           else
+                               disp('smFRET: Calculation of combined image failed.')
+                               return
+                           end
+                       end
+
+                   % Step 1.1 Identify spots in acceptor channel, and refine centers by
+                       % fitting to a Gaussian, regardless of whether or not user
+                       % wants to weight intensities by a Gaussian:
+                       %if ff == 1
+                       if ff == EndInjectFrame
+                           [newspotsR,nR,xoutR,thresh] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
                                  'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
                                  'Method','GaussFit');
-                           [newspotsG,threshholdG] = SptFindUserThresh(newspotsG,imgGMinusBkgnd,nG,xoutG,'Green Channel',...
+                           [newspotsR,threshholdR] = SptFindUserThresh(newspotsR,imgRMinusBkgnd,nR,xoutR,'Red Channel',...
                                params.DNANeighborhood,params.DNASize,'GaussFit',thresh);
                            clear thresh
                            close
-                       end
-                       
-                       clear nR xoutR nG xoutG
-                       
-                   elseif mod(ff-params.EndInjectFrame,params.CheckSpotFindingEveryXFrames)==0
-                       % This is one of the frames at which the user wants
-                       % to check the threshold value
-                        [tempnewspotsR,nR,xoutR,threshholdR] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
-                            'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                            'UserThresh',threshholdR,'Method','GaussFit');
-                       [tempnewspotsR,threshholdR] = SptFindUserThresh(tempnewspotsR,imgRMinusBkgnd,nR,xoutR,'Red Channel',...
-                           params.DNANeighborhood,params.DNASize,'GaussFit',threshholdR);
-                       close
-                       % And in donor channel
-                       if ~params.UseCombinedImage
-                           [tempnewspotsG,nG,xoutG,threshholdG] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
-                                 'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                                 'UserThresh',threshholdG,'Method','GaussFit');
-                           [tempnewspotsG,threshholdG] = SptFindUserThresh(tempnewspotsG,imgGMinusBkgnd,nG,xoutG,'Green Channel',...
-                               params.DNANeighborhood,params.DNASize,'GaussFit',threshholdG);
-                           clear thresh
-                           close
-                       end
-                   else
-                       % Don't ask the user to check the spotfinding for
-                       % this round
-                        [tempnewspotsR,nR,xoutR,~] = FindSpotsV5(imgRMinusBkgnd,...
-                            'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                            'UserThresh',threshholdR,'Method','GaussFit');
-                        if ~params.UseCombinedImage
-                            [tempnewspotsG,nG,xoutG,~] = FindSpotsV5(imgGMinusBkgnd,...
+                           % And in donor channel
+
+                           if ~params.UseCombinedImage
+                               [newspotsG,nG,xoutG,thresh] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
+                                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
+                                     'Method','GaussFit');
+                               [newspotsG,threshholdG] = SptFindUserThresh(newspotsG,imgGMinusBkgnd,nG,xoutG,'Green Channel',...
+                                   params.DNANeighborhood,params.DNASize,'GaussFit',thresh);
+                               clear thresh
+                               close
+                           end
+
+                           clear nR xoutR nG xoutG
+
+                       elseif mod(ff-params.EndInjectFrame,params.CheckSpotFindingEveryXFrames)==0
+                           % This is one of the frames at which the user wants
+                           % to check the threshold value
+                            [tempnewspotsR,nR,xoutR,threshholdR] = FindSpotsV5(imgRMinusBkgnd,'ShowResults',1,'ImgTitle','Red Channel',...
                                 'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
-                                'UserThresh',threshholdG,'Method','GaussFit');
-                        end
-
-                   end
-                   %if ff > 1
-                   if ff > EndInjectFrame
-                        % Are there any new spots that we didn't find last
-                        % time?
-                        if ~isempty(tempnewspotsR) && ~isempty(RefinedCentersR)
-                            Dists = FindSpotDists(RefinedCentersR,tempnewspotsR);
-                            spotnottooclose = Dists>params.DNASize;
-                            newspotsR = tempnewspotsR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                            clear tempnewspotsR
-                            clear Dists spotnottooclose
-                        end
-                        if ~params.UseCombinedImage && ...
-                                ~isempty(RefinedCentersG) && ~isempty(tempnewspotsG)
-                            Dists = FindSpotDists(RefinedCentersG,tempnewspotsG);
-                            spotnottooclose = Dists>params.DNASize;
-                            newspotsG = tempnewspotsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
-                            clear tempnewspotsG
-                            clear Dists spotnottooclose
-                        end
-                   end
-
-                        if debug && ff>1 && ...
-                                mod(ff-params.EndInjectFrame,params.CheckSpotFindingEveryXFrames)==0
-                           PlotDebugFigures(3,RefinedCentersR,newspotsR)
-                           PlotDebugFigures(3,RefinedCentersG,newspotsG)
-                        end
-                    clear nR xoutR nG xoutG
-
-                   % For any new spot found, calculate its variance: 
-                   % Some notes on variances: It looks like the fits are much more
-                       % likely to be poor if I use single frames, rather than
-                       % an average of ~10 frames, to find the variances. It's
-                       % also a lot slower to do it frame by frame (probably
-                       % because of all the poor fits!).
-                       % Doesn't seem to matter a ton to use the background
-                       % subtracted image or not.
-                       % Lastly, red and green channels have on average roughly
-                       % the same variances, so I think it's probably fine to
-                       % assume the same variance for a spot in the red channel
-                       % as in the green channel.  But I should check by
-                       % finding all spots throughout the movie, pairing, and
-                       % comparing the variances of true pairs ...
-                   if ~isempty(newspotsR)
-                       [newspotsRref, newVarsR] = FindRefinedSpotCenters(imgRedavg,newspotsR,0.2,params);
-                       clear newspotsR
-                       newspotsR = newspotsRref;
-                       clear newspotsRref
-                   end
-                   if ~params.UseCombinedImage && ~isempty(newspotsG)
-                       [newspotsGref, newVarsG] = FindRefinedSpotCenters(imgGreenavg,newspotsG,0.2,params);
-                       clear newspotsG
-                       newspotsG = newspotsGref;
-                       clear newspotsGref
-                   end
-
-                   RefinedCentersR = [RefinedCentersR,newspotsR];
-                   RefinedCentersG = [RefinedCentersG,newspotsG];
-                   VarsR = [VarsR,newVarsR];
-                   VarsG = [VarsG,newVarsG];
-                   newspotsR = []; 
-                   newspotsG = []; 
-                   newVarsR = []; 
-                   newVarsG = [];
-                   clear imgRbkgnd imgGbkgnd imgRMinusBkgnd imgGMinusBkgnd imgGreen imgRedavg imgGreenavg
-
-                   if mod((ff-params.EndInjectFrame),100)==0
-                       if ~params.UseCombinedImage
-                           disp(sprintf('%d red spots and %d green spots found after %d frames',...
-                               size(RefinedCentersR,2),size(RefinedCentersG,2),ff+params.FramesToAvg))
+                                'UserThresh',threshholdR,'Method','GaussFit');
+                           [tempnewspotsR,threshholdR] = SptFindUserThresh(tempnewspotsR,imgRMinusBkgnd,nR,xoutR,'Red Channel',...
+                               params.DNANeighborhood,params.DNASize,'GaussFit',threshholdR);
+                           close
+                           % And in donor channel
+                           if ~params.UseCombinedImage
+                               [tempnewspotsG,nG,xoutG,threshholdG] = FindSpotsV5(imgGMinusBkgnd,'ShowResults',1,'ImgTitle','Green Channel',...
+                                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
+                                     'UserThresh',threshholdG,'Method','GaussFit');
+                               [tempnewspotsG,threshholdG] = SptFindUserThresh(tempnewspotsG,imgGMinusBkgnd,nG,xoutG,'Green Channel',...
+                                   params.DNANeighborhood,params.DNASize,'GaussFit',threshholdG);
+                               clear thresh
+                               close
+                           end
                        else
-                           disp(sprintf('%d spots found after %d frames',...
-                               size(RefinedCentersR,2),ff+params.FramesToAvg))
+                           % Don't ask the user to check the spotfinding for
+                           % this round
+                            [tempnewspotsR,nR,xoutR,~] = FindSpotsV5(imgRMinusBkgnd,...
+                                'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
+                                'UserThresh',threshholdR,'Method','GaussFit');
+                            if ~params.UseCombinedImage
+                                [tempnewspotsG,nG,xoutG,~] = FindSpotsV5(imgGMinusBkgnd,...
+                                    'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
+                                    'UserThresh',threshholdG,'Method','GaussFit');
+                            end
+
                        end
+                       %if ff > 1
+                       if ff > EndInjectFrame
+                            % Are there any new spots that we didn't find last
+                            % time?
+                            if ~isempty(tempnewspotsR) && ~isempty(RefinedCentersR)
+                                Dists = FindSpotDists(RefinedCentersR,tempnewspotsR);
+                                spotnottooclose = Dists>params.DNASize;
+                                newspotsR = tempnewspotsR(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                                clear tempnewspotsR
+                                clear Dists spotnottooclose
+                            end
+                            if ~params.UseCombinedImage && ...
+                                    ~isempty(RefinedCentersG) && ~isempty(tempnewspotsG)
+                                Dists = FindSpotDists(RefinedCentersG,tempnewspotsG);
+                                spotnottooclose = Dists>params.DNASize;
+                                newspotsG = tempnewspotsG(:,sum(spotnottooclose,1)==size(spotnottooclose,1));
+                                clear tempnewspotsG
+                                clear Dists spotnottooclose
+                            end
+                       end
+
+                            if debug && ff>1 && ...
+                                    mod(ff-params.EndInjectFrame,params.CheckSpotFindingEveryXFrames)==0
+                               PlotDebugFigures(3,RefinedCentersR,newspotsR)
+                               PlotDebugFigures(3,RefinedCentersG,newspotsG)
+                            end
+                        clear nR xoutR nG xoutG
+
+                       % For any new spot found, calculate its variance: 
+                       % Some notes on variances: It looks like the fits are much more
+                           % likely to be poor if I use single frames, rather than
+                           % an average of ~10 frames, to find the variances. It's
+                           % also a lot slower to do it frame by frame (probably
+                           % because of all the poor fits!).
+                           % Doesn't seem to matter a ton to use the background
+                           % subtracted image or not.
+                           % Lastly, red and green channels have on average roughly
+                           % the same variances, so I think it's probably fine to
+                           % assume the same variance for a spot in the red channel
+                           % as in the green channel.  But I should check by
+                           % finding all spots throughout the movie, pairing, and
+                           % comparing the variances of true pairs ...
+                       if ~isempty(newspotsR)
+                           [newspotsRref, newVarsR] = FindRefinedSpotCenters(imgRedavg,newspotsR,0.2,params);
+                           clear newspotsR
+                           newspotsR = newspotsRref;
+                           clear newspotsRref
+                       end
+                       if ~params.UseCombinedImage && ~isempty(newspotsG)
+                           [newspotsGref, newVarsG] = FindRefinedSpotCenters(imgGreenavg,newspotsG,0.2,params);
+                           clear newspotsG
+                           newspotsG = newspotsGref;
+                           clear newspotsGref
+                       end
+
+                       RefinedCentersR = [RefinedCentersR,newspotsR];
+                       RefinedCentersG = [RefinedCentersG,newspotsG];
+                       VarsR = [VarsR,newVarsR];
+                       VarsG = [VarsG,newVarsG];
+                       newspotsR = []; 
+                       newspotsG = []; 
+                       newVarsR = []; 
+                       newVarsG = [];
+                       clear imgRbkgnd imgGbkgnd imgRMinusBkgnd imgGMinusBkgnd imgGreen imgRedavg imgGreenavg
+
+                       if mod((ff-params.EndInjectFrame),100)==0
+                           if ~params.UseCombinedImage
+                               disp(sprintf('%d red spots and %d green spots found after %d frames',...
+                                   size(RefinedCentersR,2),size(RefinedCentersG,2),ff+params.FramesToAvg))
+                           else
+                               disp(sprintf('%d spots found after %d frames',...
+                                   size(RefinedCentersR,2),ff+params.FramesToAvg))
+                           end
+                       end
+
                    end
+                   close all
+                   clear totframes SptFindIncrement threshhold threshholdR threshholdG
+                   clear newspotsR newspotsG newVarsR newVarsG
 
+                   % Save all spots found in both channels:
+                   save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),...
+                       'RefinedCentersR','RefinedCentersG','VarsR','VarsG');
+               else
+                   prevspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
+                   %spots = prevspots.spots;
+                   %Vars = prevspots.Vars;
+                   RefinedCentersR = prevspots.RefinedCentersR;
+                   RefinedCentersG = prevspots.RefinedCentersG;
+                   VarsR = prevspots.VarsR;
+                   VarsG = prevspots.VarsG;
+                   clear prevspots
                end
-               close all
-               clear totframes SptFindIncrement threshhold threshholdR threshholdG
-               clear newspotsR newspotsG newVarsR newVarsG
-               
-               % Save all spots found in both channels:
-               save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),...
-                   'RefinedCentersR','RefinedCentersG','VarsR','VarsG');
-               
-            else
-               prevspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
-               %spots = prevspots.spots;
-               %Vars = prevspots.Vars;
-               RefinedCentersR = prevspots.RefinedCentersR;
-               RefinedCentersG = prevspots.RefinedCentersG;
-               VarsR = prevspots.VarsR;
-               VarsG = prevspots.VarsG;
-               clear prevspots
-            end
-
-     % Now that all DNA spots are found, make a single list of them (in the
-     % coordinates of the acceptor channel) to pass into the function that
-     % calculates intensities:
+             % Now that all DNA spots are found, make a single list of them (in the
+             % coordinates of the acceptor channel) to pass into the function that
+             % calculates intensities:
                if ~params.UseCombinedImage
                    % Step 1.3: Add any spots in green channel that weren't
                    % paired to a red channel spot to our list of spots. Or, put
@@ -901,11 +916,16 @@ close all
                disp(sprintf('Keeping %d total spots',size(spots,2)))
                save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),...
                    'spots','Vars','-append');
+               
+            end
            
            % Step 2: Load the whole movie in increments and calculate the
            % intensity of each spot in each frame.
            
-           % Update 8/2014: Calculating background here
+           % Update 8/2014: Calculating background here--but only if you
+           % have to (i.e. if these files don't exist or you re-scaled the
+           % movie; whether you re-mapped spots or whatever doesn't matter
+           % for the background)
            tempfiles = dir(fullfile(D_Data,ToAnalyze(i).name,'BackgroundImgs*.mat'));
            tempinfo = load(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')));
            if isempty(tempfiles) || (exist('UseScaledMov','var') && strcmpi(UseScaledMov,'n'))
@@ -938,8 +958,19 @@ close all
            
            SpotsInR = spots;
            SpotVars = Vars;
-           save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')),'SpotsInR',...
-               'SpotVars','RedI','GrI')
+           % Update 1/2015: Since I added a feature in UserSpotSelection
+           % that saves all the changes the user made to a trace (like
+           % xlims, etc), I don't want to completely save over the
+           % SpotsAndIntensities file if the user didn't re-find spots or
+           % re-match them with a new transformation. I want to keep the
+           % same spot indices in that case:
+           if strcmpi(useoldspots,'y') && strcmpi(useoldTform,'y')
+               save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')),'SpotsInR',...
+                   'SpotVars','RedI','GrI','-append') % Append overwrites the indicated variables, if they already exist
+           else
+               save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')),'SpotsInR',...
+                   'SpotVars','RedI','GrI');
+           end
            clear SpotsInR SpotVars
            
            if i==1

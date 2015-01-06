@@ -284,7 +284,7 @@ To start the analysis, enter\\
 
 \noindent (4) At the end of the spot finding session, all spots found in both channels will be saved to the directory you chose to save data in ({\it savedir}).  In addition, a list of spots in the frame of reference of the acceptor channel will also be saved, as follows: spots found in the donor channel are converted to the frame of reference of the acceptor channel, using the channel map that you just calculated or that you loaded, and if a donor spot was found close by to an acceptor spot ({\it e.g.}, if that spot was a mid-FRET spot and so showed up in both channels), the location of the spot in the acceptor channel will be saved---so that you don't double-count spots.  This final list of spots in the frame of reference of the acceptor channel will be saved as the ``spots'' variable in the SpotsFound.mat file saved to {\it savedir}, and it is this list that will be used to calculate intensities for each spot.
 
-{\it NOTE (1): Any time after this point, you can quit out of smFRET, rerun smFRET with the same input argument ({\it i.e.} the same rootname), load a different channel map, and then load the spots found in both channels and re-convert to the acceptor channel frame of reference, by selecting the ``Load previously found spots?'' option (NOT the ``Load previously found spots and their intensities?'' option).  Spot intensities will then be re-calculated. (Since spot-finding is independent of a channel map and happens for each channel separately, you don't have to find spots again just because you want to change where their pair in the other channel should be.  Note that at this point the background will also be re-calculated---see next step.)}
+{\it NOTE (1): Any time after this point, you can quit out of smFRET, rerun smFRET with the same input argument ({\it i.e.} the same rootname), load a different channel map, and then load the spots found in both channels and re-convert to the acceptor channel frame of reference, by selecting the ``Load previously found spots?'' option (NOT the ``Load previously found spots and their intensities?'' option).  Spot intensities will then be re-calculated. (Since spot-finding is independent of a channel map and happens for each channel separately, you don't have to find spots again just because you want to change where their pair in the other channel should be.  There are also options to re-scale the movie without re-finding spots.  See more details in Sec.~\ref{sec:AnalysisOptions}.)}
 
 {\it NOTE (2): If you load the SpotsFound.mat file you will also notice that variables called} Vars, VarsR {\it and} VarsG {\it are saved.  These contain the $x$- and $y$-variances of the best-fit 2-D Gaussian used to refine each spot's location.}  VarsR {\it and} VarsG {\it are the variances for spots found in the acceptor channel (saved to the} RefinedCentersR {\it variable) and in the donor channel (}RefinedCentersG{\it) respectively. } Vars {\it has the same length as} spots {\it and contains the variances that will be used in the intensity calculation.  For any spot found in only one channel, that spot's variances is used; however if a spot was found in both channels, the variance of the spot in the acceptor channel is saved.  These variances are used if the IntensityGaussWeight parameter in smFRETsetup is 1 and FixSpotVar is the empty matrix.}
 
@@ -337,6 +337,41 @@ In addition to this Spot file, an eps and a Matlab .fig file of whatever is in F
 \subsection{Part 1B: Creating a channel map from paired DNAs.}
 
 You can make a map using true paired DNAs (that you've confirmed are true FRET pairs by their intensity traces, and that you made sure, using the GUI, were well-localized) by running smFRET with any input,  selecting the ``D'' option, and navigating to a save directory that contains the ``Spot$<$$>$.mat'' files saved with the ``s'' option from the GUI.  As with the beads, a transformation will be calculated, the residuals refined as much as possible, and then the user will be asked to check the results.  Works the same as described above for beads, although most of the figures that are generated for bead maps will not be generated here.   NOTE: You need at least 15 pairs of spots in order to calculate a polynomial transformation (at least of degree 4, as we and others usually do); if Matlab spits out a bunch of warnings about poorly conditioned fits, and/or you have close to or fewer than 15 spots, try changing to ``MatlabAffine'' in smFRETsetup.
+
+\subsection{Summary of analysis options.}\label{sec:AnalysisOptions}
+
+\noindent{\it After making or loading a map, for every movie you will be asked:}\\
+
+\noindent $\Rightarrow$ {\it If a ``SpotsAndIntensities.mat'' file exists from a previous analysis:} ``Load previously found spots and their intensities? (y/n)''  \\
+
+$\Rightarrow$ {\it If you select ``y'':} ``Use old parameters? (y/n)'', and go straight to GUI.\\
+
+$\Rightarrow$ {\it If you select ``n'' and a ``SpotsFound.mat'' file exists:} ``Load previously found spots? (y/n)''  \\
+
+\indent\indent $\Rightarrow$ {\it If you select ``y'' (use old spots):} ``Use same channel mapping as last time but recompute: 
+\indent\indent\indent scaling, background, intensities? (y/n)''\\
+
+\indent\indent\indent {\it If you select ``y'' (use old mapping):} The same spots as were displayed in the GUI last
+\indent\indent\indent\indent  time will be kept (including their numbering), but the movie will be re-scaled, and new
+\indent\indent\indent\indent background images and intensities for each spot will be computed.\\
+
+\indent\indent\indent {\it If you select ``n'':} Spots found in the two channels will be loaded, and a new list of spots 
+\indent\indent\indent\indent will be generated based on whatever channel mapping you loaded at the start.  Use  
+\indent\indent\indent\indent this option if you don't want to re-find spots but do want to change the mapping you  
+\indent\indent\indent\indent used to associate a red spot with a green spot.  HOWEVER: note that this will change 
+\indent\indent\indent\indent the numbering (and likely the total number) of the spots found, so any spots you found 
+\indent\indent\indent\indent before will not have the same indices as the last time you ran the GUI.  Spot intensities 
+\indent\indent\indent\indent are recalculated, but not background images.\\
+
+\indent\indent $\Rightarrow$ {\it If you select ``n'' and a ScalingInfo.mat file exists:} ``Load scaled movie? (y/n)''\\
+
+\indent\indent\indent\indent {\it If you select ``n'', the movie is re-scaled, then new spots are found, background subtraction 
+\indent\indent\indent\indent\indent information created, and spot intensities re-calculated.}\\
+
+\indent\indent\indent\indent {\it If you select ``y'', the movie is re-scaled and background is NOT recalculated, but new
+\indent\indent\indent\indent\indent spots are found and their intensities calculated.}\\
+
+\noindent {\it Note: To re-calculate the background without re-scaling, delete the ``BackgroundImgs*.mat'' files in} savedir.
 
 \newpage
 
