@@ -188,7 +188,7 @@ function smFRET(rootname,debug)
                 newtform.HistResiduals('fwd');
                 disp('Channel mapping: having to exclude lots of beads to get residuals down.')
                 disp('If histogram looks ok, you can increase tolerance, for example, enter:')
-                disp('params.ResidTolerance = ResidualsGtoR/size(matchGall,2)+0.001; dbcont')
+                disp('params.ResidTolerance = ResidGtoR/size(allmatchesG,2)+0.001; dbcont')
                 disp('If you want it to remove more spots with higher residuals, reduce StdDevMultiplier')
                 disp('(e.g., enter StdDevMultiplier = 3; dbcont into the command line)')
                 keyboard

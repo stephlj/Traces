@@ -29,8 +29,10 @@ function ScaleMovieV2(PathToMovie,params)
             meanDiff = mean(MaxDiffs);
             stdDiff = std(MaxDiffs);
             newMax = oldMax;
-            while (sortedMaxes(end)-sortedMaxes(end-1))>(meanDiff+3*stdDiff) ||...
-                    newMax>(mean(Maxes)+4*std(Maxes))
+            stdDiffmultiplier = 3;
+            meanmultiplier = 4;
+            while (sortedMaxes(end)-sortedMaxes(end-1))>(meanDiff+stdDiffmultiplier*stdDiff) ||...
+                    newMax>(mean(Maxes)+meanmultiplier*std(Maxes))
                 newMax = sortedMaxes(end-1);
                 sortedMaxes = sortedMaxes(1:end-1);
                 if length(sortedMaxes)<(length(Maxes)-7)
