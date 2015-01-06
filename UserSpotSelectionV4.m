@@ -43,13 +43,35 @@ if size(spots,1)~=2
 end
 
 % Find spots in green channel:
-temp = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')));
-if isfield(temp,'SpotsInG')
-    GrSpots = temp.SpotsInG;
+SpotsAndIstruct = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')));
+if isfield(SpotsAndIstruct,'SpotsInG')
+    GrSpots = SpotsAndIstruct.SpotsInG;
 else
     GrSpots = tform.FRETmapInv(spots);
 end
-clear temp
+% Update 1/2015: saving these following variables (and loading them in if
+% they already exist) so that you don't have to redo if you re-load an old 
+% data set:
+if isfield(SpotsAndIstruct,'xlims')
+    Rbkgnd = SpotsAndIstruct.Rbkgnd;
+    Gbkgnd = SpotsAndIstruct.Gbkgnd;
+    xlims = SpotsAndIstruct.xlims;
+    ends = SpotsAndIstruct.ends;
+    offset = SpotsAndIstruct.offset;
+else
+    Rbkgnd = zeros(size(spots,2),1);
+    Gbkgnd = zeros(size(spots,2),1);
+    xlims = zeros(size(spots,2),2);
+    ends = zeros(size(spots,2),1); % Where the end of the FRET signal should be (zero after this point)
+    offset = 1;
+    % Save these fields to the SpotsAndIntensities file (user-indicated
+    % modifications will get re-saved below)--note that '-append' will
+    % either add a field, if it doesn't exist already, or replace the field
+    % with the currently saved value
+    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+        'Rbkgnd','Gbkgnd','xlims','ends','offset','-append')
+end
+clear SpotsAndIstruct
 
 % Get an average image of the first 10 frames to display:
 [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg],params);
@@ -60,14 +82,6 @@ imgGinit = imgGinitavg;
 
 %%%Interactive section
 k = 1; % Indexes current spot being plotted
-
-% So that when you go back to a previous spot, you don't have to redo
-% selections you did before:
-Rbkgnd = zeros(size(spots,2),1);
-Gbkgnd = zeros(size(spots,2),1);
-xlims = zeros(size(spots,2),2);
-ends = zeros(size(spots,2),1); % Where the end of the FRET signal should be (zero after this point)
-offset = 1;
 
 h2 = figure('Position',params.Fig2Pos);
 h1 = figure('Position',params.Fig1Pos);
@@ -248,12 +262,16 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         Rbkgnd(k) = mean(RedI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
                         Gbkgnd(k) = mean(GrI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
                         clear x
+                        save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                            'Rbkgnd','Gbkgnd','-append')
                     end
                     cc=13;
                 % Reset background to zero
                 elseif cc=='r'
                     Rbkgnd(k)=0;
                     Gbkgnd(k)=0;
+                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                            'Rbkgnd','Gbkgnd','-append')
                     cc=13;
                 % Save figure.  Saves both the figure and a .mat of
                 % the red and green intensities and FRET values.
@@ -312,13 +330,19 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         xlims(k,1) = x(1);
                         xlims(k,2) = x(2);
                     end
+                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                            'xlims','-append')
                     cc=13;
                 % Unzoom
                 elseif cc=='u'
                     xlims(k,:) = [0,0];
+                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                            'xlims','-append')
                     cc=13;
                 elseif cc=='o'
                     offset = input('New offset:');
+                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                            'offset','-append')
                     cc=13;
                 % Set end of signal (FRET set to zero after this point)
                 elseif cc=='e'
@@ -326,6 +350,8 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         [x,~] = ginput(1);
                         ends(k) = round(x*fps/10^-3);
                     end
+                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                            'ends','-append')
                     cc=13;
                 %Show a specific frame in figure 2
                 elseif cc=='f'
