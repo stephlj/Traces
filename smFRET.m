@@ -623,6 +623,11 @@ close all
             if strcmpi(useoldspots,'y') && strcmpi(useoldTform,'y')
                prevRspots = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')));
                spots = prevRspots.SpotsInR;
+               % If the user re-located any green spots, want to use those
+               % locations:
+               if isfield(prevRspots,'SpotsInG')
+                    SpotsInG = prevRspots.SpotsInG;
+               end
                Vars = prevRspots.SpotVars;
                clear prevRspots
                disp('Scaling movie ...')
@@ -956,8 +961,18 @@ close all
            
            disp('Calculating frame-by-frame intensities ... ')
            
-           [RedI, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
-               spots, Vars, tformPoly,params);
+           if ~exist('SpotsInG','var') 
+               [RedI, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
+                   spots, Vars, tformPoly,params);
+           else % Means the user wanted just to re-scale and recalculate background,
+               % etc--so keep any re-located green spots!
+               disp('Calculating donor and acceptor channel intensities separately,') 
+               dips('to use re-located green spot locations from previous analysis')
+               [RedI, ~] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
+                   spots, Vars, -1,params);
+               [~, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
+                 SpotsInG, Vars, 1,params);
+           end
            
            % Save spot positions, intensities and associated GaussFit
            % parameters in case the user wants to re-analyze.
@@ -975,13 +990,13 @@ close all
            % re-match them with a new transformation. I want to keep the
            % same spot indices in that case:
            if strcmpi(useoldspots,'y') && strcmpi(useoldTform,'y')
-               save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')),'SpotsInR',...
-                   'SpotVars','RedI','GrI','-append') % Append overwrites the indicated variables, if they already exist
+               save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')),...
+                   'RedI','GrI','-append') % Append overwrites the indicated variables, if they already exist
            else
                save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')),'SpotsInR',...
                    'SpotVars','RedI','GrI');
            end
-           clear SpotsInR SpotVars
+           clear SpotsInR SpotVars SpotsInG
            
            if i==1
                % Also save the params structure in the data analysis folder, so
