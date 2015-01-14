@@ -207,7 +207,12 @@ function smFRET(rootname,debug)
     smFRETsetup;
     params = load('AnalysisParameters.mat');
 
-%%%%%%FIRST PART: Channel mapping:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% First PART: Channel Mapping: %%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     % Load an old channel mapping, or perform a new one:
     DoMap = input('Press enter to perform channel mapping with beads, L+enter to load an old one, D+enter to use data to make a map:','s');
 
@@ -548,7 +553,11 @@ function smFRET(rootname,debug)
     end
 clear DoMap
 
-%%%%%%SECOND PART: Analyze data:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% SECOND PART: Analyze data: %%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 close all
     D_Data = uigetdir(D_Beads,'Select directory with data to analyze');
     % Figure out how many DNA files to analyze there are:
@@ -618,6 +627,7 @@ close all
                clear prevRspots
                disp('Scaling movie ...')
                ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
+               UseScaledMov = 'n'; % This is so the background will get re-computed, below
             
             % Option 2: either re-map, or find all new spots and then re-map
             else

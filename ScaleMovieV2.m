@@ -71,6 +71,10 @@ function ScaleMovieV2(PathToMovie,params)
         MovieMin = 100000; % Random very large number!
     end
     clear tempfr;
+    MovieMaxGr = MovieMax;
+    MovieMaxRed = MovieMax;
+    MovieMinGr = MovieMin;
+    MovieMinRed = MovieMin;
     
     allMedians = zeros(1,numframes);
     allMaxes = zeros(1,numframes);
@@ -83,6 +87,17 @@ function ScaleMovieV2(PathToMovie,params)
     % frame ... 
     allGrMaxes = zeros(1,numframes);
     allRedMaxes = zeros(1,numframes);
+    % Update 1/2015: Just looking at the maxes doesn't help very much,
+    % because if you histogram all the intensity values for a movie, it has
+    % a very very long tail of high values. So now looking at intensity
+    % histograms for each movie, and calculating the 99.99 percentile of
+    % intensity values, instead of the maxima.
+    rinthist = zeros(1000,1);
+    grinthist = zeros(1000,1);
+    allinthist = zeros(1000,1);
+    allprctiles = zeros(numframes,1);
+    rprctiles = zeros(numframes,1);
+    gprctiles = zeros(numframes,1);
     
     if params.FrameLoadMax > numframes
         FrameLoadMax = numframes;
@@ -118,14 +133,14 @@ function ScaleMovieV2(PathToMovie,params)
             grbit = bsxfun(@rdivide,grbit,...
                 reshape(allMedians(jj:jj+size(grbit,3)-1),1,1,size(grbit,3)));
         end
-        
+
         MovieMax = max(MovieMax,double(max(moviebit(:))));
         MovieMin = min(MovieMin,double(min(moviebit(:))));
         
-        MovieMaxGr = max(MovieMax,double(max(grbit(:))));
-        MovieMinGr = min(MovieMin,double(min(grbit(:))));
-        MovieMaxRed = max(MovieMax,double(max(redbit(:))));
-        MovieMinRed = min(MovieMin,double(min(redbit(:))));
+        MovieMaxGr = max(MovieMaxGr,double(max(grbit(:))));
+        MovieMinGr = min(MovieMinGr,double(min(grbit(:))));
+        MovieMaxRed = max(MovieMaxRed,double(max(redbit(:))));
+        MovieMinRed = min(MovieMinRed,double(min(redbit(:))));
 
         allMaxes(jj:jj+size(moviebit,3)-1) = max(max(moviebit,[],2),[],1);
         allMins(jj:jj+size(moviebit,3)-1) = min(min(moviebit,[],2),[],1);
@@ -134,8 +149,37 @@ function ScaleMovieV2(PathToMovie,params)
         allRedMaxes(jj:jj+size(moviebit,3)-1) = max(max(redbit,[],2),[],1);
         allGrMins(jj:jj+size(moviebit,3)-1) = min(min(grbit,[],2),[],1);
         allRedMins(jj:jj+size(moviebit,3)-1) = min(min(redbit,[],2),[],1);
+                
+        % Update 1/2015: Reshaping red and green to calculate prctile:
+        rredbit = reshape(redbit,size(redbit,1)*size(redbit,2),size(redbit,3));
+        rgrbit = reshape(grbit,size(grbit,1)*size(grbit,2),size(grbit,3));
+        % prctile works on columns if given a matrix:
+        allprctiles(jj:jj+size(moviebit,3)-1) = prctile(rmoviebit,99.99);
+        rprctiles(jj:jj+size(moviebit,3)-1) = prctile(rredbit,99.99);
+        gprctiles(jj:jj+size(moviebit,3)-1) = prctile(rgrbit,99.99);
+        clear rredbit rgrbit rmoviebit
         
-        clear moviebit redbit grbit
+        % Update 1/2015: Now reshaping the red and green intensities so
+        % that I can histogram them, and re-reshaping moviebit so I can get
+        % an overall histogram as well:
+        rmoviebit = reshape(moviebit,size(moviebit,1)*size(moviebit,2)*size(moviebit,3),1);
+        rredbit = reshape(redbit,size(redbit,1)*size(redbit,2)*size(redbit,3),1);
+        rgrbit = reshape(grbit,size(grbit,1)*size(grbit,2)*size(grbit,3),1);
+        if jj==1
+            [tempallinthist,xoutall] = hist(rmoviebit',1000);
+            [temprinthist,xoutr] = hist(rredbit',1000);
+            [tempgrinthist,xoutg] = hist(rgrbit',1000);
+        else
+            [tempallinthist,~] = hist(rmoviebit',xoutall);
+            [temprinthist,~] = hist(rredbit',xoutr);
+            [tempgrinthist,~] = hist(rgrbit',xoutg);
+        end
+        allinthist = allinthist+tempallinthist';
+        rinthist = rinthist+temprinthist';
+        grinthist = grinthist+tempgrinthist';
+        clear temprinthist tempgrinthist tempallinthist
+        
+        clear moviebit redbit grbit rredbit rgrbit rmoviebit
     end
     
     params.PxlsToExclude = realPxlsToExclude;
@@ -143,9 +187,18 @@ function ScaleMovieV2(PathToMovie,params)
     
     % Check that the calculated Max(es) isn't/aren't way larger than the rest of the
     % maxes (it happens):
-    MovieMax = CheckMaxes(allMaxes,allMins,MovieMax,numframes,params.NormImage);
-    MovieMaxGr = CheckMaxes(allGrMaxes,allGrMins,MovieMaxGr,numframes,params.NormImage);
-    MovieMaxRed = CheckMaxes(allRedMaxes,allRedMins,MovieMaxRed,numframes,params.NormImage);
+    % MovieMax = CheckMaxes(allMaxes,allMins,MovieMax,numframes,params.NormImage);
+    % MovieMaxGr = CheckMaxes(allGrMaxes,allGrMins,MovieMaxGr,numframes,params.NormImage);
+    % MovieMaxRed = CheckMaxes(allRedMaxes,allRedMins,MovieMaxRed,numframes,params.NormImage);
+    % Think I need to do the same with the percentiles. Note it seems to
+    % work better to take the maxes instead of a percentile of the
+    % percentiles.
+    MovieMax = max(allprctiles);
+    MovieMaxGr = max(gprctiles);
+    MovieMaxRed = max(rprctiles);
+    MovieMax = CheckMaxes(allprctiles,allMins,MovieMax,numframes,params.NormImage);
+    MovieMaxGr = CheckMaxes(gprctiles,allGrMins,MovieMaxGr,numframes,params.NormImage);
+    MovieMaxRed = CheckMaxes(rprctiles,allRedMins,MovieMaxRed,numframes,params.NormImage);
     
     % Plot a figure so the user can check whether normalization was
     % necessary or not:
@@ -153,8 +206,10 @@ function ScaleMovieV2(PathToMovie,params)
         disp(sprintf('Using max=%d, min=%d',MovieMax,MovieMin))
         figure
         subplot(2,1,1)
-        plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
-        legend('Maxes','Mins')
+        % plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
+        % legend('Maxes','Mins')
+        plot(1:numframes,allprctiles,'ob')
+        legend('99.99 Percentile Intensity')
         set(gca,'FontSize',14)
         xlabel('Frame','FontSize',14)
         if params.NormImage
@@ -169,14 +224,21 @@ function ScaleMovieV2(PathToMovie,params)
         xlabel('Frame','FontSize',14)
         ylabel('Raw Intensity (a.u.)','FontSize',14)
         print('-depsc',fullfile(PathToMovie,'ScalingFig'))
+        
+        figure
+        bar(xoutall,allinthist'./numframes)
+        title('Histogram of all intensities across the movie')
+        
     else
         disp(sprintf('Using acceptor max=%d, min=%d',MovieMaxRed,MovieMinRed))
         disp(sprintf('Using donor max=%d, min=%d',MovieMaxGr,MovieMinGr))
         
         figure
         subplot(3,1,1)
-        plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
-        legend('Maxes','Mins')
+        % plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
+        % legend('Maxes','Mins')
+        plot(1:numframes,allprctiles,'ob')
+        legend('99.99 Percentile Intensity')
         set(gca,'FontSize',14)
         xlabel('Frame','FontSize',14)
         if params.NormImage
@@ -185,9 +247,11 @@ function ScaleMovieV2(PathToMovie,params)
             ylabel('Raw intensity (a.u.)','FontSize',14)
         end
         subplot(3,1,2)
-        plot(1:numframes,allRedMaxes,'or',1:numframes,allGrMaxes,'og',...
-            1:numframes,allRedMins,'xr',1:numframes,allGrMins,'xg')
-        legend('Acceptor maxes','Donor maxes','Acceptor mins','Donor mins')
+        % plot(1:numframes,allRedMaxes,'or',1:numframes,allGrMaxes,'og',...
+        %     1:numframes,allRedMins,'xr',1:numframes,allGrMins,'xg')
+        % legend('Acceptor maxes','Donor maxes','Acceptor mins','Donor mins')
+        plot(1:numframes,rprctiles,'or',1:numframes,gprctiles,'og')
+        legend('99.99 Percentile Acceptor Intensities','99.99 Percentile Donor Intensities')
         set(gca,'FontSize',14)
         xlabel('Frame','FontSize',14)
         if params.NormImage
@@ -202,9 +266,18 @@ function ScaleMovieV2(PathToMovie,params)
         xlabel('Frame','FontSize',14)
         ylabel('Raw Intensity (a.u.)','FontSize',14)
         print('-depsc',fullfile(PathToMovie,'ScalingFig'))
+        
+        figure
+        subplot(1,2,1)
+        bar(xoutr,rinthist'./numframes)
+        title('Histogram of all red intensities across the movie')
+        subplot(1,2,2)
+        bar(xoutg,grinthist'./numframes)
+        title('Histogram of all red intensities across the movie')
+        
     end
     pause
-    close
+    close all
     
     NormImage = params.NormImage;
     ScaleChannelsSeparately = params.ScaleChannelsSeparately;
