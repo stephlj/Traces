@@ -967,7 +967,7 @@ close all
            else % Means the user wanted just to re-scale and recalculate background,
                % etc--so keep any re-located green spots!
                disp('Calculating donor and acceptor channel intensities separately,') 
-               dips('to use re-located green spot locations from previous analysis')
+               disp('to use re-located green spot locations from previous analysis')
                [RedI, ~] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
                    spots, Vars, -1,params);
                [~, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...

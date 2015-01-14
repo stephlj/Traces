@@ -208,7 +208,7 @@ function ScaleMovieV2(PathToMovie,params)
         subplot(2,1,1)
         % plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
         % legend('Maxes','Mins')
-        plot(1:numframes,allprctiles,'ob')
+        plot(1:numframes,allprctiles,'ob',1:numframes,ones(1,numframes).*MovieMax,'--k')
         legend('99.99 Percentile Intensity')
         set(gca,'FontSize',14)
         xlabel('Frame','FontSize',14)
@@ -228,6 +228,9 @@ function ScaleMovieV2(PathToMovie,params)
         figure
         bar(xoutall,allinthist'./numframes)
         title('Histogram of all intensities across the movie')
+        xlabel('Intensity values','Fontsize',14)
+        ylabel('Frequency','Fontsize',14)
+        set(gca,'Fontsize',14)
         
     else
         disp(sprintf('Using acceptor max=%d, min=%d',MovieMaxRed,MovieMinRed))
@@ -250,8 +253,10 @@ function ScaleMovieV2(PathToMovie,params)
         % plot(1:numframes,allRedMaxes,'or',1:numframes,allGrMaxes,'og',...
         %     1:numframes,allRedMins,'xr',1:numframes,allGrMins,'xg')
         % legend('Acceptor maxes','Donor maxes','Acceptor mins','Donor mins')
-        plot(1:numframes,rprctiles,'or',1:numframes,gprctiles,'og')
-        legend('99.99 Percentile Acceptor Intensities','99.99 Percentile Donor Intensities')
+        plot(1:numframes,rprctiles,'or',1:numframes,gprctiles,'og',...
+            1:numframes,ones(1,numframes).*MovieMaxRed,'-k',1:numframes,ones(1,numframes).*MovieMaxGr,'--k')
+        legend('99.99 Percentile Acceptor Intensities','99.99 Percentile Donor Intensities',...
+            'Acceptor Max','Donor Max')
         set(gca,'FontSize',14)
         xlabel('Frame','FontSize',14)
         if params.NormImage
@@ -271,9 +276,15 @@ function ScaleMovieV2(PathToMovie,params)
         subplot(1,2,1)
         bar(xoutr,rinthist'./numframes)
         title('Histogram of all red intensities across the movie')
+        xlabel('Intensity values','Fontsize',14)
+        ylabel('Frequency','Fontsize',14)
+        set(gca,'Fontsize',14)
         subplot(1,2,2)
         bar(xoutg,grinthist'./numframes)
         title('Histogram of all red intensities across the movie')
+        xlabel('Intensity values','Fontsize',14)
+        ylabel('Frequency','Fontsize',14)
+        set(gca,'Fontsize',14)
         
     end
     pause
