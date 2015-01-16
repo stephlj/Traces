@@ -60,11 +60,17 @@ elseif FigID == 2 %Box in green the ones that were matched:
         % channels
         % Update 10/2014 making this more universal for macs and pcs
         %figure('Position',[200 200 325 625])
-        figure
-        DefaultFigPos = get(gcf,'Position');
-        set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
-            DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
-        clear DefaultFigPos
+        % Update 1/2015: This still doesn't work very well.  New plan:
+%         figure
+%         DefaultFigPos = get(gcf,'Position');
+%         set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
+%             DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
+%         clear DefaultFigPos
+        if ismac
+            figure('Position',[200 200 325 625])
+        else
+            figure('Position',[200 45 325 625])
+        end
         plot([varargin{5}(2,:);varargin{6}(2,:)],0-[varargin{5}(1,:);varargin{6}(1,:)],'-b')
         hold on
         plot(varargin{5}(2,:),0-varargin{5}(1,:),'xr')
@@ -82,11 +88,16 @@ elseif FigID==3
         % Update 10/2014 making these figures show up properly on both macs
         % and pcs
         % figure('Position',[200 200 325 625])
-        figure
-        DefaultFigPos = get(gcf,'Position');
-        set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
-            DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
-        clear DefaultFigPos
+%         figure
+%         DefaultFigPos = get(gcf,'Position');
+%         set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
+%             DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
+%         clear DefaultFigPos
+        if ismac
+            figure('Position',[200 200 325 625])
+        else
+            figure('Position',[200 45 325 625])
+        end
         hold on
         if ~isempty(varargin{1})
             plot(varargin{1}(2,:),0-varargin{1}(1,:),'xg')
