@@ -183,7 +183,15 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
             % Randomly generate a subset of spots, 10% fewer than before:
             initnumpairs = min(size(spotsG,2),size(spotsR,2));
             while size(spotsG,2)>0.5*initnumpairs && size(spotsG,2)>50 && attempts < 5
-                indices = randperm(min(size(spotsG,2),size(spotsR,2)),round(0.9*min(size(spotsG,2),size(spotsR,2))));
+                try
+                    indices = randperm(min(size(spotsG,2),size(spotsR,2)),round(0.9*min(size(spotsG,2),size(spotsR,2))));
+                catch
+                    % Older versions of Matlab don't have that argument set
+                    % for randperm:
+                    tempindices = randperm(min(size(spotsG,2),size(spotsR,2)));
+                    indices = tempindices(1:round(0.9*min(size(spotsG,2),size(spotsR,2))));
+                    clear tempindices
+                end
                 oldspotsG = spotsG;
                 oldspotsR = spotsR;
                 clear spotsG spotsR
