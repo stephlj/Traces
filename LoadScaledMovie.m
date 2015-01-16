@@ -94,7 +94,10 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
         
         if params.NormImage
             tempMeds(1,1,:) = allMedians(firstframe:lastframe);
-            moviebit = moviebit./repmat(tempMeds,size(moviebit,1),size(moviebit,2),1);
+            % moviebit = moviebit./repmat(tempMeds,size(moviebit,1),size(moviebit,2),1);
+            % For backwards compatibility with older Matlab versions, using
+            % the other syntax for repmat:
+            moviebit = moviebit./repmat(tempMeds,[size(moviebit,1),size(moviebit,2),1]);
             clear tempMeds
         end
         

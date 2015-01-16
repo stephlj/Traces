@@ -40,7 +40,7 @@ codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
 % Fig2Pos = [650,800,700,550];
 Fig2Pos = [650,800,500,650];
 % Fig1Pos = [0,400,600,500];
-Fig1Pos = [25,400,600,500];
+Fig1Pos = [25,400,600,600];
 
 %%%%%%%% Microscope-specific parameters: %%%%%%%%
 % Note: This code hasn't really been de-bugged for settings other than
@@ -67,8 +67,7 @@ EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
 InjectTime = 0;%13.3; % Time that injection began, in SECONDS. The only thing this
     % parameter does is plot in the GUI a vertical line when injection occured.
     % To plot nothing, make this 0.
-FramesToAvg = 20; % How many frames to average over for spotfinding and calculating
-    % the local background that will be subtracted. 10-20 is a good value
+FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
 FindSpotsEveryXFrames = 0; % If this is greater than 0,
     % spots will be found every this many frames (but still averaging over

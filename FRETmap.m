@@ -482,11 +482,18 @@ classdef FRETmap < handle
             % Update 10/2014: Making this show up on both macs and pc's
             % better
             %figure('Position',[200 200 325 625])
-            figure
-            DefaultFigPos = get(gcf,'Position');
-            set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
-                DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
-            clear DefaultFigPos
+            % Update 1/2015: This doesn't work well. It's actually the
+            % second element of the Position vector that's the problem.
+            if ismac
+                figure('Position',[200 200 325 625])
+            else
+                figure('Position',[200 45 325 625])
+            end
+%             figure
+%             DefaultFigPos = get(gcf,'Position');
+%             set(gcf,'Position',[DefaultFigPos(1)-0.5*DefaultFigPos(1), DefaultFigPos(2),...
+%                 DefaultFigPos(3)*0.575, DefaultFigPos(4)*1.5])
+%             clear DefaultFigPos
             plot(Data1(2,:),0-Data1(1,:),'xg')
             hold on
             plot(Data2(2,:),0-Data2(1,:),'xr')
