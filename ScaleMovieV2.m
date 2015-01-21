@@ -37,14 +37,17 @@ function ScaleMovieV2(PathToMovie,params)
                 sortedMaxes = sortedMaxes(1:end-1);
                 if length(sortedMaxes)<(length(Maxes)-7)
                     disp('ScaleMovieV2: A lot of max outliers?')
+                    disp('To continue reducing the max value, enter: dbcont')
+                    disp('To stop here, enter: stdDiffmultiplier = stdDiffmultiplier+1; meanmultiplier = meanmultiplier+1; dbcont')
                     figure
-                    plot(1:xaxislim,Maxes,'ob',1:xaxislim,Mins,'xr')
+                    plot(1:xaxislim,Maxes,'ob',1:xaxislim,Mins,'xr',...
+                        1:xaxislim,ones(1,xaxislim).*newMax,'--k')
                     if NormImage
                         ylabel('Normalized Intensity (a.u.)','FontSize',14)
                     else
                         ylabel('Raw intensity (a.u.)','FontSize',14)
                     end
-                    legend('Maxes','Mins')
+                    legend('99.99 percentiles','Mins','Max to scale to')
                     set(gca,'FontSize',14)
                     xlabel('Frame','FontSize',14)
                     keyboard
@@ -153,6 +156,7 @@ function ScaleMovieV2(PathToMovie,params)
         % Update 1/2015: Reshaping red and green to calculate prctile:
         rredbit = reshape(redbit,size(redbit,1)*size(redbit,2),size(redbit,3));
         rgrbit = reshape(grbit,size(grbit,1)*size(grbit,2),size(grbit,3));
+        clear rmoviebit
         rmoviebit = reshape(moviebit,size(moviebit,1)*size(moviebit,2),size(moviebit,3));
         % prctile works on columns if given a matrix:
         allprctiles(jj:jj+size(moviebit,3)-1) = prctile(rmoviebit,99.99);
@@ -197,8 +201,11 @@ function ScaleMovieV2(PathToMovie,params)
     MovieMax = max(allprctiles);
     MovieMaxGr = max(gprctiles);
     MovieMaxRed = max(rprctiles);
+    disp('Checking for outliers in overall percentiles ... ')
     MovieMax = CheckMaxes(allprctiles,allMins,MovieMax,numframes,params.NormImage);
+    disp('Checking for outliers in donor percentiles ... ')
     MovieMaxGr = CheckMaxes(gprctiles,allGrMins,MovieMaxGr,numframes,params.NormImage);
+    disp('Checking for outliers in acceptor percentiles ... ')
     MovieMaxRed = CheckMaxes(rprctiles,allRedMins,MovieMaxRed,numframes,params.NormImage);
     
     % Plot a figure so the user can check whether normalization was
