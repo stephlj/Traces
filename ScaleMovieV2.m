@@ -153,6 +153,7 @@ function ScaleMovieV2(PathToMovie,params)
         % Update 1/2015: Reshaping red and green to calculate prctile:
         rredbit = reshape(redbit,size(redbit,1)*size(redbit,2),size(redbit,3));
         rgrbit = reshape(grbit,size(grbit,1)*size(grbit,2),size(grbit,3));
+        rmoviebit = reshape(moviebit,size(moviebit,1)*size(moviebit,2),size(moviebit,3));
         % prctile works on columns if given a matrix:
         allprctiles(jj:jj+size(moviebit,3)-1) = prctile(rmoviebit,99.99);
         rprctiles(jj:jj+size(moviebit,3)-1) = prctile(rredbit,99.99);

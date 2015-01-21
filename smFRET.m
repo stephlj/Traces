@@ -410,6 +410,7 @@ function smFRET(rootname,debug)
         disp(sprintf('Residuals for %d spots:',size(matchGall,2)))
         ResidualsGtoR = tformPoly.ResidualsFwd
         ResidualsRtoG = tformPoly.ResidualsInv
+        ResidualsGtoRperspot = tformPoly.ResidualsFwd/size(matchGall,2)
 
         % Refine map by removing outliers (caused by mismatched pairs)
         if isempty(DoMap)

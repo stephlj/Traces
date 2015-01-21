@@ -64,7 +64,7 @@ EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
     % I usually know when I'm done injecting in seconds (usually about 25 seconds, 
     % add a couple for safety), and I collect data at 0.15 seconds per frame, 
     % so I usually set this to round(27/0.15).
-InjectTime = 0;%13.3; % Time that injection began, in SECONDS. The only thing this
+InjectTime = 10;%13.3; % Time that injection began, in SECONDS. The only thing this
     % parameter does is plot in the GUI a vertical line when injection occured.
     % To plot nothing, make this 0.
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
@@ -184,7 +184,7 @@ ScaleChannelsSeparately = 1; % If this is 0, ScaleMovieV2 will scale every inten
     % has been to scale both channels together, but it appears for our
     % system that that will lead to donor intensities that are consistently
     % half those of the acceptor channel.
-NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
+NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
     % intensity over time, which may be due to laser power fluctuations;
