@@ -58,7 +58,8 @@ end
 % Greedy algorithm fails if spots start too far misaligned.  Ask the user
 % to provide input for a rough preliminary affine map if maxDist is too
 % big. I've found 10 to be a good cutoff:
-if maxDist > 10
+% Update 1/2015: changing this to 11 instead of 10
+if maxDist > 11
     disp('FindSpotMatches: Channels not well-enough aligned, user must pick spots for rough affine map:')
     matched1 = -1;
     matched2 = -1;

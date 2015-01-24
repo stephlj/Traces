@@ -184,7 +184,7 @@ ScaleChannelsSeparately = 1; % If this is 0, ScaleMovieV2 will scale every inten
     % has been to scale both channels together, but it appears for our
     % system that that will lead to donor intensities that are consistently
     % half those of the acceptor channel.
-NormImage = 1; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
+NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensity, 
     % in each frame, to the median intensity of the (512x512) image at that
     % frame. We've been observing large fluctuations in total image
     % intensity over time, which may be due to laser power fluctuations;
