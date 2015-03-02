@@ -73,6 +73,18 @@ else
 end
 clear SpotsAndIstruct
 
+% Update 3/2015: Enabling all the re-mapping to happen at the end, and then
+% the user goes through only those re-mapped spots.  This vector will index
+% those re-mapped spots and m will index this vector:
+kk = [];
+% Then these vectors will keep track of which spots need to be recalculated
+% at the end:
+RedToReCalc = [];
+GrToReCalc = [];
+% and this is a placeholder that will be turned into kk to indicate it's
+% time to go through the re-mapped spots:
+AllToReCalc = [];
+
 % Get an average image of the first 10 frames to display:
 [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg],params);
 imgRinitavg = mat2gray(mean(imgRinit,3));
@@ -89,10 +101,10 @@ h1 = figure('Position',params.Fig1Pos);
 disp('Fig. 2 must be current.') 
 disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom;')
 disp('f=select frame to display; m = play movie between two points; a=show average around frame;')
-disp('o=adjust black offset; l = re-_l_ocate spot; g=go to spot number;')
-disp('e=end of trace (after this point FRET set to zero); d=done with movie')
+disp('o=adjust black offset; l = re-_l_ocate spot now; c = re-locate spot now but re-_c_alculate later;')
+disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d=done with movie')
 
-    while k <= size(spots,2)
+    while k <= size(spots,2)  
        % Calculate raw intensities and raw FRET, then correct for gamma
        % and alpha as user wants:
        % Note: Before smoothing, even if user wants to smooth intensities and/or 
@@ -225,32 +237,92 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
             cc=get(gcf,'currentcharacter');
             
             if ct==1
-                % Go forward to the next bead
+                % Go forward to the next spot
                 if cc=='.'
-                    k = k+1;
-                    imgRinit = imgRinitavg;
-                    imgGinit = imgGinitavg;
-                    cc = 13;
-                % Go back one bead
-                elseif cc==',' 
-                    if k>1
-                        k=k-1;
+                    % If you've not gotten through the whole movie once:
+                    if isempty(kk)
+                        k = k+1;
+                        imgRinit = imgRinitavg;
+                        imgGinit = imgGinitavg;
+                        % If you have now gone through the movie once and have
+                        % things to re-map, re-map them now:
+                        if k>size(spots,2) && sum(ToReCalc)>0
+                            RedToReCalc = sort(RedToReCalc);
+                            GrToReCalc = sort(GrToReCalc);
+                            [allRedI(RedToReCalc,:), ~] = CalcIntensitiesV3(PathToMovie,...
+                                spots(:,RedToReCalc), spotVars(:,RedToReCalc),-1,params);
+                            RedI = allRedI;
+                            save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                                'RedI','-append')
+                            [~, allGrI(GrToReCalc,:)] = CalcIntensitiesV3(PathToMovie,...
+                                GrSpots(:,GrToReCalc), spotVars(:,GrToReCalc),1,params);
+                            GrI = allGrI;
+                            save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                                'GrI','-append')
+                            clear RedI GrI
+                            % Fill kk appropriately
+                            kk = sort(AllToReCalc);
+                            m = 1;
+                            k = kk(m);
+                        end
+                    elseif m==length(kk)
+                        k = size(spots,2)+1;
+                        % (This will break us out of the while loop and end this analysis session)
+                    else
+                        m = m+1;
+                        k = kk(m);
                         imgRinit = imgRinitavg;
                         imgGinit = imgGinitavg;
                     end
                     cc=13;
-                % Go to specific bead
+                % Go back one spot
+                elseif cc==',' 
+                    if isempty(kk) && k>1
+                        k=k-1;
+                        imgRinit = imgRinitavg;
+                        imgGinit = imgGinitavg;
+                    elseif ~isempty(kk) && m>1
+                        m = m-1;
+                        k = kk(m);
+                        imgRinit = imgRinitavg;
+                        imgGinit = imgGinitavg;
+                    end
+                    cc=13;
+                % Go to specific spot
                 elseif cc=='g'
                     newk = input('Go to bead number:');
-                    if newk<=size(spots,2) && newk>=1
-                        k=newk;
+                    % Update 3/2015: Only allow this to work if the spot
+                    % the user wants to look at is one that was re-mapped:
+                    if isempty(kk)
+                        if newk<=size(spots,2) && newk>=1
+                            k=newk;
+                            imgRinit = imgRinitavg;
+                            imgGinit = imgGinitavg;
+                        end
+                    elseif ~isempty(kk) && ismember(newk,kk)
+                        [~,indx] = ismember(newk,kk);
+                        m=indx;
+                        k = kk(m);
                         imgRinit = imgRinitavg;
                         imgGinit = imgGinitavg;
                     end
                     cc=13;
                 % go to the next movie:
                 elseif cc=='d'
-                    k = size(spots,2)+1;
+                    verifyans = 'y';
+                    if ~isempty(kk) && m<length(kk)
+                        disp('You have not looked through all of the spots you re-mapped.')
+                        disp('Information about which spots you re-mapped (though not the re-mapping itself)')
+                        disp('will be lost if you contine.')
+                        verifyans = input('Continue? (y/n): ', 's');
+                    elseif isempty(kk) && ~isempty(AllToReCalc)
+                        disp('You have spots that you re-mapped and wanted to re-calculate intensities for.')
+                        verifyans = input('Quit anyway? (y/n): ', 's');
+                    end
+                    if strcmpi(verifyans,'y')
+                        k = size(spots,2)+1;
+                    end
+                    clear verifyans
                     cc=13;
                 % Set background levels
                 elseif cc=='b'
@@ -406,7 +478,10 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     cc = 13;
                 % Re-locate a spot in one of the channels, if the
                 % transformation looks like it didn't get the center right:
-                elseif cc=='l'
+                % Update 3/2015: Add the option to re-find the spot as
+                % usual, but do all the re-calculating of intensities all
+                % at once at the end:
+                elseif cc=='l' || cc=='c'
                     disp('Click on trace at time around which to look for spot:')
                     [xT,~] = ginput(1);
                     if isequal(trace_axes,gca) || isequal(fret_axes,gca)
@@ -439,13 +514,29 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                     spots(:,k) = tempnewspot;
                                     NewSpot = spots(:,k);
                                     disp(sprintf('Change in spot center = %d pixels',sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)))
-                                    [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
-                                        spots(:,k), spotVars(:,k),-1,params);
+                                    % Update 3/2015: Here's where the change happens. Don't re-calculate
+                                    % till later if user entered 'c':
                                     SpotsInR = spots;
-                                    RedI = allRedI;
-                                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInR',...
-                                        'RedI','-append')
-                                    clear SpotsInR RedI
+                                    if cc=='l'
+                                        [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
+                                            spots(:,k), spotVars(:,k),-1,params);
+                                        RedI = allRedI;
+                                        save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInR',...
+                                            'RedI','-append')
+                                    else
+                                        % Note that the new spot location is "immortalized" in spots; so we
+                                        % just need to know that this spot needs its intensities
+                                        % re-calculated, we already have the new spot location saved:
+                                        if ~ismember(k,RedToReCalc)
+                                            RedToReCalc(end+1) = k;
+                                        end
+                                        if ~ismember(k,AllToReCalc)
+                                            AllToReCalc(end+1) = k;
+                                        end
+                                        save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInR',...
+                                            '-append')
+                                    end
+                                    clear SpotsInR RedI NewSpot
                                 else
                                     disp('New spot center too close to edge.')
                                 end
@@ -465,13 +556,29 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                     GrSpots(:,k) = tempnewspot;
                                     NewSpot = GrSpots(:,k);
                                     disp(sprintf('Change in spot center = %d pixels',sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)))
-                                    [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
-                                        GrSpots(:,k), spotVars(:,k),1,params);
+                                    % Update 3/2015: Here's where the change happens. Don't re-calculate
+                                    % till later if user entered 'c':
                                     SpotsInG = GrSpots;
-                                    GrI = allGrI;
-                                    save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInG',...
-                                        'GrI','-append')
-                                    clear SpotsInG GrI
+                                    if cc=='l'
+                                        [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
+                                            GrSpots(:,k), spotVars(:,k),1,params);
+                                        GrI = allGrI;
+                                        save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInG',...
+                                            'GrI','-append')
+                                    else
+                                        % Note that the new spot location is "immortalized" in GrSpots; so we
+                                        % just need to know that this spot needs its intensities
+                                        % re-calculated, we already have the new spot location saved:
+                                        if ~ismember(k,GrToReCalc)
+                                            GrToReCalc(end+1) = k;
+                                        end
+                                        if ~ismember(k,AllToReCalc)
+                                            AllToReCalc(end+1) = k;
+                                        end
+                                        save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInG',...
+                                            '-append')
+                                    end
+                                    clear SpotsInG GrI NewSpot
                                 else
                                     disp('New spot center too close to edge.')
                                 end
