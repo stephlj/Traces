@@ -129,8 +129,9 @@ end
 % Other defaults:
 cen_boxsize = round(maxsize/2); % Size of the box to use for centroid 
     % calculation or GaussFit will be cen_boxsize*2+1
-bkgnd_tolerance = 0.01; %This is good for beads and background-subtracted DNAs, which is what
+%bkgnd_tolerance = 0.01; %This is good for beads and background-subtracted DNAs, which is what
     % FindSpots is called on
+bkgnd_tolerance = 0.02;
 
 % Error handling for inputs:
 if rem(NeighborhoodSize,sqrt(NeighborhoodSize))~=0
@@ -255,6 +256,10 @@ for i = 1:size(peaks,2)
 %             disp(sprintf('Peak at (%d,%d) excluded for unknown reason ...',...
 %                 peaks(1,i),peaks(2,i)))
 %         end
+%         PutBoxesOnImageV4(imggray,peaks(:,i),boxsize,0)
+%         pause
+%         close
+    %
     end
 end
 
