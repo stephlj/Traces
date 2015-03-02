@@ -87,6 +87,9 @@ AllToReCalc = [];
 
 % Get an average image of the first 10 frames to display:
 [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg],params);
+if imgRinit==-1
+    return
+end
 imgRinitavg = mat2gray(mean(imgRinit,3));
 imgGinitavg = mat2gray(mean(imgGinit,3));
 imgRinit = imgRinitavg;
