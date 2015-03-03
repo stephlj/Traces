@@ -71,19 +71,27 @@ else
     save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
         'Rbkgnd','Gbkgnd','xlims','ends','offset','-append')
 end
-clear SpotsAndIstruct
 
 % Update 3/2015: Enabling all the re-mapping to happen at the end, and then
 % the user goes through only those re-mapped spots.  This vector will index
 % those re-mapped spots and m will index this vector:
 kk = [];
 % Then these vectors will keep track of which spots need to be recalculated
-% at the end:
-RedToReCalc = [];
-GrToReCalc = [];
-% and this is a placeholder that will be turned into kk to indicate it's
-% time to go through the re-mapped spots:
-AllToReCalc = [];
+% at the end. Load them from disk if the user's analysis was interrupted in
+% the middle:
+if isfield(SpotsAndIstruct,'RedToReCalc')
+    RedToReCalc = SpotsAndIstruct.RedToReCalc;
+    GrToReCalc = SpotsAndIstruct.GrToReCalc;
+    AllToReCalc = SpotsAndIstruct.AllToReCalc;
+else
+    RedToReCalc = [];
+    GrToReCalc = [];
+    % and this is a placeholder that will be turned into kk to indicate it's
+    % time to go through the re-mapped spots:
+    AllToReCalc = [];
+end
+
+clear SpotsAndIstruct
 
 % Get an average image of the first 10 frames to display:
 [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,[1 1+params.FramesToAvg],params);
@@ -249,22 +257,34 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                         imgGinit = imgGinitavg;
                         % If you have now gone through the movie once and have
                         % things to re-map, re-map them now:
-                        if k>size(spots,2) && sum(ToReCalc)>0
+                        if k>size(spots,2) && sum(AllToReCalc)>0
                             RedToReCalc = sort(RedToReCalc);
                             GrToReCalc = sort(GrToReCalc);
-                            [allRedI(RedToReCalc,:), ~] = CalcIntensitiesV3(PathToMovie,...
-                                spots(:,RedToReCalc), spotVars(:,RedToReCalc),-1,params);
-                            RedI = allRedI;
-                            save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
-                                'RedI','-append')
-                            [~, allGrI(GrToReCalc,:)] = CalcIntensitiesV3(PathToMovie,...
-                                GrSpots(:,GrToReCalc), spotVars(:,GrToReCalc),1,params);
-                            GrI = allGrI;
-                            save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
-                                'GrI','-append')
+                            if ~isempty(RedToReCalc)
+                                [allRedI(RedToReCalc,:), ~] = CalcIntensitiesV3(PathToMovie,...
+                                    spots(:,RedToReCalc), spotVars(:,RedToReCalc),-1,params);
+                                RedI = allRedI;
+                                % Re-set RedToReCalc to empty to indicate
+                                % we've re-calculated everything here
+                                RedToReCalc = [];
+                                save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                                    'RedI','-append')
+                            end
+                            if ~isempty(GrToReCalc)
+                                [~, allGrI(GrToReCalc,:)] = CalcIntensitiesV3(PathToMovie,...
+                                    GrSpots(:,GrToReCalc), spotVars(:,GrToReCalc),1,params);
+                                GrI = allGrI;
+                                GrToReCalc = [];
+                                save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                                    'GrI','-append')
+                            end
                             clear RedI GrI
                             % Fill kk appropriately
                             kk = sort(AllToReCalc);
+                            % then empty it and save that to disk
+                            AllToReCalc = [];
+                            save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
+                                    'RedToReCalc','GrToReCalc','AllToReCalc','-append')
                             m = 1;
                             k = kk(m);
                         end
@@ -320,7 +340,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                         verifyans = input('Continue? (y/n): ', 's');
                     elseif isempty(kk) && ~isempty(AllToReCalc)
                         disp('You have spots that you re-mapped and wanted to re-calculate intensities for.')
-                        verifyans = input('Quit anyway? (y/n): ', 's');
+                        verifyans = input('Quit anyway? (y/n) ', 's');
                     end
                     if strcmpi(verifyans,'y')
                         k = size(spots,2)+1;
@@ -518,9 +538,10 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                                     NewSpot = spots(:,k);
                                     disp(sprintf('Change in spot center = %d pixels',sqrt((NewSpot(1)-InitSpot(1))^2+(NewSpot(2)-InitSpot(2))^2)))
                                     % Update 3/2015: Here's where the change happens. Don't re-calculate
-                                    % till later if user entered 'c':
+                                    % till later if user entered 'c'. However, disallow the use of 'c' if
+                                    % we're already looking through re-calculated spots:
                                     SpotsInR = spots;
-                                    if cc=='l'
+                                    if cc=='l' && isempty(kk)
                                         [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
                                             spots(:,k), spotVars(:,k),-1,params);
                                         RedI = allRedI;
@@ -537,7 +558,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                                             AllToReCalc(end+1) = k;
                                         end
                                         save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInR',...
-                                            '-append')
+                                            'GrToReCalc','RedToReCalc','AllToReCalc','-append')
                                     end
                                     clear SpotsInR RedI NewSpot
                                 else
@@ -562,7 +583,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                                     % Update 3/2015: Here's where the change happens. Don't re-calculate
                                     % till later if user entered 'c':
                                     SpotsInG = GrSpots;
-                                    if cc=='l'
+                                    if cc=='l' && isempty(kk)
                                         [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
                                             GrSpots(:,k), spotVars(:,k),1,params);
                                         GrI = allGrI;
@@ -579,7 +600,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                                             AllToReCalc(end+1) = k;
                                         end
                                         save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),'SpotsInG',...
-                                            '-append')
+                                            'GrToReCalc','RedToReCalc','AllToReCalc','-append')
                                     end
                                     clear SpotsInG GrI NewSpot
                                 else
