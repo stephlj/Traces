@@ -261,6 +261,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                             RedToReCalc = sort(RedToReCalc);
                             GrToReCalc = sort(GrToReCalc);
                             if ~isempty(RedToReCalc)
+                                disp('Calculating intensities for re-mapped red spots ...')
                                 [allRedI(RedToReCalc,:), ~] = CalcIntensitiesV3(PathToMovie,...
                                     spots(:,RedToReCalc), spotVars(:,RedToReCalc),-1,params);
                                 RedI = allRedI;
@@ -271,6 +272,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                                     'RedI','-append')
                             end
                             if ~isempty(GrToReCalc)
+                                disp('Calculating intensities for re-mapped green spots ...')
                                 [~, allGrI(GrToReCalc,:)] = CalcIntensitiesV3(PathToMovie,...
                                     GrSpots(:,GrToReCalc), spotVars(:,GrToReCalc),1,params);
                                 GrI = allGrI;
