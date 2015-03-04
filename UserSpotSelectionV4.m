@@ -112,8 +112,9 @@ h1 = figure('Position',params.Fig1Pos);
 disp('Fig. 2 must be current.') 
 disp('.=fwd; ,=back; b=background adjust; r=reset background; s=save; z = zoom; u=unzoom;')
 disp('f=select frame to display; m = play movie between two points; a=show average around frame;')
-disp('o=adjust black offset; l = re-_l_ocate spot now; c = re-locate spot now but re-_c_alculate later;')
-disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d=done with movie')
+disp('o=adjust black offset; l = re-_l_ocate spot now but re-calculate intensities later;')
+disp('c = re-locate spot and re-_c_alculate intensities now; g=go to spot number;')
+disp('e=end of trace (after this point FRET set to zero); d=done with movie')
 
     while k <= size(spots,2)  
        % Calculate raw intensities and raw FRET, then correct for gamma
@@ -334,20 +335,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                     cc=13;
                 % go to the next movie:
                 elseif cc=='d'
-                    verifyans = 'y';
-                    if ~isempty(kk) && m<length(kk)
-                        disp('You have not looked through all of the spots you re-mapped.')
-                        disp('Information about which spots you re-mapped (though not the re-mapping itself)')
-                        disp('will be lost if you contine.')
-                        verifyans = input('Continue? (y/n): ', 's');
-                    elseif isempty(kk) && ~isempty(AllToReCalc)
-                        disp('You have spots that you re-mapped and wanted to re-calculate intensities for.')
-                        verifyans = input('Quit anyway? (y/n) ', 's');
-                    end
-                    if strcmpi(verifyans,'y')
-                        k = size(spots,2)+1;
-                    end
-                    clear verifyans
+                    k = size(spots,2)+1;
                     cc=13;
                 % Set background levels
                 elseif cc=='b'
@@ -543,7 +531,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                                     % till later if user entered 'c'. However, disallow the use of 'c' if
                                     % we're already looking through re-calculated spots:
                                     SpotsInR = spots;
-                                    if cc=='l' && isempty(kk)
+                                    if cc=='c' || (cc=='l' && ~isempty(kk))
                                         [allRedI(k,:), ~] = CalcIntensitiesV3(PathToMovie,...
                                             spots(:,k), spotVars(:,k),-1,params);
                                         RedI = allRedI;
@@ -585,7 +573,7 @@ disp('g=go to spot number; e=end of trace (after this point FRET set to zero); d
                                     % Update 3/2015: Here's where the change happens. Don't re-calculate
                                     % till later if user entered 'c':
                                     SpotsInG = GrSpots;
-                                    if cc=='l' && isempty(kk)
+                                    if cc=='c' || (cc=='l' && ~isempty(kk))
                                         [~, allGrI(k,:)] = CalcIntensitiesV3(PathToMovie,...
                                             GrSpots(:,k), spotVars(:,k),1,params);
                                         GrI = allGrI;
