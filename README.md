@@ -1,12 +1,16 @@
 #Single-Molecule FRET Analysis Code#
 
-This is a software suite designed to calculate FRET-versus-time traces from a standard prism TIRF-based single-molecule FRET microscopy setup.  The most current version of this suite can be found at [GitHub.com](https://github.com/stephlj/smFRETcode).  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily for other microscopy setups and acquisition software.  A limited number of setup-specific parameters can be changed in the smFRETsetup file, but it is highly likely that you will need to modify at least some parts of this code (for example, the file loading function, unless images from your camera are saved the same way ours are; see the accompanying manual for more details). The included manual discusses some additional options for customizing this suite to suit your particular needs.
+This is a software suite designed to calculate FRET-versus-time traces from a standard prism-based TIRF single molecule FRET microscopy setup.  The most current version of this suite can be found at [GitHub.com](https://github.com/stephlj/smFRETcode).  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily for other microscopy setups and acquisition software.  A limited number of setup-specific parameters can be changed in the smFRETsetup file, but it is highly likely that you will need to modify at least some parts of this code (for example, the file loading function, unless images from your camera are saved the same way ours are; see the accompanying manual for more details). The included manual discusses some additional options for customizing this suite to suit your particular needs.
 
 The general outline of the analysis workflow is: (1) Calculate a map that correlates pixels in the acceptor channel image to pixels in the donor channel image, as these will never be perfectly aligned in an smFRET setup. Or, load an old one. (2) Find fluorescent spots in a movie or set of movies and allow the user to scroll through intensity-versus-time traces for each spot, and then save good traces for further analysis later.
 
 More information (including detailed derivations of, for example, the channel mapping linear algebra) can be found in the documentation/manual  that accompanies this repository.
 
 I would be very grateful if you would [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find bugs in the code or find it doesn't work well with your data. Also, a port of parts or all of this software to Python (rather than Matlab), or some other freely available language, would be a great help to the scientific community.
+
+##Why use this software?##
+
+There were three driving factors for us to develop our own software rather than use something already available ...
 
 ##System Requirements##
 
@@ -43,8 +47,24 @@ This project was a collaborative effort with [Matt Johnson](http://www.themattjo
 
 Software and manual copyright (C)  2014 Stephanie Johnson, University of California, San Francisco.
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-A copy of the GNU General Public License can be found in the LICENSE.txt file that accompanies this software; it can also be found at the [GNU website](http://www.gnu.org/licenses/).
+ The MIT License (MIT)
+ 
+ Copyright (c) 2014 Stephanie Johnson, University of California, San Francisco
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.

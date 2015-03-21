@@ -50,7 +50,7 @@ Stephanie Johnson,\\Department of Biochemistry and
 
 \section{Introduction.}
 
-This is a software suite designed to calculate FRET-versus-time traces from a standard prism TIRF-based single-molecule FRET microscopy setup.  The most current version of this suite can be found at $<$https://github.com/stephlj/smFRETcode$>$.  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily for other microscopy setups and acquisition software.  A limited number of setup-specific parameters can be changed in the smFRETsetup file, but it is likely that you will need to modify at least some parts of this code (for example, the file loading function, unless images from your camera are saved the same way ours are---see more details below). %Section~\ref{sec:CustomOpts} below discusses some additional options for customizing this suite to suit your particular needs.
+This is a software suite designed to calculate FRET-versus-time traces from a standard prism-based TIRF single-molecule FRET microscopy setup.  The most current version of this suite can be found at $<$https://github.com/stephlj/smFRETcode$>$.  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily for other microscopy setups and acquisition software.  A limited number of setup-specific parameters can be changed in the smFRETsetup file, but it is likely that you will need to modify at least some parts of this code (for example, the file loading function, unless images from your camera are saved the same way ours are---see more details below). %Section~\ref{sec:CustomOpts} below discusses some additional options for customizing this suite to suit your particular needs.
 
 The general outline of the analysis workflow is: (1) Calculate a map that correlates pixels in the acceptor channel image to pixels in the donor channel image, as these will never be perfectly aligned in an smFRET setup. Or, load an old one. (2) Find fluorescent spots in a movie or set of movies and allow the user to scroll through intensity-versus-time traces for each spot, and then save good traces for further analysis later.
 
@@ -62,21 +62,31 @@ The rest of this manual contains information about required Matlab toolboxes, a 
 
 Software and manual copyright \copyright 2014 Stephanie Johnson, University of California, San Francisco.
 
-This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    A copy of the GNU General Public License can be found in the LICENSE.txt file that accompanies this software; it can also be found at $<$http://www.gnu.org/licenses/$>$.
+ The MIT License (MIT)
+ 
+ Copyright (c) 2014 Stephanie Johnson, University of California, San Francisco
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
     
 \subsection{Contact information.}
 
-If you have questions or comments about this software suite, please open an issue through the github repository for this suite (preferred), or contact me at Stephanie.Johnson@ucsf.edu (most recent contact information can be found on my github account).  If you find a bug in this code, I would love to hear about it.  Please include as much information as you can about what causes the bug---what commands you entered, a screen shot of the output, etc, and even some of your data, if you can.  Thanks!
+If you have questions or comments about this software suite, or if you find a bug, please open an issue through the github repository for this suite.  Please include as much information as you can about what causes the bug---what commands you entered, a screen shot of the output, etc, and even some of your data, if you can.  Thanks!
 
 \clearpage
 
