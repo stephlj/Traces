@@ -154,7 +154,7 @@ function smFRET(rootname,debug)
         InitBdNum = size(allmatchesG,2);
         while ResidGtoR/size(allmatchesG,2)>=params.ResidTolerance ||...
             ResidRtoG/size(allmatchesG,2)>=params.ResidTolerance || ...
-            abs(ResidGtoR-PrevResid)/PrevResid > 0.05 % Stop if residuals stop changing much
+            abs(ResidGtoR-PrevResid)/PrevResid < 0.05 % Stop if residuals stop changing much
             PrevResid = ResidGtoR;
             tempRs = newtform.FRETmapFwd(allmatchesG);
             CurrErrors = sqrt((allmatchesR(1,:)-tempRs(1,:)).^2+(allmatchesR(2,:)-tempRs(2,:)).^2);
@@ -197,10 +197,7 @@ function smFRET(rootname,debug)
                 disp('If you want it to remove more spots with higher residuals, reduce StdDevMultiplier')
                 disp('(e.g., enter StdDevMultiplier = 3; dbcont into the command line)')
                 keyboard
-                % If the histogram looks ok, best thing to do is just to
-                % manually increase the tolerance:
-                % params.ResidTolerance = ResidualsGtoR/size(matchGall,2)+0.001;
-                % or something like that
+                close
             end
             clear CurrDists CurrErrors
             steps = steps+1;
