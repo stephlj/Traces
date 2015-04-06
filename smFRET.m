@@ -616,7 +616,8 @@ close all
                 useoldspots = input('Load previously found spots? (y/n)','s');
                 useoldTform = 'n';
                 if strcmpi(useoldspots,'y')
-                    useoldTform = input('Use same channel mapping as last time but recompute: scaling, background, intensities? (y/n)','s');
+                    disp('Use same channel mapping as last time (y) but recompute scaling, background, intensities? ')
+                    useoldTform = input('Or use new channel mapping (n), keep old scaling and background, but recompute intensities? ','s');
                 end
             end
             
