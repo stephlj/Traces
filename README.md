@@ -1,16 +1,18 @@
 #Traces (single molecule FRET analysis code)#
 
-Traces is a software suite designed to calculate FRET-versus-time traces from a standard prism-based TIRF single molecule FRET (smFRET) microscopy setup.  The most current version of this suite can be found at [GitHub.com](https://github.com/stephlj/smFRETcode).  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily for other microscopy setups and image acquisition software.  Some setup-specific parameters can be changed in the smFRETsetup file, but you may need to modify at least some parts of this code (for example, the file loading function, unless images from your camera are saved the same way ours are; see the accompanying manual for more details). 
+Traces is a software suite designed to calculate FRET-versus-time traces from a standard prism-based TIRF single molecule FRET (smFRET) microscopy setup.  The most current version of this suite can be found at [GitHub.com](https://github.com/stephlj/smFRETcode).  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily for other microscopy setups and image acquisition software. We have attempted to avoid as much as possible "buried" parameters, collecting them instead in the TracesSetup file, which optimally is the only function a user will have to edit (though you may still need to modify, for example, the image loading function; see the accompanying manual for more details).
 
 The general outline of the analysis workflow is: (1) Calculate a map that correlates pixels in the acceptor channel image to pixels in the donor channel image, as these will never be perfectly aligned in an smFRET setup. Or, load an old one. (2) Find fluorescent spots in a movie or set of movies and allow the user to scroll through intensity-versus-time traces for each spot, and then save good traces for further analysis later.
 
-More information (including detailed derivations of, for example, the channel mapping linear algebra) can be found in the documentation/manual  that accompanies this repository.
+More information (including detailed derivations of, for example, the channel mapping linear algebra) can be found in the manual that accompanies this repository.
 
-I would be  grateful if you would [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find bugs in the code or find it doesn't work well with your data. Also, a port of parts or all of this software to Python (rather than Matlab), or some other freely available language, would be a great help to the scientific community.
+Please [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find bugs in the code or find it doesn't work well with your data. Also, a port of parts or all of this software to Python (rather than Matlab), or some other freely available language, would be a great help to the scientific community.
 
 ##Why use Traces?##
 
-Traces developed out of three main problems we were facing analyzing smFRET data in our lab: (1) The need for more customization options for our particular microscope than were offered by other software options; (2) ; and (3) the need to be able to "trace" dye intensity-versus-time data back to the images that generated those data. This last was so important to us, especially for distinguishing complicated but real signals from experimental artifacts, that we named our software "Traces"--we want the user to always be able to "trace back" to the original images, to the analysis parameters used to get intensity-versus-time data out of those images, etc.  (Plus, the point of this software is to generate intensity-versus-time trajectories, which are sometimes called "traces".)
+Traces developed out of three main problems we were facing analyzing smFRET data in our lab: (1) The need for more customization options for our particular setup than were offered by other software options; (2) the need for more automation, additional computational and manual checks to enrich for good data, and the ability to save and rerun select parts of the analysis, in order to handle the large data sets we generate; and (3) the need to be able to "trace" dye intensity-versus-time data back to the images that generated those data. This last was so important to us, especially for distinguishing complicated but real signals from experimental artifacts, that we named our software "Traces"--we want the user to always be able to "trace back" to the original images, to the analysis parameters used to get intensity-versus-time data out of those images, etc.  (Plus, the point of this software is to generate intensity-versus-time trajectories, which are sometimes called "traces".) 
+
+More generally, we strongly believe that, just as controls and sanity checks are essential for rigorously interpreting experimental results, similar controls and checks are crucial for verifying that any code's output is "right". Therefore Traces offers the user visualizations, plots and sanity checks after every manipulation of the original data set, so that the user can assess how Traces is doing, instead of treating the process of taking a set of raw camera images and generating FRET-versus-time traces as a black box.
 
 ##System Requirements##
 
@@ -31,10 +33,10 @@ More information can be found in the accompanying manual.
 
 ##Sample Data##
 
-Sample data that can be analyzed by my code can be found in my [smFRETdata](https://github.com/stephlj/smFRETdata) repository. To analyze the sample data in that  repository, run
+Sample data that can be analyzed by Traces can be found at [smFRETdata](https://github.com/stephlj/smFRETdata). To analyze the sample data in that  repository, run
 
 ```matlab
-smFRET('HighFRET25pM')
+Traces('HighFRET25pM')
 ```
 
 from the command line and then follow the instructions in the manual.
