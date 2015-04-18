@@ -206,6 +206,7 @@ function smFRET(rootname,debug)
     end
 
     % Load and check parameter settings
+    addpath('core','tools');
     smFRETsetup;
     params = load('AnalysisParameters.mat');
 
