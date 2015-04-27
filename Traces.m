@@ -154,7 +154,7 @@ function Traces(rootname,debug)
         InitBdNum = size(allmatchesG,2);
         while ResidGtoR/size(allmatchesG,2)>=params.ResidTolerance ||...
             ResidRtoG/size(allmatchesG,2)>=params.ResidTolerance || ...
-            abs(ResidGtoR-PrevResid)/PrevResid < 0.05 % Stop if residuals stop changing much
+            abs(ResidGtoR-PrevResid)/PrevResid > 0.05 % Stop if residuals stop changing much
             PrevResid = ResidGtoR;
             tempRs = newtform.FRETmapFwd(allmatchesG);
             CurrErrors = sqrt((allmatchesR(1,:)-tempRs(1,:)).^2+(allmatchesR(2,:)-tempRs(2,:)).^2);
