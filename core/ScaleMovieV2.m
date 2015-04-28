@@ -200,7 +200,7 @@ function ScaleMovieV2(PathToMovie,params)
     % Update 4/2015: Taking advantage of all these maxes and medians
     % already calculated here, by detecting any red flashes here:
     if params.DetectRedFlash>0
-        params = DetectRedFlash(rprctiles,allMedians,params);
+        params = DetectRedFlash(rprctiles,gprctiles,allMedians,params);
         % These artificial maxes (from flashing the red laser) mess with
         % the calculation of the true max to which to scale the image. So
         % removing them here:

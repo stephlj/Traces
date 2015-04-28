@@ -9,8 +9,9 @@
 % (1) A significant spike in acceptor channel intensity
 % (2) A concurrent spike in the median intensity over the whole frame
 % (excludes random spikes from very brief, bright junk spots in the
-% acceptor channel
-% (3) These spikes must last more than one frame
+% acceptor channel)
+% (3) No concurrent spike in the donor channel
+% (4) Spikes must last more than one frame
 %
 % Steph 4/2015
 %
@@ -36,10 +37,9 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 % SOFTWARE.
 
-function params = DetectRedFlash(AcceptorMaxes,Medians,params)
+function params = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
 
-    % Subfunction that finds potential intensity spikes. Works similarly to
-    % what's done in FindSpotsV5.
+    % Subfunction that finds potential intensity spikes.
     function candidates = FindSpikes(searchvec)
         candidates = [];
         
@@ -83,6 +83,8 @@ function params = DetectRedFlash(AcceptorMaxes,Medians,params)
     RedCandidates = FindSpikes(AcceptorMaxes);
     % Check whether these are also spikes in the medians:
     MedCandidates = FindSpikes(Medians);
+    % and no concurrent spikes in the donor channel:
+    GrCandidates = FindSpikes(DonorMaxes);
     
     flashes = [];
     
@@ -94,7 +96,7 @@ function params = DetectRedFlash(AcceptorMaxes,Medians,params)
         params.ManualInjectMark = 0;
         % Iterate through each candidate and ask make sure it appears in both lists:
         for j = 1:length(RedCandidates)
-            if ismember(RedCandidates(j),MedCandidates)
+            if ismember(RedCandidates(j),MedCandidates) && ~ismember(RedCandidates(j),GrCandidates)
                 flashes(end+1) = RedCandidates(j);
             end
         end
@@ -105,11 +107,12 @@ function params = DetectRedFlash(AcceptorMaxes,Medians,params)
         while ~isempty(isok)
             plot(AcceptorMaxes,'xr')
             hold on
-            plot(Medians,'og')
+            plot(DonorMaxes,'xg')
+            plot(Medians,'ob')
             for f = 1:length(flashes)
                 plot([flashes(f) flashes(f)],[0 max(AcceptorMaxes)],'--k')
             end
-            legend('Acceptor channel','Medians')
+            legend('Acceptor channel','Donor channel','Medians')
             hold off
             ylabel('Intensity (a.u.)','Fontsize',14)
             xlabel('Frame','Fontsize',14)
