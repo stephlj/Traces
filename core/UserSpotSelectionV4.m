@@ -49,6 +49,18 @@ if size(spots,1)~=2
     spots = transpose(spots);
 end
 
+% Finding an injection point to plot, if any:
+if isfield(params,'ManualInjectMark') && params.ManualInjectMark>0
+   InjMarkToPlot = params.ManualInjectMark;
+elseif isfield(params,'InjectPoints') && ~isempty(params.InjectPoints)
+   InjMarkToPlot = [];
+   for ss = 1:length(params.InjectPoints)
+       InjMarkToPlot(end+1) = params.InjectPoints(ss)+params.InjectDelay;
+   end
+else
+   InjMarkToPlot = [];
+end
+
 % Find spots in green channel:
 SpotsAndIstruct = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')));
 if isfield(SpotsAndIstruct,'SpotsInG')
@@ -222,9 +234,12 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        trace_axes = subplot(2,1,1);
        plot(xvect,RedI,'-r',xvect,GrI,'-g',xvect,RedI+GrI+offset,'-k',...
            [xvect(1) xvect(end)],[0 0],'--k')
-       if isfield(params,'InjectTime') && params.InjectTime>0
+       if ~isempty(InjMarkToPlot)
            hold on
-           plot([params.InjectTime, params.InjectTime], [0 max(RedI+GrI+offset)+0.1],'-m')
+           for ss = 1:length(InjMarkToPlot)
+               plot([InjMarkToPlot(ss), InjMarkToPlot(ss)], ...
+                   [0 max(RedI+GrI+offset)+0.1],'-m')
+           end
            hold off
        end
        xlabel('Time (sec)','Fontsize',12)
@@ -237,9 +252,11 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        fret_axes = subplot(2,1,2);
        plot(xvect,FRET,'-b',[xvect(1) xvect(end)],[0 0],'--k',...
            [xvect(1) xvect(end)],[1 1],'--k')
-       if isfield(params,'InjectTime') && params.InjectTime>0
+       if ~isempty(InjMarkToPlot)
            hold on
-           plot([params.InjectTime, params.InjectTime], [-0.2 1.2],'-m')
+           for ss = 1:length(InjMarkToPlot)
+               plot([InjMarkToPlot(ss), InjMarkToPlot(ss)],[-0.2 1.2],'-m')
+           end
            hold off
        end
        xlabel('Time (sec)','Fontsize',12)
@@ -247,7 +264,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        if xlims(k,2)~=0
            xlim([xlims(k,1) xlims(k,2)])
        end
-       ylim([-.2 1.2])
+       ylim([-0.2 1.2])
        
        % Interactive section:
        cc=1;

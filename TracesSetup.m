@@ -73,6 +73,9 @@ InjectDelay = 3.3; % If you are using an automated syringe pump to inject,
     % and you have measured the delay, put that information here.  This is 
     % only used if red laser flashes are detected (see above). Our delay is
     % 3.3 +/- 0.2 sec.
+ManualInjectMark = 0; % If this is nonzero and nonnegative, UserSpotSelection 
+    % will plot a vertical line at this number of seconds. It doesn't
+    % affect anything other than plot display.
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
 FindSpotsEveryXFrames = 0; % If this is greater than 0,
@@ -207,6 +210,9 @@ NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensit
     if EndInjectFrame<=0
         EndInjectFrame = 1;
     end
+    if InjectDelay<0
+        InjectDelay=0;
+    end
     if FindSpotsEveryXFrames<0
         FindSpotsEveryXFrames = 0;
     end
@@ -230,5 +236,6 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'FrameLoadMax','UseCombinedImage','IntensityGaussWeight','NormImage',...
     'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
     'UseSymGauss','EndInjectFrame','DetectRedFlash','InjectDelay',...
-    'FindSpotsEveryXFrames','alpha','gamma','CheckSpotFindingEveryXFrames',...
-    'GaussWeightAmp','FixSpotVar','ScaleChannelsSeparately');
+    'ManualInjectMark','FindSpotsEveryXFrames','alpha','gamma',...
+    'CheckSpotFindingEveryXFrames','GaussWeightAmp','FixSpotVar',...
+    'ScaleChannelsSeparately');
