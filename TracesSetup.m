@@ -56,22 +56,23 @@ Acceptor = 0; % If this is 1, the acceptor channel is the one on the right
 % (Our acquisition procedure automatically saves other necessary variables
 % like how many pixels on each side our images our, the frame rate, etc.
 % But those could be coded in here and then Traces.m rewritten to use values
-% from the AnalysisParameters.mat file rather than from the metadata file.  
+% from the AnalysisParameters.mat file rather than from the metadata file.)  
     
 %%%%%%%% Analysis parameters: %%%%%%%%
 SmoothIntensities = 5; % If this is zero (or negative), don't do any smoothing 
     % of the acceptor and donor intensities; if greater than zero, median
     % filter of width specified by this variable.  Must be an integer.
 SmoothFRET = 5; % Same as SmoothIntensities but for the FRET signal. 
-EndInjectFrame = 1;%round(27/0.15); % If doing a manual injection, which tends
-    % to bump the stage, you can set this to the value of a frame that you 
-    % know is after theinjection is over, and spotfinding will start at EndInjectFrame. 
-    % I usually know when I'm done injecting in seconds (usually about 25 seconds, 
-    % add a couple for safety), and I collect data at 0.15 seconds per frame, 
-    % so I usually set this to round(27/0.15).
-InjectTime = 9;%13.3; % Time that injection began, in SECONDS. The only thing this
-    % parameter does is plot in the GUI a vertical line when injection occured.
-    % To plot nothing, make this 0.
+EndInjectFrame = 1;% If this is bigger than 1, spotfinding will start after
+    % this frame (instead of the first 1:FramesToAvg frames). (Relic from
+    % when we did manual injections, which bumped the stage.)
+DetectRedFlash = 1; % If this is nonzero, Traces will look for a "flash"
+    % in the acceptor channel, which we use to mark injection via an
+    % automated syringe pump.
+InjectDelay = 3.3; % If you are using an automated syringe pump to inject,
+    % and you have measured the delay, put that information here.  This is 
+    % only used if red laser flashes are detected (see above). Our delay is
+    % 3.3 +/- 0.2 sec.
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
 FindSpotsEveryXFrames = 0; % If this is greater than 0,
@@ -228,6 +229,6 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'Fig1Pos','Fig2Pos','FramesToAvg','PxlsToExclude','Refine_Bd_Cen',...
     'FrameLoadMax','UseCombinedImage','IntensityGaussWeight','NormImage',...
     'TransformToCalc','TformMaxDeg','TformTotDeg','ResidTolerance',...
-    'UseSymGauss','EndInjectFrame','FindSpotsEveryXFrames','alpha','gamma',...
-    'CheckSpotFindingEveryXFrames','GaussWeightAmp','FixSpotVar',...
-    'ScaleChannelsSeparately','InjectTime');
+    'UseSymGauss','EndInjectFrame','DetectRedFlash','InjectDelay',...
+    'FindSpotsEveryXFrames','alpha','gamma','CheckSpotFindingEveryXFrames',...
+    'GaussWeightAmp','FixSpotVar','ScaleChannelsSeparately');

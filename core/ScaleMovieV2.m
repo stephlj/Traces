@@ -210,10 +210,18 @@ function ScaleMovieV2(PathToMovie,params)
     MovieMaxRed = max(rprctiles);
     disp('Checking for outliers in overall percentiles ... ')
     MovieMax = CheckMaxes(allprctiles,allMins,MovieMax,numframes,params.NormImage);
-    disp('Checking for outliers in donor percentiles ... ')
-    MovieMaxGr = CheckMaxes(gprctiles,allGrMins,MovieMaxGr,numframes,params.NormImage);
-    disp('Checking for outliers in acceptor percentiles ... ')
-    MovieMaxRed = CheckMaxes(rprctiles,allRedMins,MovieMaxRed,numframes,params.NormImage);
+    if params.ScaleChannelsSeparately
+        disp('Checking for outliers in donor percentiles ... ')
+        MovieMaxGr = CheckMaxes(gprctiles,allGrMins,MovieMaxGr,numframes,params.NormImage);
+        disp('Checking for outliers in acceptor percentiles ... ')
+        MovieMaxRed = CheckMaxes(rprctiles,allRedMins,MovieMaxRed,numframes,params.NormImage);
+    end
+    
+    % Update 4/2015: Taking advantage of all these maxes and medians
+    % already calculated here, by detecting any red flashes here:
+    if params.DetectRedFlash>0
+        params = DetectRedFlash(rprctiles,allMedians,params);
+    end
     
     % Plot a figure so the user can check whether normalization was
     % necessary or not:
