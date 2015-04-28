@@ -71,6 +71,8 @@ function params = DetectRedFlash(AcceptorMaxes,Medians,params)
                 end
                 candidates(end+1) = maxes(k);
                 k = k-1;
+            else
+                k = k-1;
             end
         end
         
@@ -109,6 +111,9 @@ function params = DetectRedFlash(AcceptorMaxes,Medians,params)
             end
             legend('Acceptor channel','Medians')
             hold off
+            ylabel('Intensity (a.u.)','Fontsize',14)
+            xlabel('Frame','Fontsize',14)
+            set(gca,'Fontsize',14)
             isok = input('Press enter if this is right; a to add a missing flash, r to remove one:','s');
             if strcmpi(isok,'a')
                 disp('Click where you want to add a flash:')

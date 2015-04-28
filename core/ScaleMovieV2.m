@@ -197,6 +197,20 @@ function ScaleMovieV2(PathToMovie,params)
     params.PxlsToExclude = realPxlsToExclude;
     clear realPxlsToExclude
     
+    % Update 4/2015: Taking advantage of all these maxes and medians
+    % already calculated here, by detecting any red flashes here:
+    if params.DetectRedFlash>0
+        params = DetectRedFlash(rprctiles,allMedians,params);
+        % These artificial maxes (from flashing the red laser) mess with
+        % the calculation of the true max to which to scale the image. So
+        % removing them here:
+        for ss = 1:length(params.InjectPoints)
+            allprctiles(params.InjectPoints(ss)-3:params.InjectPoints(ss)+3) = median(allprctiles).*ones(7,1);
+            rprctiles(params.InjectPoints(ss)-3:params.InjectPoints(ss)+3) = median(rprctiles).*ones(7,1);
+            allMedians(params.InjectPoints(ss)-3:params.InjectPoints(ss)+3) = median(allMedians).*ones(7,1);
+        end
+    end
+    
     % Check that the calculated Max(es) isn't/aren't way larger than the rest of the
     % maxes (it happens):
     % MovieMax = CheckMaxes(allMaxes,allMins,MovieMax,numframes,params.NormImage);
@@ -215,12 +229,6 @@ function ScaleMovieV2(PathToMovie,params)
         MovieMaxGr = CheckMaxes(gprctiles,allGrMins,MovieMaxGr,numframes,params.NormImage);
         disp('Checking for outliers in acceptor percentiles ... ')
         MovieMaxRed = CheckMaxes(rprctiles,allRedMins,MovieMaxRed,numframes,params.NormImage);
-    end
-    
-    % Update 4/2015: Taking advantage of all these maxes and medians
-    % already calculated here, by detecting any red flashes here:
-    if params.DetectRedFlash>0
-        params = DetectRedFlash(rprctiles,allMedians,params);
     end
     
     % Plot a figure so the user can check whether normalization was
