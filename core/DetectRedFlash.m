@@ -1,4 +1,4 @@
-% function DetectRedFlash(AcceptorMaxes,Medians,params)
+% function params = DetectRedFlash(AcceptorMaxes,Medians,params)
 %
 % Called by ScaleMovie if the DetectRedFlash parameter in TracesSetup is
 % nonzero. Looks for flashes of high intensity in the acceptor channel
