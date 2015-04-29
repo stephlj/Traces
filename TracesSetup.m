@@ -75,7 +75,8 @@ InjectDelay = 3.3; % If you are using an automated syringe pump to inject,
     % 3.3 +/- 0.2 sec.
 ManualInjectMark = 0; % If this is nonzero and nonnegative, UserSpotSelection 
     % will plot a vertical line at this number of seconds. It doesn't
-    % affect anything other than plot display.
+    % affect anything other than plot display. This isn't used if
+    % DetectRedFLash is nonzero and acceptor channel flashes are found.
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
 FindSpotsEveryXFrames = 0; % If this is greater than 0,

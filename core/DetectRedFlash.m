@@ -141,7 +141,7 @@ function params = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
             end
         end
     end
-    params.InjectPoints = sort(flashes);
+    params.InjectPoints = sort(flashes)/(params.fps*10^3);
     
 end
 

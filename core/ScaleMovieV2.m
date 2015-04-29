@@ -1,4 +1,4 @@
-% function ScaleMovie(PathToMovie,params)
+% function params = ScaleMovie(PathToMovie,params)
 %
 % Given the path to a directory with images (PathToMovie) and a parameter
 % structure created by smFRETsetup (params), calculate the min and max over the
@@ -27,7 +27,7 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 % SOFTWARE.
 
-function ScaleMovieV2(PathToMovie,params)
+function params = ScaleMovieV2(PathToMovie,params)
 
         % Subfunction to check for and remove intensity spikes:
         function newMax = CheckMaxes(Maxes,Mins,oldMax,xaxislim,NormImage)

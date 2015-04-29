@@ -573,6 +573,7 @@ close all
     end
     fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze(1).name),'fps');
     fps = 1/fps; % This is actually frames per ms
+    params.fps = fps;
     
     % Make sure not saving over old data:
     if ~exist(fullfile(params.defaultsavedir,rootname),'dir')
@@ -636,7 +637,7 @@ close all
                Vars = prevRspots.SpotVars;
                clear prevRspots
                disp('Scaling movie ...')
-               ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
+               params = ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
                UseScaledMov = 'n'; % This is so the background will get re-computed, below
             
             % Option 2: either re-map, or find all new spots and then re-map
@@ -657,7 +658,7 @@ close all
 
                    if strcmpi(UseScaledMov,'n')
                        disp('Scaling movie ...')
-                       ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
+                       params = ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
                    end
 
                    % Update 5/2014: Added the option to find spots throughout the movie
@@ -1007,7 +1008,6 @@ close all
                % Also save the params structure in the data analysis folder, so
                % you know what analysis parameters were used to analyze the
                % data:
-               params.fps = fps;
                save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
            end
            
@@ -1036,7 +1036,16 @@ close all
                 params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
                 params = params.params;
            else
-               params.fps = fps;
+               % Update 4/2015: The only field I might care about in an old
+               % params set is "InjectPoints")--because if this option has
+               % been selected, I'm not re-scaling
+               oldparams = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
+               if isfield(oldparams.params,'InjectPoints')
+                   InjectPoints = oldparams.params.InjectPoints;
+                   params.InjectPoints = InjectPoints;
+                   params.ManualInjectMark = 0;
+                   clear InjectPoints oldparams
+               end
                save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
            end
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
