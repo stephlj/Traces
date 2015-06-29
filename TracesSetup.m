@@ -66,23 +66,23 @@ SmoothFRET = 5; % Same as SmoothIntensities but for the FRET signal.
 EndInjectFrame = 1;% If this is bigger than 1, spotfinding will start after
     % this frame (instead of the first 1:FramesToAvg frames). (Relic from
     % when we did manual injections, which bumped the stage.)
-DetectRedFlash = 1; % If this is nonzero, Traces will look for a "flash"
+DetectRedFlash = 1; % If this is greater than 0, Traces will look for a "flash"
     % in the acceptor channel, which we use to mark injection via an
     % automated syringe pump.
 InjectDelay = 3.3; % If you are using an automated syringe pump to inject,
     % and you have measured the delay, put that information here.  This is 
     % only used if red laser flashes are detected (see above). Our delay is
     % 3.3 +/- 0.2 sec.
-ManualInjectMark = 0; % If this is nonzero and nonnegative, UserSpotSelection 
+ManualInjectMark = 8.23; % If this is greater than 0, UserSpotSelection 
     % will plot a vertical line at this number of seconds. It doesn't
     % affect anything other than plot display. This isn't used if
     % DetectRedFLash is nonzero and acceptor channel flashes are found.
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
-FindSpotsEveryXFrames = 0; % If this is greater than 0,
+FindSpotsEveryXFrames = 500; % If this is greater than 0,
     % spots will be found every this many frames (but still averaging over
     % FramesToAvg frames)
-CheckSpotFindingEveryXFrames = 0; % If this is greater than zero, Traces will ask
+CheckSpotFindingEveryXFrames = 500; % If this is greater than zero, Traces will ask
     % the user to check the fidelity of the spotfinding threshhold every
     % this many frames. I recommend if FindSpotsEveryXFrames is greater
     % than 0, that this is set to something like 5*FindSpotsEveryXFrames.
