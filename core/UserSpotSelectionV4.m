@@ -341,7 +341,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         cc=13;
                     % Go to specific spot
                     elseif cc=='g'
-                        newk = input('Go to bead number:');
+                        newk = input('Go to bead number: ');
                         % Update 3/2015: Only allow this to work if the spot
                         % the user wants to look at is one that was re-mapped:
                         if isempty(kk)
@@ -429,7 +429,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     % Zoom
                     elseif cc=='z'
                         [x,~] = ginput(2);
-                        if isequal(trace_axes,gca)
+                        if isequal(trace_axes,gca) && x(1)~=x(2)
                             x = sort(x);
                             if x(1)<0
                                 x(1)=1;
@@ -450,7 +450,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 'xlims','-append')
                         cc=13;
                     elseif cc=='o'
-                        offset = input('New offset:');
+                        offset = input('New offset: ');
                         save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
                                 'offset','-append')
                         cc=13;
