@@ -8,8 +8,8 @@
 % dirname: path to the directory that contains the metadata.txt file
 % paramname: can be
 %    imgsize ->output ("val") will be a vector of xpxls,ypxls
-%    fps -> output ("val") will be frames per MILLIsecond not frames per
-%       second (I know, bad nomenclature ... )
+%    fps -> output ("val") will be frame rate at which the data were
+%       acquired (frames per second)
 %    precision -> output ("val") will be the numeric type of the raw
 %       images. THIS IS ONLY AN OPTION IF YOU CREATED YOUR OWN METADATA FILE,
 %       and only necessary if you're loading pma's instead of tif's.
@@ -22,8 +22,8 @@
 % IF YOU DON'T USE MICROMANAGER: Here's how to create a metadata file that
 % GetInfoFromMetaData can read:
 % Create a text file that has the following lines: (copy them exactly as
-% here, except change the "150" to be whatever your frame interval is, in 
-% milliseconds, change the last two numbers to be the pixel size of 
+% here, except change the "150" to the interval, in MILLIseconds, to whatever
+% 1/<your frame rate> is, change the last two numbers to be the pixel size of 
 % your camera's field of view, and change the precision to whatever your 
 % raw images' numeric type is. NOTE you only need that last line if you're
 % going to load pma files! The lines below are for 150 ms frame interval,
@@ -31,7 +31,7 @@
 % See also the sample metadata.txt file that accompanies this software package):
 %
 %%%%% SAMPLE METADATA.TXT CONTENT %%%%%%
-% "Interval_ms": 150 
+% "Andor-ActualInterval-ms": 150 
 % "ROI": [
 %    0,
 %    0,
@@ -49,7 +49,7 @@
 % Create such a metadata.mat file as follows, from the Matlab command line:
 %
 %%%%% SAMPLE METADATA.MAT CREATION COMMANDS %%%%%%
-% fps = 150;
+% fps = 0.15;
 % xsize = 512;
 % ysize = 512;
 % save('metadata.mat','fps','xsize','ysize')
@@ -129,25 +129,25 @@ if ~exist(fullfile(dirname,'metadata.mat'),'file')
     %elseif strcmpi(paramname,'fps')
     
     % Now extract the fps
-        temp = regexpi(alllines{1}(1),'Interval_ms');
+        temp = regexpi(alllines{1}(1),'Andor-ActualInterval-ms');
         if ~isempty(temp{1})
             thisline = char(alllines{1}(1));
             temp2 = regexpi(thisline,'\d');
             valstr = '';
-            for i = 1:length(temp2)
-                valstr = strcat(valstr,thisline(temp2(i)));
+            for i = temp2(1):temp2(end)
+                    valstr = strcat(valstr,thisline(i));
             end
-            fps = str2double(valstr);
+            fps = 1/(str2double(valstr)*10^-3);
         else
-            temp = regexpi(alllines{1}(4),'Interval_ms');
+            temp = regexpi(alllines{1}(61),'Andor-ActualInterval-ms');
             if ~isempty(temp{1})
-                thisline = char(alllines{1}(4));
+                thisline = char(alllines{1}(61));
                 temp2 = regexpi(thisline,'\d');
                 valstr = '';
-                for i = 1:length(temp2)
-                    valstr = strcat(valstr,thisline(temp2(i)));
+                for i = temp2(1):temp2(end)
+                    valstr = strcat(valstr,thisline(i));
                 end
-                fps = str2double(valstr);
+                fps = 1/(str2double(valstr)*10^-3);
             else
                 disp('GetInfoFromMetaData: Unexpected metadata format.')
                 val = -1;
