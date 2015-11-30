@@ -29,9 +29,11 @@ function TracesSetup()
 
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
-defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
+%defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
+defaultsavedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET data analysis';
 % Where to load data from:
-defaultdatadir = '/Volumes/smFRET/smFRET data';
+%defaultdatadir = '/Volumes/smFRET/smFRET data';
+defaultdatadir = '/Users/Steph/Desktop/current data being analyzed';
 %defaultdatadir = '/Volumes/SPEEDY';
 % Where the code is (which is where it saves this parameter file)
 codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
@@ -73,10 +75,12 @@ InjectDelay = 3.3; % If you are using an automated syringe pump to inject,
     % and you have measured the delay, put that information here.  This is 
     % only used if red laser flashes are detected (see above). Our delay is
     % 3.3 +/- 0.2 sec.
-ManualInjectMark = 8.23; % If this is greater than 0, UserSpotSelection 
+ManualInjectMark = 10; %If this is greater than 0, UserSpotSelection 
     % will plot a vertical line at this number of seconds. It doesn't
     % affect anything other than plot display. This isn't used if
     % DetectRedFLash is nonzero and acceptor channel flashes are found.
+    % 8.23<-This is assuming 10fps for my old data, which
+    % as of 11/2015 I think is actually 7.38 fps!
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
 FindSpotsEveryXFrames = 0; % If this is greater than 0,
