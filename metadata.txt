@@ -1,4 +1,4 @@
-"Interval_ms": 150
+"Andor-ActualInterval-ms": 150
 "ROI": [
   0,
   0,
