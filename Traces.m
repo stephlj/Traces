@@ -571,9 +571,7 @@ close all
         disp('Did not find data to analyze.') %error handling
         return
     end
-    fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze(1).name),'fps');
-    fps = 1/fps; % This is actually frames per ms
-    params.fps = fps;
+    params.fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze(1).name),'fps');
     
     % Make sure not saving over old data:
     if ~exist(fullfile(params.defaultsavedir,rootname),'dir')
@@ -1028,7 +1026,7 @@ close all
                Vars = repmat(params.FixSpotVar',1,size(spots,2));
            end
                UserSpotSelectionV4(RedI,GrI,spots,Vars,...
-                   fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+                   fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,params.fps,i);
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')));
            useoldparams = input('Use old parameters? (y/n)','s');
@@ -1059,7 +1057,7 @@ close all
                Vars = ones(size(spots));
            end
            UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
-               Vars,fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,fps,i);
+               Vars,fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,params.fps,i);
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp
     end

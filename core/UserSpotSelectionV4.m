@@ -189,7 +189,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        end
        % TODO: convolve with a Gaussian instead of using a moving average
         
-       xvect = ((1:length(RedI))./fps)*10^-3; % fps is actually frames per ms
+       xvect = ((1:length(RedI))./fps);
        
        [imgRzoom,zoomcenR] = ExtractROI(imgRinit,zoomsize,spots(:,k));
        [imgGzoom,zoomcenG] = ExtractROI(imgGinit,zoomsize,GrSpots(:,k));
@@ -369,8 +369,8 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         % correct panel
                         if isequal(trace_axes,gca)
                             x = sort(x);
-                            Rbkgnd(k) = mean(RedI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
-                            Gbkgnd(k) = mean(GrI(round(x(1)*fps/10^-3:x(2)*fps/10^-3)));
+                            Rbkgnd(k) = mean(RedI(round(x(1)*fps:x(2)*fps)));
+                            Gbkgnd(k) = mean(GrI(round(x(1)*fps:x(2)*fps)));
                             clear x
                             save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
                                 'Rbkgnd','Gbkgnd','-append')
@@ -389,14 +389,14 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         saveas(gca,fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))),'fig')
                         print('-depsc',fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))))
                         if xlims(k,2)~=0
-                            RedToSave = RedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
-                            GrToSave = GrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
-                            FRETtoSave = FRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
-                            rawRedToSave = rawRedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
-                            rawGrToSave = rawGrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
-                            rawFRETtoSave = unsmoothedFRET(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
-                            unsmthRedToSave = unsmoothedRedI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
-                            unsmthGrToSave = unsmoothedGrI(round(xlims(k,1)*fps/10^-3:xlims(k,2)*fps/10^-3));
+                            RedToSave = RedI(round(xlims(k,1)*fps:xlims(k,2)*fps));
+                            GrToSave = GrI(round(xlims(k,1)*fps:xlims(k,2)*fps));
+                            FRETtoSave = FRET(round(xlims(k,1)*fps:xlims(k,2)*fps));
+                            rawRedToSave = rawRedI(round(xlims(k,1)*fps:xlims(k,2)*fps));
+                            rawGrToSave = rawGrI(round(xlims(k,1)*fps:xlims(k,2)*fps));
+                            rawFRETtoSave = unsmoothedFRET(round(xlims(k,1)*fps:xlims(k,2)*fps));
+                            unsmthRedToSave = unsmoothedRedI(round(xlims(k,1)*fps:xlims(k,2)*fps));
+                            unsmthGrToSave = unsmoothedGrI(round(xlims(k,1)*fps:xlims(k,2)*fps));
                         else
                             RedToSave = RedI;
                             GrToSave = GrI;
@@ -458,7 +458,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     elseif cc=='e'
                         if isequal(trace_axes,gca) || isequal(fret_axes,gca)
                             [x,~] = ginput(1);
-                            ends(k) = round(x*fps/10^-3);
+                            ends(k) = round(x*fps);
                         end
                         save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
                                 'ends','-append')
@@ -468,7 +468,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         [x,~] = ginput(1);
                         if isequal(trace_axes,gca) || isequal(fret_axes,gca)
                             % x will be in seconds, not frames. Convert to frame:
-                            x = x*fps/10^-3; % fps is actually frames per ms
+                            x = x*fps;
                             [imgRinit,imgGinit] = PlayMovie(PathToMovie,[round(x) round(x)],params,...
                                 h2,strcat('subplot(',char(39),'Position',char(39),...
                                     ',[0.08 0.23 0.39 0.39*',int2str(size(imgRinit,1)/size(imgRinit,2)),'])'),...
@@ -486,7 +486,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         [x,~] = ginput(2);
                         if isequal(trace_axes,gca) || isequal(fret_axes,gca)
                             % x will be in seconds, not frames. Convert to frame:
-                            x = x*fps/10^-3; % fps is actually frames per ms
+                            x = x*fps;
                             x = round(sort(x));
                             [imgRinit,imgGinit] = PlayMovie(PathToMovie,[x(1) x(2)],params,...
                                 h2,strcat('subplot(',char(39),'Position',char(39),...
@@ -505,7 +505,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         [x,~] = ginput(1);
                         if isequal(trace_axes,gca) || isequal(fret_axes,gca)
                             % x will be in seconds, not frames. Convert to frame:
-                            x = x*fps/10^-3; % fps is actually frames per ms
+                            x = x*fps;
                             [imgRinit,imgGinit] = LoadScaledMovie(PathToMovie,...
                                 [round(x)-ceil(params.FramesToAvg/2) round(x)+ceil(params.FramesToAvg/2)],...
                                 params);
@@ -523,7 +523,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         disp('Click on trace at time around which to look for spot:')
                         [xT,~] = ginput(1);
                         if isequal(trace_axes,gca) || isequal(fret_axes,gca)
-                            xT = round(xT*fps/10^-3);
+                            xT = round(xT*fps);
                             starttime = xT-ceil(params.FramesToAvg/2);
                             endtime = xT+ceil(params.FramesToAvg/2);
                             if starttime<1

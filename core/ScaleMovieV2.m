@@ -205,9 +205,9 @@ function params = ScaleMovieV2(PathToMovie,params)
         % the calculation of the true max to which to scale the image. So
         % removing them here:
         for ss = 1:length(params.InjectPoints)
-            allprctiles(params.InjectPoints(ss)*(params.fps*10^3)-3:params.InjectPoints(ss)*(params.fps*10^3)+3) = median(allprctiles).*ones(7,1);
-            rprctiles(params.InjectPoints(ss)*(params.fps*10^3)-3:params.InjectPoints(ss)*(params.fps*10^3)+3) = median(rprctiles).*ones(7,1);
-            allMedians(params.InjectPoints(ss)*(params.fps*10^3)-3:params.InjectPoints(ss)*(params.fps*10^3)+3) = median(allMedians).*ones(7,1);
+            allprctiles(params.InjectPoints(ss)*(params.fps)-3:params.InjectPoints(ss)*(params.fps)+3) = median(allprctiles).*ones(7,1);
+            rprctiles(params.InjectPoints(ss)*(params.fps)-3:params.InjectPoints(ss)*(params.fps)+3) = median(rprctiles).*ones(7,1);
+            allMedians(params.InjectPoints(ss)*(params.fps)-3:params.InjectPoints(ss)*(params.fps)+3) = median(allMedians).*ones(7,1);
         end
     end
     
