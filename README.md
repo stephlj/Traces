@@ -1,6 +1,6 @@
 #Traces (single molecule FRET analysis code)#
 
-Traces is a software suite designed to calculate FRET-versus-time traces from a standard prism-based TIRF single-molecule FRET (smFRET) microscopy setup.  The most recent version of this suite can be found at [GitHub.com](https://github.com/stephlj/smFRETcode).  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily to other microscopy setups and acquisition software.  
+Traces is a software suite designed to calculate FRET-versus-time trajectories (“traces”) from a standard prism-based TIRF single-molecule FRET (smFRET) microscopy setup. It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily to other microscopy setups and acquisition software.  
 
 We have attempted to avoid as much as possible "buried" parameters, collecting them instead in the TracesSetup.m file.  TracesSetup.m is the only function a user should have to edit regularly (though some initial modifications may need to be made to, for example, the image loading function; see the accompanying manual for more details).
 
@@ -10,11 +10,15 @@ More information (including detailed derivations of, for example, the channel ma
 
 Please [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find bugs in Traces. 
 
-##Why use Traces?##
+##Why Traces?##
 
-Traces developed out of three main problems we were facing analyzing smFRET data in our lab: (1) The need for more customization options for our particular setup than were offered by other software options; (2) the need for more automation, additional computational and manual checks to enrich for good data, and the ability to save and rerun select parts of the analysis, in order to handle the large data sets we generate; and (3) the need to be able to "trace" dye intensity-versus-time data back to the images that generated those data. This last was so important to us, especially for distinguishing complicated but real signals from experimental artifacts, that we named our software "Traces"--we want the user to always be able to "trace back" to the original images, to the analysis parameters used to get intensity-versus-time data out of those images, etc.  (Plus, the point of this software is to generate intensity-versus-time trajectories, which are sometimes called "traces".) 
+Traces developed out of three main problems we were facing analyzing smFRET data in our lab: (1) The need for more customization options for our particular setup than were offered by other software options; (2) the need for more automation, additional computational and manual checks to enrich for good data, and the ability to save and rerun select parts of the analysis, in order to handle the large data sets we generate; and (3) the need to be able to "trace" intensity-versus-time data back to the images that generated those data. 
 
-More generally, just as controls and sanity checks are essential for rigorously interpreting experimental results, similar controls and checks are crucial for verifying that any code's output is "right". Therefore Traces offers the user visualizations, plots, and sanity checks after every manipulation of the original data set, so that the user can assess how Traces is doing, instead of treating the process of taking a set of raw camera images and generating FRET-versus-time traces as a black box.
+This last point was so important to us, especially for distinguishing complicated but real signals from experimental artifacts, that we named our software "Traces"--we want the user to always be able to "trace back" to the original images, to the analysis parameters used to get intensity-versus-time data out of those images, etc. For example, Traces allows the user to play sections of the movie, or to examine averages of sections of the movie, that generated the intensity-versus-time data being displayed for analysis.
+
+More generally, just as controls and sanity checks are essential for rigorously interpreting experimental results, similar controls and checks are crucial for verifying that any code's output is "right". Therefore Traces offers the user visualizations, plots, and sanity checks after every manipulation of the data, so that the user can assess how Traces is doing, instead of treating the process of taking a set of raw camera images and generating FRET-versus-time traces as a black box.
+
+Several other smFRET analysis software packages exist that span a spectrum from bare-bones to highly automated, with Traces falling somewhere in the middle. At one end of the spectrum is the [package] developed by TJ Ha’s lab at UIUC (http://cplc.illinois.edu/software/). Algorithmically, Traces is very similar to the Ha lab code; however, Traces does not treat the analysis pipeline from images to intensity-versus-time trajectories as a black box. Traces also offers a rudimentary GUI and some additional features such as the ability to re-localize FRET pairs. At the other end of the spectrum is [iSMS](http://isms.au.dk/), which includes a sophisticated GUI and many automated features, and can be run without much programming knowledge on the part of the user. However, it is more difficult to customize and may work best for setups that are more similar than ours to the setup for which iSMS was designed. For example, iSMS finds FRET pairs using a nearest-neighbor algorithm, rather than a channel mapping procedure, which does not work well with the high spot density and single laser illumination in our setup. If none of the available software options work well for you, it is our hope that the algorithmic details in the Traces manual and its modularity will be helpful for you to develop your own software. For example, you can replace the background correction function `CalcBkgnd.m` with one that uses a different method for computing a background to subtract (or one the subtracts no background at all). As long as your function has a compatible input/output structure as `CalcBkgnd`, you can still take advantage of the rest of the Traces suite.
 
 ##System Requirements##
 
@@ -33,17 +37,17 @@ More information can be found in the accompanying manual.
 
 ##Sample Data##
 
-Sample data that can be analyzed by Traces can be found at [smFRETdata](https://github.com/stephlj/smFRETdata). To analyze the sample data in that  repository, run
+Sample data that can be analyzed by Traces can be found at [smFRETdata](https://github.com/stephlj/smFRETdata). To analyze the sample data in that repository, run
 
 ```matlab
-Traces('HighFRET25pM')
+Traces('SNF2h51nMATP1mM')
 ```
 
 from the command line and then follow the instructions in the manual.
 
 ##Acknowledgements##
 
-This project was a collaborative effort with [Matt Johnson](http://www.themattjohnson.com/) and [Luke Breuer](http://luke.breuer.com), who made significant intellectual and time contributions to its development.  I am also indebted to TJ Ha's lab at UIUC, which has made what I consider to be "industry-standard" [smFRET code](http://cplc.illinois.edu/software/) freely available on their website. In this repository I make frequent allusions to the Ha lab code, noting where my code differs from theirs and where I have followed their lead. Thanks also to the UCSF SMUG crew (Margaret Elvekrog, Thomas Noriega, Megan Mayerle, Sarah Ledoux, Daniel Elnatan) and the Narlikar lab, especially John Leonard, for helpful discussions about code as well as experimental development, and to Megan Mayerle for the DNAs used for the sample data. Finally I am grateful for financial support through NIH grants to my PI, Dr. Geeta Narlikar, and a Leukemia and Lymphoma Society Career Development Program fellowship.
+This project was a collaborative effort with [Matt Johnson](http://www.themattjohnson.com/) and [Luke Breuer](http://luke.breuer.com), who made significant intellectual and time contributions to its development.  I am also indebted to the freely available [smFRET analysis software](http://cplc.illinois.edu/software/) from TJ Ha's lab at UIUC. In this repository I make frequent allusions to the Ha lab code, noting where my code differs from theirs and where I have followed their lead. Thanks also to the UCSF SMUG crew (Margaret Elvekrog, Thomas Noriega, Megan Mayerle, Sarah Ledoux, Daniel Elnatan) and the Narlikar lab, especially John Leonard, for helpful discussions about code as well as experimental development. Finally I am grateful for financial support through NIH grants to my PI, Dr. Geeta Narlikar, and a Leukemia and Lymphoma Society Career Development Program fellowship.
 
 ##Licensing and Copyright Information##
 
