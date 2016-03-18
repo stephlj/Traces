@@ -60,6 +60,7 @@ elseif isfield(params,'InjectPoints') && ~isempty(params.InjectPoints)
 else
    InjMarkToPlot = [];
 end
+t_Inj = InjMarkToPlot;
 
 % Find spots in green channel:
 SpotsAndIstruct = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')));
@@ -421,7 +422,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         variance = spotVars(:,k);
                         save(fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k),'.mat')),...
                             'RedI','GrI','FRET','rawRedI','rawGrI','unsmoothedRedI','unsmoothedGrI',...
-                            'unsmoothedFRET','fps','Rspot','Gspot','variance')
+                            'unsmoothedFRET','fps','Rspot','Gspot','variance','t_Inj')
                         clear RedToSave GrToSave FRETtoSave rawRedToSave rawGrToSave rawFRETtoSave
                         clear unsmthRedToSave unsmthGrToSave
                         clear Rspot Gspot variance

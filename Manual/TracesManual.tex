@@ -128,8 +128,8 @@ This software assumes the following about how raw data area acquired and stored 
 
 \begin{figure}[!t]
 \begin{center}
-\includegraphics[width=4.5in]{ScreenShots/DirectoriesShot.eps}
-\caption{Screen shot illustrating the directory structure assumed by Traces.m and LoadRawImgs.m.  Here ``rootname'' is ``NucsFrozen75pM18mW''; so to analyze both of these subfolders together, the call to Traces would be Traces(`NucsFrozen75pM18mW').  If your acquisition software creates pma's rather than tif's, the ``NucsFrozen75pM18mW\_1'' directory would have one .pma file instead of all of the .tif files, and a metadata.txt file, but not the display\_and\_comments.txt file (a file saved by Micro-Manager that we don't use).  You don't need to have multiple directories that you want to analyze at once. The highlighted directory in the middle column containing images to be analyzed will be called ``datadir'' in the rest of this manual.}
+\includegraphics[width=4.5in]{ScreenShots/DirectoriesShot.png}
+\caption{Screen shot illustrating the directory structure assumed by Traces.m and LoadRawImgs.m.  Here ``rootname'' is ``SNF2h51nMATP1mM''  (the one to use to analyze the sample data that comes with this software). If there were an additional directory called ``SNF2h51nMATP1mM\_2'', a call to Traces of the form Traces(`SNF2h51nMATP1mM') would analyze both directories contents sequentially.  If your acquisition software creates pma's rather than tif's, the ``SNF2h51nMATP1mM\_1'' directory would have one .pma file instead of all of the .tif files, and a metadata.txt file, but not the display\_and\_comments.txt file (a file saved by Micro-Manager that we don't use).  You don't need to have multiple directories that you want to analyze at once. The highlighted directory in the middle column containing images to be analyzed will be called ``datadir'' in the rest of this manual.}
 \label{fig:DirectoryStructure}
 \end{center}
 \end{figure}
@@ -182,7 +182,7 @@ To start the analysis, enter\\
 
 \noindent Traces(`{\it rootname}')\\
 
-\noindent in the command line (see Fig.~\ref{fig:DirectoryStructure} for a description of ``rootname'').  \\
+\noindent in the command line (see Fig.~\ref{fig:DirectoryStructure} for a description of ``rootname'').  Use ``SNF2h51nMATP1mM'' as ``rootname'' to analyze the sample data that comes with this software.  \\
 
 %{\it For example, to analyze the data in my Sample FRET Data repository, the rootname would be \sj{``HighFRET10pM''}.} \\
 

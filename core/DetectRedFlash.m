@@ -46,7 +46,7 @@ function params = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
         % Find values in the vector that are much bigger than the values 
         % around it. Start by defining a threshold above which a value is 
         % "much bigger" than those around it:
-        spikethresh = 4; %We will insist that a spike be 4 std dev's bigger
+        spikethresh = 3; %We will insist that a spike be 4 std dev's bigger
             % than the mean value of searchvec.
 
         maxes = searchvec > (mean(searchvec)+spikethresh*std(searchvec));
@@ -99,6 +99,11 @@ function params = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
             if ismember(RedCandidates(j),MedCandidates) && ~ismember(RedCandidates(j),GrCandidates)
                 flashes(end+1) = RedCandidates(j);
             end
+        end
+        
+        if isempty(flashes)
+            disp('No red flashes detected ... ')
+            keyboard;
         end
 
         % Lastly, ask the user to verify:

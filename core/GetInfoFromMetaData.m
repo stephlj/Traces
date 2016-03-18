@@ -109,9 +109,12 @@ if ~exist(fullfile(dirname,'metadata.mat'),'file')
         if strcmpi(alllines{1}(2),'"ROI": [')
             tempx = alllines{1}(5);
             tempy = alllines{1}(6);
-        elseif strcmpi(alllines{1}(19),'"ROI": [')
+        elseif strcmpi(alllines{1}(19),'"ROI": [') %THis is for previous metadata verison
             tempx = alllines{1}(22);
             tempy = alllines{1}(23);
+        elseif strcmpi(alllines{1}(20),'"ROI": [') %THis is for new metadata verison
+            tempx = alllines{1}(23);
+            tempy = alllines{1}(24);
         else
             tempx = alllines{1}(12);
             tempy = alllines{1}(22);
@@ -139,7 +142,7 @@ if ~exist(fullfile(dirname,'metadata.mat'),'file')
             end
             fps = 1/(str2double(valstr)*10^-3);
         else
-            temp = regexpi(alllines{1}(61),'Andor-ActualInterval-ms');
+            temp = regexpi(alllines{1}(61),'Andor-ActualInterval-ms'); %For old metadata version
             if ~isempty(temp{1})
                 thisline = char(alllines{1}(61));
                 temp2 = regexpi(thisline,'\d');
@@ -149,9 +152,20 @@ if ~exist(fullfile(dirname,'metadata.mat'),'file')
                 end
                 fps = 1/(str2double(valstr)*10^-3);
             else
-                disp('GetInfoFromMetaData: Unexpected metadata format.')
-                val = -1;
-                return
+                temp = regexpi(alllines{1}(62),'Andor-ActualInterval-ms'); %For new metadata version
+                if ~isempty(temp{1})
+                    thisline = char(alllines{1}(62));
+                    temp2 = regexpi(thisline,'\d');
+                    valstr = '';
+                    for i = temp2(1):temp2(end)
+                        valstr = strcat(valstr,thisline(i));
+                    end
+                    fps = 1/(str2double(valstr)*10^-3);
+                else
+                    disp('GetInfoFromMetaData: Unexpected metadata format.')
+                    val = -1;
+                    return
+                end
             end
         end
         clear temp temp2
