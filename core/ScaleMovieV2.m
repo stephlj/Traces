@@ -47,8 +47,7 @@ function params = ScaleMovieV2(PathToMovie,params)
                     disp('To continue reducing the max value, enter: dbcont')
                     disp('To stop here, enter: stdDiffmultiplier = stdDiffmultiplier+1; meanmultiplier = meanmultiplier+1; dbcont')
                     
-                    PlotMaxes(xaxislim,[],Maxes,newMax,Mins,[],NormImage)
-                   
+                    PlotMaxes(xaxislim,[],[],Maxes,newMax,Mins,[],NormImage)
                     keyboard
                     close
                 end
@@ -57,20 +56,22 @@ function params = ScaleMovieV2(PathToMovie,params)
         end
     
         % Plotting function
-        function PlotMaxes(n_frames,medians,R_prctile,R_max_val,G_prctile,G_max_val,norm)
-            
+        function PlotMaxes(n_frames,medians,allprctile,R_prctile,R_max_val,G_prctile,G_max_val,norm)
             figure
             if isempty(medians)
                 plot(1:n_frames,R_prctile,'ob',1:n_frames,G_prctile,'xr',...
                     1:n_frames,ones(1,n_frames).*R_max_val,'--k')
                 legend('99.99 percentiles','Mins','Max to scale to')
-            elseif ~isempty(G_max_val)
-                subplot(3,1,1)
-                plot(1:n_frames,R_prctile,'ob',1:n_frames,ones(1,n_frames).*R_max_val,'--k')
-                legend('99.99 Percentile Intensity')
             else
-                subplot(2,1,1)
-                plot(1:n_frames,R_prctile,'ob')
+                if ~isempty(G_max_val)
+                    subplot(3,1,1)
+                    plot(1:n_frames,allprctile,'ob')
+                else
+                    subplot(2,1,1)
+                    plot(1:n_frames,R_prctile,'ob',...
+                        1:n_frames,ones(1,n_frames).*R_max_val,'--k')
+                end
+                
                 legend('99.99 Percentile Intensity')
             end
             set(gca,'FontSize',14)
@@ -283,7 +284,7 @@ function params = ScaleMovieV2(PathToMovie,params)
     if ~ScaleChannelsSeparately
         disp(sprintf('Using max=%d, min=%d',MovieMax,MovieMin))
         
-        PlotMaxes(numframes,allMedians,allprctiles,MovieMax,[],[],NormImage)
+        PlotMaxes(numframes,allMedians,[],allprctiles,MovieMax,[],[],NormImage)
         print('-depsc',fullfile(PathToMovie,'ScalingFig'))
         
         figure
@@ -297,7 +298,7 @@ function params = ScaleMovieV2(PathToMovie,params)
         disp(sprintf('Using acceptor max=%d, min=%d',MovieMaxRed,MovieMinRed))
         disp(sprintf('Using donor max=%d, min=%d',MovieMaxGr,MovieMinGr))
         
-        PlotMaxes(numframes,allMedians,rprctiles,MovieMaxRed,gprctiles,MovieMaxGr,NormImage)
+        PlotMaxes(numframes,allMedians,allprctiles,rprctiles,MovieMaxRed,gprctiles,MovieMaxGr,NormImage)
         print('-depsc',fullfile(PathToMovie,'ScalingFig'))
         
         figure

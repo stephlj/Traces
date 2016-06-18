@@ -68,7 +68,7 @@ SmoothFRET = 5; % Same as SmoothIntensities but for the FRET signal.
 EndInjectFrame = 1;% If this is bigger than 1, spotfinding will start after
     % this frame (instead of the first 1:FramesToAvg frames). (Relic from
     % when we did manual injections, which bumped the stage.)
-DetectRedFlash = 0; % If this is greater than 0, Traces will look for a "flash"
+DetectRedFlash = 1; % If this is greater than 0, Traces will look for a "flash"
     % in the acceptor channel, which we use to mark injection via an
     % automated syringe pump.
 InjectDelay = 2.6; % If you are using an automated syringe pump to inject,

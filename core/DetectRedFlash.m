@@ -147,6 +147,7 @@ function InjectPoints = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
         end
     end
     InjectPoints = sort(flashes)/params.fps;
+    close
     
 end
 
