@@ -109,6 +109,24 @@ function params = ScaleMovieV2(PathToMovie,params)
                 ylabel('Raw Intensity (a.u.)','FontSize',14)
             end
         end
+    
+        % Helper functions to compute stuff
+        function [out_max,out_min] = ComputeMaxes(in_max,in_min,data)
+            out_max = max(in_max,double(max(data(:))));
+            out_min = min(in_min,double(min(data(:))));
+        end
+        function [out_maxes,out_mins] = ComputeDoubleMax(data)
+            out_maxes = max(max(data,[],2),[],1);
+        	out_mins = min(min(data,[],2),[],1);
+        end
+        function prctiles = ComputePercentiles(data)
+            rdata = reshape(data,size(data,1)*size(data,2),size(data,3));
+            prctiles = prctile(rdata,99.99);
+        end
+        function rdata = ReshapeData(data,meds,index)
+            rdata = bsxfun(@rdivide,data,...
+                reshape(meds(index:index+size(data,3)-1),1,1,size(data,3)));
+        end
 
     % Get some preliminary info:
     framesize = GetInfoFromMetaData(PathToMovie,'imgsize');
@@ -184,40 +202,26 @@ function params = ScaleMovieV2(PathToMovie,params)
         rmoviebit = reshape(moviebit,size(moviebit,1)*size(moviebit,2),size(moviebit,3));
         allMedians(jj:jj+size(moviebit,3)-1) = median(rmoviebit,1);
         if NormImage
-            moviebit = bsxfun(@rdivide,moviebit,...
-                reshape(allMedians(jj:jj+size(moviebit,3)-1),1,1,size(moviebit,3)));
-            redbit = bsxfun(@rdivide,redbit,...
-                reshape(allMedians(jj:jj+size(redbit,3)-1),1,1,size(redbit,3)));
-            grbit = bsxfun(@rdivide,grbit,...
-                reshape(allMedians(jj:jj+size(grbit,3)-1),1,1,size(grbit,3)));
+            moviebit = ReshapeData(moviebit,allMedians,jj);
+            redbit = ReshapeData(redbit,allMedians,jj);
+            grbit = ReshapeData(grbit,allMedians,jj);
         end
 
-        MovieMax = max(MovieMax,double(max(moviebit(:))));
-        MovieMin = min(MovieMin,double(min(moviebit(:))));
-        
-        MovieMaxGr = max(MovieMaxGr,double(max(grbit(:))));
-        MovieMinGr = min(MovieMinGr,double(min(grbit(:))));
-        MovieMaxRed = max(MovieMaxRed,double(max(redbit(:))));
-        MovieMinRed = min(MovieMinRed,double(min(redbit(:))));
+        [MovieMax,MovieMin] = ComputeMaxes(MovieMax,MovieMin,moviebit);
+        [MovieMaxGr,MovieMinGr] = ComputeMaxes(MovieMaxGr,MovieMinGr,grbit);
+        [MovieMaxRed,MovieMinRed] = ComputeMaxes(MovieMaxRed,MovieMinRed,redbit);
 
-        allMaxes(jj:jj+size(moviebit,3)-1) = max(max(moviebit,[],2),[],1);
-        allMins(jj:jj+size(moviebit,3)-1) = min(min(moviebit,[],2),[],1);
-        
-        allGrMaxes(jj:jj+size(moviebit,3)-1) = max(max(grbit,[],2),[],1);
-        allRedMaxes(jj:jj+size(moviebit,3)-1) = max(max(redbit,[],2),[],1);
-        allGrMins(jj:jj+size(moviebit,3)-1) = min(min(grbit,[],2),[],1);
-        allRedMins(jj:jj+size(moviebit,3)-1) = min(min(redbit,[],2),[],1);
+        [allMaxes(jj:jj+size(moviebit,3)-1),...
+            allMins(jj:jj+size(moviebit,3)-1)] = ComputeDoubleMax(moviebit);
+        [allGrMaxes(jj:jj+size(moviebit,3)-1),...
+            allGrMins(jj:jj+size(moviebit,3)-1)] = ComputeDoubleMax(grbit);
+        [allRedMaxes(jj:jj+size(moviebit,3)-1),...
+            allRedMins(jj:jj+size(moviebit,3)-1)] = ComputeDoubleMax(redbit);
                 
         % Update 1/2015: Reshaping red and green to calculate prctile:
-        rredbit = reshape(redbit,size(redbit,1)*size(redbit,2),size(redbit,3));
-        rgrbit = reshape(grbit,size(grbit,1)*size(grbit,2),size(grbit,3));
-        clear rmoviebit
-        rmoviebit = reshape(moviebit,size(moviebit,1)*size(moviebit,2),size(moviebit,3));
-        % prctile works on columns if given a matrix:
-        allprctiles(jj:jj+size(moviebit,3)-1) = prctile(rmoviebit,99.99);
-        rprctiles(jj:jj+size(moviebit,3)-1) = prctile(rredbit,99.99);
-        gprctiles(jj:jj+size(moviebit,3)-1) = prctile(rgrbit,99.99);
-        clear rredbit rgrbit rmoviebit
+        allprctiles(jj:jj+size(moviebit,3)-1) = ComputePercentiles(moviebit);
+        rprctiles(jj:jj+size(moviebit,3)-1) = ComputePercentiles(redbit);
+        gprctiles(jj:jj+size(moviebit,3)-1) = ComputePercentiles(grbit);
         
         % Update 1/2015: Now reshaping the red and green intensities so
         % that I can histogram them, and re-reshaping moviebit so I can get
