@@ -71,11 +71,13 @@ EndInjectFrame = 1;% If this is bigger than 1, spotfinding will start after
 DetectRedFlash = 0; % If this is greater than 0, Traces will look for a "flash"
     % in the acceptor channel, which we use to mark injection via an
     % automated syringe pump.
-InjectDelay = 3.3; % If you are using an automated syringe pump to inject,
+InjectDelay = 2.6; % If you are using an automated syringe pump to inject,
     % and you have measured the delay, put that information here.  This is 
     % only used if red laser flashes are detected (see above). Our delay is
     % 3.3 +/- 0.2 sec.
-ManualInjectMark = 12.5; %10; %If this is greater than 0, UserSpotSelection 
+    % Update 6/2016: With the new syringes, the delay for pump 2 is
+    % 2.6+/0.3 sec.
+ManualInjectMark = 11.8; %10; %If this is greater than 0, UserSpotSelection 
     % will plot a vertical line at this number of seconds. It doesn't
     % affect anything other than plot display. This isn't used if
     % DetectRedFLash is nonzero and acceptor channel flashes are found.
@@ -87,6 +89,7 @@ ManualInjectMark = 12.5; %10; %If this is greater than 0, UserSpotSelection
     % new buffer hits the sample, then 
     % ManualInjectMark = 67.6/7.38+3.3 = 12.5 seconds <-new Micro-Manager
     % ManualInjectMarkOld = 49.3/7.38+3.3 = 9.98 seconds <-old Micro-Manager
+    % ManualInjectMarkOld = 67.6/7.38+2.6 = 11.8 seconds <-new Micro-Manager+new syringe
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
 FindSpotsEveryXFrames = 0; % If this is greater than 0,
