@@ -46,26 +46,74 @@ function params = ScaleMovieV2(PathToMovie,params)
                     disp('ScaleMovieV2: A lot of max outliers?')
                     disp('To continue reducing the max value, enter: dbcont')
                     disp('To stop here, enter: stdDiffmultiplier = stdDiffmultiplier+1; meanmultiplier = meanmultiplier+1; dbcont')
-                    figure
-                    plot(1:xaxislim,Maxes,'ob',1:xaxislim,Mins,'xr',...
-                        1:xaxislim,ones(1,xaxislim).*newMax,'--k')
-                    if NormImage
-                        ylabel('Normalized Intensity (a.u.)','FontSize',14)
-                    else
-                        ylabel('Raw intensity (a.u.)','FontSize',14)
-                    end
-                    legend('99.99 percentiles','Mins','Max to scale to')
-                    set(gca,'FontSize',14)
-                    xlabel('Frame','FontSize',14)
+                    
+                    PlotMaxes(xaxislim,[],Maxes,newMax,Mins,[],NormImage)
+                   
                     keyboard
                     close
                 end
             end
             clear sortedMaxes MaxDiffs meanDiff stdDiff
         end
+    
+        % Plotting function
+        function PlotMaxes(n_frames,medians,R_prctile,R_max_val,G_prctile,G_max_val,norm)
+            
+            figure
+            if isempty(medians)
+                plot(1:n_frames,R_prctile,'ob',1:n_frames,G_prctile,'xr',...
+                    1:n_frames,ones(1,n_frames).*R_max_val,'--k')
+                legend('99.99 percentiles','Mins','Max to scale to')
+            elseif ~isempty(G_max_val)
+                subplot(3,1,1)
+                plot(1:n_frames,R_prctile,'ob',1:n_frames,ones(1,n_frames).*R_max_val,'--k')
+                legend('99.99 Percentile Intensity')
+            else
+                subplot(2,1,1)
+                plot(1:n_frames,R_prctile,'ob')
+                legend('99.99 Percentile Intensity')
+            end
+            set(gca,'FontSize',14)
+            xlabel('Frame','FontSize',14)
+            if norm
+                ylabel('Normalized Intensity (a.u.)','FontSize',14)
+            else
+                ylabel('Raw intensity (a.u.)','FontSize',14)
+            end
+            
+            if ~isempty(medians)
+                if ~isempty(G_max_val)
+                    subplot(3,1,2)
+                    plot(1:n_frames,R_prctile,'or',1:n_frames,G_prctile,'og',...
+                        1:n_frames,ones(1,n_frames).*R_max_val,'-k',1:n_frames,ones(1,n_frames).*G_max_val,'--k')
+                    legend('99.99 Percentile Acceptor Intensities','99.99 Percentile Donor Intensities',...
+                        'Acceptor Max','Donor Max')
+                end
+                set(gca,'FontSize',14)
+                xlabel('Frame','FontSize',14)
+                if norm
+                    ylabel('Normalized Intensity (a.u.)','FontSize',14)
+                else
+                    ylabel('Raw intensity (a.u.)','FontSize',14)
+                end
+                
+                if ~isempty(G_max_val)
+                    subplot(3,1,3)
+                else
+                    subplot(2,1,2)
+                end
+                plot(1:n_frames,medians,'.g')
+                legend('Median')
+                set(gca,'FontSize',14)
+                xlabel('Frame','FontSize',14)
+                ylabel('Raw Intensity (a.u.)','FontSize',14)
+            end
+        end
 
     % Get some preliminary info:
     framesize = GetInfoFromMetaData(PathToMovie,'imgsize');
+    NormImage = params.NormImage;
+    ScaleChannelsSeparately = params.ScaleChannelsSeparately;
  
     % First, set the initial max to the minimum possible value, then the initial minimum to
     % the maximum possible value:
@@ -135,7 +183,7 @@ function params = ScaleMovieV2(PathToMovie,params)
         % appropriately scaled if necessary):
         rmoviebit = reshape(moviebit,size(moviebit,1)*size(moviebit,2),size(moviebit,3));
         allMedians(jj:jj+size(moviebit,3)-1) = median(rmoviebit,1);
-        if params.NormImage
+        if NormImage
             moviebit = bsxfun(@rdivide,moviebit,...
                 reshape(allMedians(jj:jj+size(moviebit,3)-1),1,1,size(moviebit,3)));
             redbit = bsxfun(@rdivide,redbit,...
@@ -200,60 +248,38 @@ function params = ScaleMovieV2(PathToMovie,params)
     % Update 4/2015: Taking advantage of all these maxes and medians
     % already calculated here, by detecting any red flashes here:
     if params.DetectRedFlash>0
-        params = DetectRedFlash(rprctiles,gprctiles,allMedians,params);
+        InjectPoints = DetectRedFlash(rprctiles,gprctiles,allMedians,params);
         % These artificial maxes (from flashing the red laser) mess with
         % the calculation of the true max to which to scale the image. So
         % removing them here:
-        for ss = 1:length(params.InjectPoints)
-            allprctiles(params.InjectPoints(ss)*(params.fps)-3:params.InjectPoints(ss)*(params.fps)+3) = median(allprctiles).*ones(7,1);
-            rprctiles(params.InjectPoints(ss)*(params.fps)-3:params.InjectPoints(ss)*(params.fps)+3) = median(rprctiles).*ones(7,1);
-            allMedians(params.InjectPoints(ss)*(params.fps)-3:params.InjectPoints(ss)*(params.fps)+3) = median(allMedians).*ones(7,1);
+        for ss = 1:length(InjectPoints)
+            allprctiles(InjectPoints(ss)*(params.fps)-3:InjectPoints(ss)*(params.fps)+3) = median(allprctiles).*ones(7,1);
+            rprctiles(InjectPoints(ss)*(params.fps)-3:InjectPoints(ss)*(params.fps)+3) = median(rprctiles).*ones(7,1);
+            allMedians(InjectPoints(ss)*(params.fps)-3:InjectPoints(ss)*(params.fps)+3) = median(allMedians).*ones(7,1);
         end
     end
     
     % Check that the calculated Max(es) isn't/aren't way larger than the rest of the
-    % maxes (it happens):
-    % MovieMax = CheckMaxes(allMaxes,allMins,MovieMax,numframes,params.NormImage);
-    % MovieMaxGr = CheckMaxes(allGrMaxes,allGrMins,MovieMaxGr,numframes,params.NormImage);
-    % MovieMaxRed = CheckMaxes(allRedMaxes,allRedMins,MovieMaxRed,numframes,params.NormImage);
-    % Think I need to do the same with the percentiles. Note it seems to
-    % work better to take the maxes instead of a percentile of the
-    % percentiles.
+    % maxes (it happens): Note it seems to work better to take the maxes instead of 
+    % a percentile of thepercentiles.
     MovieMax = max(allprctiles);
     MovieMaxGr = max(gprctiles);
     MovieMaxRed = max(rprctiles);
     disp('Checking for outliers in overall percentiles ... ')
-    MovieMax = CheckMaxes(allprctiles,allMins,MovieMax,numframes,params.NormImage);
-    if params.ScaleChannelsSeparately
+    MovieMax = CheckMaxes(allprctiles,allMins,MovieMax,numframes,NormImage);
+    if ScaleChannelsSeparately
         disp('Checking for outliers in donor percentiles ... ')
-        MovieMaxGr = CheckMaxes(gprctiles,allGrMins,MovieMaxGr,numframes,params.NormImage);
+        MovieMaxGr = CheckMaxes(gprctiles,allGrMins,MovieMaxGr,numframes,NormImage);
         disp('Checking for outliers in acceptor percentiles ... ')
-        MovieMaxRed = CheckMaxes(rprctiles,allRedMins,MovieMaxRed,numframes,params.NormImage);
+        MovieMaxRed = CheckMaxes(rprctiles,allRedMins,MovieMaxRed,numframes,NormImage);
     end
     
     % Plot a figure so the user can check whether normalization was
     % necessary or not:
-    if ~params.ScaleChannelsSeparately
+    if ~ScaleChannelsSeparately
         disp(sprintf('Using max=%d, min=%d',MovieMax,MovieMin))
-        figure
-        subplot(2,1,1)
-        % plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
-        % legend('Maxes','Mins')
-        plot(1:numframes,allprctiles,'ob',1:numframes,ones(1,numframes).*MovieMax,'--k')
-        legend('99.99 Percentile Intensity')
-        set(gca,'FontSize',14)
-        xlabel('Frame','FontSize',14)
-        if params.NormImage
-            ylabel('Normalized Intensity (a.u.)','FontSize',14)
-        else
-            ylabel('Raw intensity (a.u.)','FontSize',14)
-        end
-        subplot(2,1,2)
-        plot(1:numframes,allMedians,'.g')
-        legend('Median')
-        set(gca,'FontSize',14)
-        xlabel('Frame','FontSize',14)
-        ylabel('Raw Intensity (a.u.)','FontSize',14)
+        
+        PlotMaxes(numframes,allMedians,allprctiles,MovieMax,[],[],NormImage)
         print('-depsc',fullfile(PathToMovie,'ScalingFig'))
         
         figure
@@ -267,40 +293,7 @@ function params = ScaleMovieV2(PathToMovie,params)
         disp(sprintf('Using acceptor max=%d, min=%d',MovieMaxRed,MovieMinRed))
         disp(sprintf('Using donor max=%d, min=%d',MovieMaxGr,MovieMinGr))
         
-        figure
-        subplot(3,1,1)
-        % plot(1:numframes,allMaxes,'ob',1:numframes,allMins,'xr')
-        % legend('Maxes','Mins')
-        plot(1:numframes,allprctiles,'ob')
-        legend('99.99 Percentile Intensity')
-        set(gca,'FontSize',14)
-        xlabel('Frame','FontSize',14)
-        if params.NormImage
-            ylabel('Normalized Intensity (a.u.)','FontSize',14)
-        else
-            ylabel('Raw intensity (a.u.)','FontSize',14)
-        end
-        subplot(3,1,2)
-        % plot(1:numframes,allRedMaxes,'or',1:numframes,allGrMaxes,'og',...
-        %     1:numframes,allRedMins,'xr',1:numframes,allGrMins,'xg')
-        % legend('Acceptor maxes','Donor maxes','Acceptor mins','Donor mins')
-        plot(1:numframes,rprctiles,'or',1:numframes,gprctiles,'og',...
-            1:numframes,ones(1,numframes).*MovieMaxRed,'-k',1:numframes,ones(1,numframes).*MovieMaxGr,'--k')
-        legend('99.99 Percentile Acceptor Intensities','99.99 Percentile Donor Intensities',...
-            'Acceptor Max','Donor Max')
-        set(gca,'FontSize',14)
-        xlabel('Frame','FontSize',14)
-        if params.NormImage
-            ylabel('Normalized Intensity (a.u.)','FontSize',14)
-        else
-            ylabel('Raw intensity (a.u.)','FontSize',14)
-        end
-        subplot(3,1,3)
-        plot(1:numframes,allMedians,'.g')
-        legend('Median')
-        set(gca,'FontSize',14)
-        xlabel('Frame','FontSize',14)
-        ylabel('Raw Intensity (a.u.)','FontSize',14)
+        PlotMaxes(numframes,allMedians,rprctiles,MovieMaxRed,gprctiles,MovieMaxGr,NormImage)
         print('-depsc',fullfile(PathToMovie,'ScalingFig'))
         
         figure
@@ -320,12 +313,15 @@ function params = ScaleMovieV2(PathToMovie,params)
     end
     pause
     close all
-    
-    NormImage = params.NormImage;
-    ScaleChannelsSeparately = params.ScaleChannelsSeparately;
+   
     % Save the scaling information to disk for use by LoadScaledMovie:
-    save(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'allMedians',...
-        'MovieMin','MovieMax','MovieMinRed','MovieMaxRed','MovieMinGr','MovieMaxGr',...
-        'NormImage','ScaleChannelsSeparately')
-    clear NormImage ScaleChannelsSeparately
+    if exist('InjectPoints','var')
+        save(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'allMedians',...
+            'MovieMin','MovieMax','MovieMinRed','MovieMaxRed','MovieMinGr','MovieMaxGr',...
+            'NormImage','ScaleChannelsSeparately','InjectPoints')
+    else
+        save(fullfile(PathToMovie,strcat('ScalingInfo.mat')),'allMedians',...
+            'MovieMin','MovieMax','MovieMinRed','MovieMaxRed','MovieMinGr','MovieMaxGr',...
+            'NormImage','ScaleChannelsSeparately')
+    end
 end

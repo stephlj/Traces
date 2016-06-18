@@ -37,7 +37,7 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 % SOFTWARE.
 
-function params = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
+function InjectPoints = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
 
     % Subfunction that finds potential intensity spikes.
     function candidates = FindSpikes(searchvec)
@@ -146,7 +146,7 @@ function params = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
             end
         end
     end
-    params.InjectPoints = sort(flashes)/params.fps;
+    InjectPoints = sort(flashes)/params.fps;
     
 end
 
