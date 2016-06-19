@@ -93,7 +93,6 @@ function InjectPoints = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
         keyboard;
         
     else
-        params.ManualInjectMark = 0;
         % Iterate through each candidate and ask make sure it appears in both lists:
         for j = 1:length(RedCandidates)
             if ismember(RedCandidates(j),MedCandidates) && ~ismember(RedCandidates(j),GrCandidates)

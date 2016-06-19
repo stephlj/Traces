@@ -50,13 +50,17 @@ if size(spots,1)~=2
 end
 
 % Finding an injection point to plot, if any:
-if isfield(params,'ManualInjectMark') && params.ManualInjectMark>0
+ScalingParams = load(fullfile(PathToMovie,'ScalingInfo.mat'));
+if isfield(ScalingParams,'InjectPoints')
+   InjMarkToPlot = ScalingParams.InjectPoints+params.InjectDelay;
+% Backwards compatibility
+elseif isfield(params,'InjectPoints')
+    InjMarkToPlot = params.InjectPoints+params.InjectDelay;
+    InjectPoints = params.InjectPoints;
+    save(fullfile(PathToMovie,'ScalingInfo.mat','InjectPoints','-append'));
+    clear InjectPoints
+elseif isfield(params,'ManualInjectMark')
    InjMarkToPlot = params.ManualInjectMark;
-elseif isfield(params,'InjectPoints') && ~isempty(params.InjectPoints)
-   InjMarkToPlot = [];
-   for ss = 1:length(params.InjectPoints)
-       InjMarkToPlot(end+1) = params.InjectPoints(ss)+params.InjectDelay;
-   end
 else
    InjMarkToPlot = [];
 end

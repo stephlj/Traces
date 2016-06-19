@@ -1034,16 +1034,6 @@ close all
                 params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
                 params = params.params;
            else
-               % Update 4/2015: The only field I might care about in an old
-               % params set is "InjectPoints")--because if this option has
-               % been selected, I'm not re-scaling
-               oldparams = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
-               if isfield(oldparams.params,'InjectPoints')
-                   InjectPoints = oldparams.params.InjectPoints;
-                   params.InjectPoints = InjectPoints;
-                   params.ManualInjectMark = 0;
-                   clear InjectPoints oldparams
-               end
                save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
            end
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
