@@ -770,11 +770,11 @@ close all
                        else
                            % Don't ask the user to check the spotfinding for
                            % this round
-                            [tempnewspotsR,nR,xoutR,~] = FindSpotsV5(imgRMinusBkgnd,...
+                            [tempnewspotsR,nR,xoutR,threshholdR] = FindSpotsV5(imgRMinusBkgnd,...
                                 'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
                                 'UserThresh',threshholdR,'Method','GaussFit');
                             if ~params.UseCombinedImage
-                                [tempnewspotsG,nG,xoutG,~] = FindSpotsV5(imgGMinusBkgnd,...
+                                [tempnewspotsG,nG,xoutG,threshholdG] = FindSpotsV5(imgGMinusBkgnd,...
                                     'NeighborhoodSize',params.DNANeighborhood,'maxsize',params.DNASize,...
                                     'UserThresh',threshholdG,'Method','GaussFit');
                             end
@@ -857,12 +857,12 @@ close all
 
                    end
                    close all
-                   clear totframes SptFindIncrement threshhold threshholdR threshholdG
+                   clear totframes SptFindIncrement threshhold
                    clear newspotsR newspotsG newVarsR newVarsG
 
                    % Save all spots found in both channels:
                    save(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')),...
-                       'RefinedCentersR','RefinedCentersG','VarsR','VarsG');
+                       'RefinedCentersR','RefinedCentersG','VarsR','VarsG','threshholdR','threshholdG');
                else
                    prevspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
                    %spots = prevspots.spots;
