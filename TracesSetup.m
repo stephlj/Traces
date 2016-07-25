@@ -68,7 +68,7 @@ SmoothFRET = 5; % Same as SmoothIntensities but for the FRET signal.
 EndInjectFrame = 1;% If this is bigger than 1, spotfinding will start after
     % this frame (instead of the first 1:FramesToAvg frames). (Relic from
     % when we did manual injections, which bumped the stage.)
-DetectRedFlash = 1; % If this is greater than 0, Traces will look for a "flash"
+DetectRedFlash = 0; % If this is greater than 0, Traces will look for a "flash"
     % in the acceptor channel, which we use to mark injection via an
     % automated syringe pump.
 InjectDelay = 2.6; % If you are using an automated syringe pump to inject,
@@ -77,7 +77,7 @@ InjectDelay = 2.6; % If you are using an automated syringe pump to inject,
     % 3.3 +/- 0.2 sec.
     % Update 6/2016: With the new syringes, the delay for pump 2 is
     % 2.6+/0.3 sec.
-ManualInjectMark = 11.8; %10; %If this is greater than 0, UserSpotSelection 
+ManualInjectMark = 11.8; %If this is greater than 0, UserSpotSelection 
     % will plot a vertical line at this number of seconds. It doesn't
     % affect anything other than plot display. This isn't used if
     % DetectRedFLash is nonzero and acceptor channel flashes are found.

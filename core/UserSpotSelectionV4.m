@@ -85,7 +85,8 @@ if isfield(SpotsAndIstruct,'xlims')
 else
     Rbkgnd = zeros(size(spots,2),1);
     Gbkgnd = zeros(size(spots,2),1);
-    xlims = zeros(size(spots,2),2);
+    xlims(:,1) = zeros(size(spots,2),1);
+    xlims(:,2) = ones(size(spots,2),1).*size(allRedI,2)/fps;
     ends = zeros(size(spots,2),1); % Where the end of the FRET signal should be (zero after this point)
     offset = 1;
     % Save these fields to the SpotsAndIntensities file (user-indicated
@@ -250,9 +251,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('Intensity (a.u.)','Fontsize',12)
        title(strcat('Spot',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)
-       if xlims(k,2)~=0
-           xlim([xlims(k,1) xlims(k,2)])
-       end
+       xlim([xlims(k,1) xlims(k,2)])
        
        fret_axes = subplot(2,1,2);
        plot(xvect,FRET,'-b',[xvect(1) xvect(end)],[0 0],'--k',...
@@ -266,9 +265,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        end
        xlabel('Time (sec)','Fontsize',12)
        ylabel('FRET','Fontsize',12)
-       if xlims(k,2)~=0
-           xlim([xlims(k,1) xlims(k,2)])
-       end
+       xlim([xlims(k,1) xlims(k,2)])
        ylim([-0.2 1.2])
        
        % Interactive section:
@@ -393,7 +390,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     elseif cc=='s'
                         saveas(gca,fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))),'fig')
                         print('-depsc',fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))))
-                        if xlims(k,2)~=0
+                        if xlims(k,2)~=size(allRedI,2)
                             RedToSave = RedI(round(xlims(k,1)*fps:xlims(k,2)*fps));
                             GrToSave = GrI(round(xlims(k,1)*fps:xlims(k,2)*fps));
                             FRETtoSave = FRET(round(xlims(k,1)*fps:xlims(k,2)*fps));
@@ -450,7 +447,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         cc=13;
                     % Unzoom
                     elseif cc=='u'
-                        xlims(k,:) = [0,0];
+                        xlims(k,:) = [0,size(allRedI,2)];
                         save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
                                 'xlims','-append')
                         cc=13;
