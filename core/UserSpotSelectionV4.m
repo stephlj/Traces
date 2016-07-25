@@ -447,7 +447,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         cc=13;
                     % Unzoom
                     elseif cc=='u'
-                        xlims(k,:) = [0,size(allRedI,2)];
+                        xlims(k,:) = [0,size(allRedI,2)/fps];
                         save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(setnum),'.mat')),...
                                 'xlims','-append')
                         cc=13;
