@@ -390,7 +390,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     elseif cc=='s'
                         saveas(gca,fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))),'fig')
                         print('-depsc',fullfile(savedir,strcat('Spot',int2str(setnum),'_',int2str(k))))
-                        if xlims(k,2)~=size(allRedI,2)
+                        if xlims(k,2)~=size(allRedI,2)/fps
                             RedToSave = RedI(round(xlims(k,1)*fps:xlims(k,2)*fps));
                             GrToSave = GrI(round(xlims(k,1)*fps:xlims(k,2)*fps));
                             FRETtoSave = FRET(round(xlims(k,1)*fps:xlims(k,2)*fps));
