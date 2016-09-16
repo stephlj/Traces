@@ -194,8 +194,10 @@ function Traces(rootname,debug)
                 disp('Channel mapping: having to exclude lots of beads to get residuals down.')
                 disp('If histogram looks ok, you can increase tolerance, for example, enter:')
                 disp('params.ResidTolerance = ResidGtoR/size(allmatchesG,2)+0.001; dbcont')
-                disp('If you want it to remove more spots with higher residuals, reduce StdDevMultiplier')
-                disp('(e.g., enter StdDevMultiplier = 3; dbcont into the command line)')
+                disp('If you want it to remove more spots with higher residuals, reduce StdDevMultiplier,')
+                disp('e.g., enter:')
+                disp('StdDevMultiplier = StdDevMultiplier-1; dbcont')
+                disp('into the command line.')
                 keyboard
                 close
             end
@@ -571,7 +573,17 @@ close all
         disp('Did not find data to analyze.') %error handling
         return
     end
-    params.fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze(1).name),'fps');
+    % Update 9/2016: Allow loading via either old uManager or new uManager
+    % directory structure:  
+    ToAnalyze_FullNames = cell(1,length(ToAnalyze));
+    for g = 1:length(ToAnalyze)
+        if exist(fullfile(D_Data,ToAnalyze(1).name,'Pos0','metadata.txt'),'file')
+            ToAnalyze_FullNames{g} = fullfile(ToAnalyze(g).name,'Pos0');
+        else
+            ToAnalyze_FullNames{g} = ToAnalyze(g).name;
+        end
+    end
+    params.fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze_FullNames{1}),'fps');
     
     % Make sure not saving over old data:
     if ~exist(fullfile(params.defaultsavedir,rootname),'dir')
@@ -635,7 +647,7 @@ close all
                Vars = prevRspots.SpotVars;
                clear prevRspots
                disp('Scaling movie ...')
-               params = ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
+               params = ScaleMovieV2(fullfile(D_Data,ToAnalyze_FullNames{i}),params);
                UseScaledMov = 'n'; % This is so the background will get re-computed, below
             
             % Option 2: either re-map, or find all new spots and then re-map
@@ -650,17 +662,17 @@ close all
 
                    UseScaledMov = 'n';
 
-                   if exist(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')),'file')
+                   if exist(fullfile(D_Data,ToAnalyze_FullNames{i},strcat('ScalingInfo.mat')),'file')
                        UseScaledMov = input('Load scaled movie? (y/n)','s');
                    end
 
                    if strcmpi(UseScaledMov,'n')
                        disp('Scaling movie ...')
-                       params = ScaleMovieV2(fullfile(D_Data,ToAnalyze(i).name),params);
+                       params = ScaleMovieV2(fullfile(D_Data,ToAnalyze_FullNames{i}),params);
                    end
 
                    % Update 5/2014: Added the option to find spots throughout the movie
-                   [~,totframes] = LoadRawImgs(fullfile(D_Data,ToAnalyze(i).name),...
+                   [~,totframes] = LoadRawImgs(fullfile(D_Data,ToAnalyze_FullNames{i}),...
                        'FramesToLoad',[1 1]);
                    if params.FindSpotsEveryXFrames==0
                        SptFindIncrement = totframes;
@@ -688,7 +700,7 @@ close all
                    % of EndInjectFrame.
                    %for ff = [1,EndInjectFrame:SptFindIncrement:totframes]
                    for ff = EndInjectFrame:SptFindIncrement:totframes
-                       [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze(i).name),...
+                       [imgRed,imgGreen] = LoadScaledMovie(fullfile(D_Data,ToAnalyze_FullNames{i}),...
                            [ff ff+params.FramesToAvg],params);
                        imgRedavg = mat2gray(mean(imgRed,3)); 
                        imgGreenavg = mat2gray(mean(imgGreen,3));
@@ -907,7 +919,7 @@ close all
                    % edges from the red channel boundaries: 
                    if ~isempty(spotsGinR)
                        [spotsGinR,~,Vars,~] = CheckSpotBoundaries(spotsGinR,...
-                            spotsGinR,Vars,Vars,params,fullfile(D_Data,ToAnalyze(i).name));
+                            spotsGinR,Vars,Vars,params,fullfile(D_Data,ToAnalyze_FullNames{i}));
                    else
                        Vars = [];
                    end
@@ -916,7 +928,7 @@ close all
                    if ~isempty(RefinedCentersR)
                        spotsRinG = tformPoly.FRETmapInv(RefinedCentersR);
                        [spotsRinG,~,VarsR,~] = CheckSpotBoundaries(spotsRinG,...
-                            spotsRinG,VarsR,VarsR,params,fullfile(D_Data,ToAnalyze(i).name));
+                            spotsRinG,VarsR,VarsR,params,fullfile(D_Data,ToAnalyze_FullNames{i}));
                        clear RefinedCentersR
                        RefinedCentersR = tformPoly.FRETmapFwd(spotsRinG);
                    end
@@ -945,10 +957,10 @@ close all
            % have to (i.e. if these files don't exist or you re-scaled the
            % movie; whether you re-mapped spots or whatever doesn't matter
            % for the background)
-           tempfiles = dir(fullfile(D_Data,ToAnalyze(i).name,'BackgroundImgs*.mat'));
-           tempinfo = load(fullfile(D_Data,ToAnalyze(i).name,strcat('ScalingInfo.mat')));
+           tempfiles = dir(fullfile(D_Data,ToAnalyze_FullNames{i},'BackgroundImgs*.mat'));
+           tempinfo = load(fullfile(D_Data,ToAnalyze_FullNames{i},strcat('ScalingInfo.mat')));
            if isempty(tempfiles) || (exist('UseScaledMov','var') && strcmpi(UseScaledMov,'n'))
-               ComputeBackgroundImgs(fullfile(D_Data,ToAnalyze(i).name),params)
+               ComputeBackgroundImgs(fullfile(D_Data,ToAnalyze_FullNames{i}),params)
            elseif params.ScaleChannelsSeparately ~= tempinfo.ScaleChannelsSeparately || ...
                    params.NormImage ~= tempinfo.NormImage
                disp('NormImage and/or ScaleChannelsSeparately do not match what was used to calculate background.')
@@ -957,7 +969,7 @@ close all
                    params.NormImage = tempinfo.NormImage;
                    params.ScaleChannelsSeparately = tempinfo.ScaleChannelsSeparately;
                else
-                   ComputeBackgroundImgs(fullfile(D_Data,ToAnalyze(i).name),params)
+                   ComputeBackgroundImgs(fullfile(D_Data,ToAnalyze_FullNames{i}),params)
                end
                clear redobkgnd
            end
@@ -966,15 +978,15 @@ close all
            disp('Calculating frame-by-frame intensities ... ')
            
            if ~exist('SpotsInG','var') 
-               [RedI, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
+               [RedI, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze_FullNames{i}),...
                    spots, Vars, tformPoly,params);
            else % Means the user wanted just to re-scale and recalculate background,
                % etc--so keep any re-located green spots!
                disp('Calculating donor and acceptor channel intensities separately,') 
                disp('to use re-located green spot locations from previous analysis')
-               [RedI, ~] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
+               [RedI, ~] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze_FullNames{i}),...
                    spots, Vars, -1,params);
-               [~, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze(i).name),...
+               [~, GrI] = CalcIntensitiesV3(fullfile(D_Data,ToAnalyze_FullNames{i}),...
                  SpotsInG, Vars, 1,params);
            end
            
@@ -1026,7 +1038,7 @@ close all
                Vars = repmat(params.FixSpotVar',1,size(spots,2));
            end
                UserSpotSelectionV4(RedI,GrI,spots,Vars,...
-                   fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,params.fps,i);
+                   fullfile(D_Data,ToAnalyze_FullNames{i}),params,tformPoly,savedir,params.fps,i);
         else %If the user wants to instead use previously saved data
            oldspots = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')));
            useoldparams = input('Use old parameters? (y/n)','s');
@@ -1047,7 +1059,7 @@ close all
                Vars = ones(size(spots));
            end
            UserSpotSelectionV4(oldspots.RedI,oldspots.GrI,oldspots.SpotsInR,...
-               Vars,fullfile(D_Data,ToAnalyze(i).name),params,tformPoly,savedir,params.fps,i);
+               Vars,fullfile(D_Data,ToAnalyze_FullNames{i}),params,tformPoly,savedir,params.fps,i);
         end
         clear TotImg spots imgRed imgGreen spotsG spotsR spotsG_abs spotsRguess spotstemp
     end

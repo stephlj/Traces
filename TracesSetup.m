@@ -77,7 +77,7 @@ InjectDelay = 2.6; % If you are using an automated syringe pump to inject,
     % 3.3 +/- 0.2 sec.
     % Update 6/2016: With the new syringes, the delay for pump 2 is
     % 2.6+/0.3 sec.
-ManualInjectMark = 11.8; %If this is greater than 0, UserSpotSelection 
+ManualInjectMark = 0;%11.8; %If this is greater than 0, UserSpotSelection 
     % will plot a vertical line at this number of seconds. It doesn't
     % affect anything other than plot display. This isn't used if
     % DetectRedFLash is nonzero and acceptor channel flashes are found.
@@ -87,9 +87,9 @@ ManualInjectMark = 11.8; %If this is greater than 0, UserSpotSelection
     % and my frame rate is 7.38 fps, and there's an additional delay of 3.3
     % seconds between when I hit Withdraw on the syringe pump and when the
     % new buffer hits the sample, then 
-    % ManualInjectMark = 67.6/7.38+3.3 = 12.5 seconds <-new Micro-Manager
-    % ManualInjectMarkOld = 49.3/7.38+3.3 = 9.98 seconds <-old Micro-Manager
-    % ManualInjectMarkOld = 67.6/7.38+2.6 = 11.8 seconds <-new Micro-Manager+new syringe
+    % ManualInjectMarkOld = 67.6/7.38+3.3 = 12.5 seconds <-new Micro-Manager
+    % ManualInjectMarkOld = 49.3/7.38+3.3 = 9.98 seconds <-old Micro-Manager, 3000 frame movies only!!
+    % ManualInjectMark = 67.6/7.38+2.6 = 11.8 seconds <-new Micro-Manager+new syringe
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
 FindSpotsEveryXFrames = 0; % If this is greater than 0,

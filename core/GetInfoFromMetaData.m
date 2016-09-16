@@ -88,6 +88,12 @@
 
 function val = GetInfoFromMetaData(dirname,paramname)
 
+    % Update 9/2016: Allow loading via either old uManager or new uManager
+    % directory structure:    
+    if exist(fullfile(dirname,'Pos0','metadata.txt'),'file')
+        dirname = fullfile(dirname,'Pos0');
+    end
+
 if ~exist(fullfile(dirname,'metadata.mat'),'file') && ...
         ~exist(fullfile(dirname,'metadata.txt'),'file')
     disp('GetInfoFromMetaData: File does not exist?')

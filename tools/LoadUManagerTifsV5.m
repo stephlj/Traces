@@ -68,6 +68,11 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
     % In folder D uManager will have saved a bunch of image files, and two
     % text files that contain information about the data and its acquisition.
     
+    % Update 1/2014: Load one file to get the integer type class:
+    temp = imread(fullfile(D,alltifs(1).name));
+    classtype = class(temp);
+    clear temp
+    
     % First figure out the size of the images:
     % Update 7/2014:
     if ~exist('xpxls','var')
@@ -75,11 +80,6 @@ function allimgs = LoadUManagerTifsV5(D,varargin)
         xpxls = val(1);
         ypxls = val(2);
     end
-    
-    % Update 1/2014: Load one file to get the integer type class:
-    temp = imread(fullfile(D,alltifs(1).name));
-    classtype = class(temp);
-    clear temp
 
     if ~exist('StartStop','var') || (StartStop(2)-StartStop(1)+1)>=length(alltifs)
         allimgs = zeros(xpxls,ypxls,length(alltifs),classtype);
