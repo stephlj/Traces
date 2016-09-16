@@ -269,13 +269,24 @@ function Traces(rootname,debug)
             matchRall = [];
             allBdImgs = [];
             BeadFilesInMap = cell(num_BeadDir,1);
+            
+            % Update 9/2016: Allow loading via either old uManager or new uManager
+            % directory structure:  
+            AllBeads_FullNames = cell(1,length(AllBeads));
+            for g = 1:length(AllBeads)
+                if exist(fullfile(D_Beads,AllBeads(1).name,'Pos0','metadata.txt'),'file')
+                    AllBeads_FullNames{g} = fullfile(AllBeads(g).name,'Pos0');
+                else
+                    AllBeads_FullNames{g} = AllBeads(g).name;
+                end
+            end
 
             for i = 1:BdDir
                 if i<=num_BeadDir
-                    BeadFilesInMap{i} = fullfile(D_Beads,AllBeads(i).name); % Keeps a record of which bead files went into the map
+                    BeadFilesInMap{i} = fullfile(D_Beads,AllBeads_FullNames{i}); % Keeps a record of which bead files went into the map
                 end
 
-                TotImg = LoadRawImgs(fullfile(D_Beads,AllBeads(i).name),'FramesToLoad',[1 params.FramesToAvg]);
+                TotImg = LoadRawImgs(fullfile(D_Beads,AllBeads_FullNames{i}),'FramesToLoad',[1 params.FramesToAvg]);
 
                 % Updated 2/2014 to account for LoadUManagerTifs returning an
                 % image of the same numeric type as the initial files.  For
