@@ -88,8 +88,17 @@ function InjectPoints = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
     
     flashes = [];
     
+    figure
+    plot(AcceptorMaxes,'xr')
+    hold on
+    plot(DonorMaxes,'xg')
+    plot(Medians,'ob')
+    
     if isempty(RedCandidates) || isempty(MedCandidates)
         disp('No red flashes detected ... ')
+        disp('To manually indicate flash locations, enter:')
+        disp('flashes = [68, 120]; dbcont')
+        disp('(that would be for two flashes, one that starts at frame 68, one that starts at frame 120)')
         keyboard;
         
     else
@@ -103,16 +112,14 @@ function InjectPoints = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
         if isempty(flashes)
             disp('No red flashes detected ... ')
             keyboard;
+            disp('To manually indicate flash locations, enter:')
+            disp('flashes = [68, 120]; dbcont')
+            disp('(that would be for two flashes, one that starts at frame 68, one that starts at frame 120)')
         end
 
         % Lastly, ask the user to verify:
-        figure
         isok = 'n';
         while ~isempty(isok)
-            plot(AcceptorMaxes,'xr')
-            hold on
-            plot(DonorMaxes,'xg')
-            plot(Medians,'ob')
             for f = 1:length(flashes)
                 plot([flashes(f) flashes(f)],[0 max(AcceptorMaxes)],'--k')
             end
