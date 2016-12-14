@@ -124,7 +124,6 @@ function InjectPoints = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
                 plot([flashes(f) flashes(f)],[0 max(AcceptorMaxes)],'--k')
             end
             legend('Acceptor channel','Donor channel','Medians')
-            hold off
             ylabel('Intensity (a.u.)','Fontsize',14)
             xlabel('Frame','Fontsize',14)
             set(gca,'Fontsize',14)
