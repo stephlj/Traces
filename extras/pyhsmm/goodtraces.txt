@@ -1,0 +1,10 @@
+#Lines that start with pound are excluded
+#start and end are in FRAMES; whitespace matters, do not add or exclude extra spaces
+# DataDir1 and DataDir2 are directories in datadir (see config.py); Spot1_1.mat etc are
+# are output files from Traces
+DataDir1/Spot1_1.mat
+DataDir1/Spot1_2.mat start=50
+DataDir1/Spot2_1.mat
+DataDir2/Spot1_1.mat start=100 end=2000
+DataDir2/Spot1_2.mat end=2000
+#DataDir2/Spot2_1.mat
