@@ -19,6 +19,8 @@
 %Steph added:
 \usepackage[usenames,dvipsnames]{xcolor}
 \newcommand{\sj}[1]{\textcolor{red}{#1}}
+% To prevent Matlab functions getting split across lines:
+\hyphenation{LoadRawImgs}
 
 \bibliographystyle{unsrt}
 
@@ -34,7 +36,7 @@
 \title{``Traces'' analysis code for smFRET: Documentation}
 
 \author{%
-Stephanie Johnson,\\Department of Biochemistry and
+Stephanie Johnson, Ph.D.\\Department of Biochemistry and
      Biophysics, \\University of California, San Francisco, \\San Francisco, CA, USA\\
 %\and Matthew Johnson,\\Department of Electrical Engineering and Computer Science, \\Massachusetts Institute of
 %    Technology, \\Cambridge, MA, USA\\
@@ -50,7 +52,7 @@ Stephanie Johnson,\\Department of Biochemistry and
 
 \section{Introduction.}
 
-Traces is a software suite designed to calculate FRET-versus-time traces from a standard prism-based TIRF single-molecule FRET (smFRET) microscopy setup.  The most recent version of this suite can be found at $<$https://github.com/stephlj/smFRETcode$>$.  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily to other microscopy setups and acquisition software.  
+Traces is a software suite designed to calculate FRET-versus-time trajectories from a standard prism-based TIRF single-molecule FRET (smFRET) microscopy setup.  The most recent version of this suite can be found at $<$https://github.com/stephlj/smFRETcode$>$.  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily to other microscopy setups and acquisition software.  
 
 We have attempted to avoid as much as possible ``buried'' parameters, collecting them instead in the TracesSetup.m file.  TracesSetup.m is the only function a user should have to edit regularly (though some initial modifications may need to be made to, for example, the image loading function; see below for more details). %Section~\ref{sec:CustomOpts} below discusses some additional options for customizing this suite to suit your particular needs.
 
@@ -89,7 +91,7 @@ Software and manual copyright \copyright 2014 Stephanie Johnson, University of C
 \subsection{Contact information.}
 
 If you find a bug in Traces, please open an issue through the Traces GitHub repository \\
-($<$https://github.com/stephlj/smFRETcode$>$). Please include as much information as you can about what causes the bug---what commands you entered, a screen shot of the output, some of your data if possible, {\textit etc}.  Thanks!
+($<$https://github.com/stephlj/smFRETcode$>$). Please include as much information as you can about what causes the bug---what commands you entered, a screen shot of the output, {\textit etc}.  Thanks!
 
 \clearpage
 
@@ -151,8 +153,6 @@ This software assumes the following about how raw data area acquired and stored 
 The workflow for analyzing smFRET data is, generally speaking, composed of five steps (which we call ``modules''; see Fig.~\ref{fig:Workflow}): (1) data pre-processing, which includes, for example, scaling each image to take advantage of the full dynamic range of the numeric type you're using; (2) finding a mapping between the donor and acceptor channels, which will never be perfectly aligned in any setup, such that a mathematical relationship between points in one channel to points in the other must be calculated to best identify FRET pairs; (3) spot finding, that is, identifying which pixels contain fluorescence from real molecules, and which are background fluctuations; (4) calculating the intensity in each identified spot in each frame, and from these intensities, FRET-versus-time traces; and finally (5) displaying these traces for the user to comb through to pick out real results for further analysis.  Note that modules are not necessarily performed in the order listed above; for example, we do a channel mapping (Module 2) before data pre-processing (Module 1), and this analysis suite also offers the opportunity to make a refined map (Module 2) using FRET pairs that the user has looked through (Module 5).
 
 Details of how to run each module, and of what each module does, are discussed in the next section.  Figures~\ref{fig:CodeConnectivity1} and~\ref{fig:CodeConnectivity2} show call graphs that diagram the functions that perform each module, with required or optional Matlab toolboxes noted to the right of each function. Functions in colored boxes are ``tools'' that are or could be called by multiple functions; pink are highly specific to our microscope setup (and, along with the functions in white boxes, can be found in the ``core'' subdirectory), yellow should be more general (and can be found in the ``tools'' subdirectory).  Blue asterisks indicate interactive sections requiring user input; red arrows indicate files saved to or loaded from disk (dashed lines indicate optional pathways based on user input).
-
-An additional function included in this suite but not listed in Figs~\ref{fig:CodeConnectivity1} and~\ref{fig:CodeConnectivity2} because it is not called by Traces directly is ``ConvertTovbFRETInput.m,'' in the ``extras'' subdirectory. This function converts traces saved in the GUI to the input format for the commonly-used vbFRET hidden Markov modeling software \cite{Bronson2009}.  
 
 \begin{figure}[!p]
 \begin{center}
@@ -376,6 +376,8 @@ In addition to this Spot file, an eps and a Matlab .fig file of whatever is in F
 
 You can make a map using true paired DNAs (that you've confirmed are true FRET pairs by their intensity traces, and that you made sure, using the GUI, were well-localized) by running Traces with any input,  selecting the ``D'' option, and navigating to a save directory that contains the ``Spot$<$$>$.mat'' files saved with the ``s'' option from the GUI.  As with the beads, a transformation will be calculated, the residuals refined as much as possible, and then the user will be asked to check the results.  This works the same as described above for beads, although most of the figures that are generated for bead maps will not be generated here.   NOTE: You need at least 15 pairs of spots in order to calculate a polynomial transformation (at least of degree 4, as we and others usually do); if Matlab spits out a bunch of warnings about poorly conditioned fits, and/or you have close to or fewer than 15 spots, try changing to ``MatlabAffine'' in TracesSetup.
 
+\newpage
+
 \subsection{Summary of analysis options.}\label{sec:AnalysisOptions}
 
 \noindent{\it After making or loading a map, for every movie you will be asked:}\\
@@ -409,6 +411,58 @@ $\Rightarrow$ {\it If you select ``n'' and a ``SpotsFound.mat'' file exists:} ``
 \indent\indent\indent\indent\indent spots are found and their intensities calculated.}\\
 
 \noindent {\it Note: To re-calculate the background without re-scaling, delete the ``BackgroundImgs*.mat'' files in} savedir.
+
+\newpage
+
+\section{Extras: HMM analyses of Traces outputs.}
+
+Hidden Markov model (HMM)-based approaches are some of the most popular methods for extracting quantitative information from FRET-vs-time trajectories. The ``extras'' subdirectory in Traces includes a function called ``ConvertTovbFRETInput.m,'' which converts the output files saved in the Traces GUI to the input format for the commonly-used vbFRET hidden Markov modeling software \cite{Bronson2009}. We have found vbFRET to be most useful for small data sets (it is relatively slow), and for data that includes fast switching between two or three states.
+
+For our purposes, we have adapted a free, open-source HMM python library called pyhsmm for use with the output files of Traces. {\bf Note: our adaptation of pyhsmm is not as well-documented or as thoroughly tested as Traces!}
+
+\subsection{Installing pyhsmm.}
+
+pyhsmm can be downloaded from https://github.com/mattjj/pyhsmm. Installation instructions can be found in the README in the pyhsmm repo. You will also need a python installation.
+
+\subsection{Configuring pyhsmm to load the output of Traces.}
+
+(1) Tell pyhsmm where to look for data and where to save the results:\\
+Open config.py and edit datadir to point to the master directory for your Traces output files; edit resultsdir to point to where you want pyhsmm to store the HMM results.
+
+{\it As an example, let's say I want to analyze all of my 51 nM SNF2h with 1 mM ATP data. Say I collected data on two separate days and saved the analysis of that data as}
+
+/Users/Steph/Documents/smFRETdata/TracesOutput/SNF2h51nMATP1mM\_2015\_May05
+
+/Users/Steph/Documents/smFRETdata/TracesOutput/SNF2h51nMATP1mM\_2015\_Jun01\\
+\noindent {\it Each of these subdirectories can contain the analysis of multiple acquisitions from Micro-Manager. Let's suppose that on May 5, I took two movies; then SNF2h51nMATp1mM\_2015\_May05 will have Spot1\_1.mat, Spot1\_25.mat, ... Spot2\_100.mat, Spot2\_250.mat,} etc. \\
+\noindent {\it In config.py,} datadir {\it would be }
+
+/Users/Steph/Documents/smFRETdata/TracesOutput \\
+\noindent resultsdir {\it might be}
+
+/Users/Steph/Documents/smFRETdata/pyhsmmOutput\\
+
+\noindent (2) Create a subdirectory in {\it resultsdir} for data that you want to analyze together. The name of this directory will be the input to ExamineHMMresults() or the second argument if you run auto\_analysis from the command line; it will be called ``out\_dir'' in the rest of this manual.
+
+{\it In the above example, out\_dir could be ``SNF2h51nMATP1mM.'' The full path to} out\_dir {\it would be}
+
+/Users/Steph/Documents/smFRETdata/pyhsmmOutput/SNF2h51nMATP1mM\\
+
+\noindent (3) In out\_dir, create a text file called ``goodtraces.txt.'' Each line of goodtraces should list a .mat file saved by Traces that represents a single trajectory (*Spot*.mat), along with its parent directory. See the example goodtraces.txt file included with this repo for more details. 
+
+{\it goodtraces.txt tells pyhsmm what data to load, and any information about cropping or excluding particular traces.}\\
+
+\noindent (4) If you are going to call auto\_analysis from the command line, create a directory in out\_dir called ``ResultsFigs''.\\
+
+\noindent (5) Open ExamineHMMresults.m in Matlab and edit the parameters at the top of the function.
+
+\subsection{Configuring pyhsmm's initial parameters.}
+
+\subsection{Running pyhsmm from the command line.}
+
+\subsection{Running pyhsmm from Matlab with the GUI provided in Traces/extras.}
+
+{\bf Note: to my knowledge, this only works on a Mac, unfortunately.}
 
 \newpage
 

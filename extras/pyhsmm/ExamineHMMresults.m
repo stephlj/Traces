@@ -4,30 +4,36 @@
 % data for construct, then starts a simple GUI for the user to select
 % traces for further analysis.
 %
-% Construct can be any one of the subdirectory names in 
-% '/Users/Steph/Documents/UCSF/Narlikar lab/HMM analysis/data'.
+% Construct can be any the subdirectory names in resultsdir in config.py.
 %
 % Steph 2/2015
 
 function ExamineHMMresults(construct)
 
-%fig_pos = [250,400,700,700];
+%%% Parameters: %%%
+% Figure position for GUI. Run figure('Position',fig_pos') to see where
+% this will show up on your screen and adjust accordingly.
 fig_pos = [100,400,1100,700];
-%resultsdir = fullfile('/Users/Steph/Documents/UCSF/Narlikar lab/HMM analysis/data',construct);
 
+% Minimum FRET cutoff. For visualization only.
 minFRET = 0.775; % Plots a horizontal line indicating min acceptable starting FRET
-    % For my usual +3 nucs, use 0.775
-    % For 20-20 overhang DNAs, use 0.7
 
+% Where your python installation is:
 setenv('PYTHONPATH', ['/Users/Steph/code/:', getenv('PYTHONPATH')]);
 setenv('PATH', ['/Users/Steph/miniconda/bin/:', getenv('PATH')]);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Code guts below here %%%
 [~,dirnames] = system(['python config.py']);
 % The two outputs come back separated by a newline character:
 newlines = regexpi(dirnames,'\n');
 datadir = dirnames(1:newlines(1)-1);
 resultsdir = dirnames(newlines(1)+1:end-1);
 resultsdir = fullfile(resultsdir,construct);
+
+if ~exist(fullfile(resultsdir,'ResultsFigs'),'dir')
+    mkdir(fullfile(resultsdir,'ResultsFigs'));
+end
 
 python_command = ['python auto_analysis.py ', construct];
 
@@ -174,6 +180,14 @@ while k <= length(allresults)
             % Discard or un-discard this trace
             elseif cc=='d'
                 tokeep(k) = ~tokeep(k);
+                newtempstruct = load(fullfile(resultsdir,allresults(k).name));
+                if isfield(newtempstruct,'discard')
+                    discard = ~newtempstruct.discard;
+                else
+                    discard = 1;
+                end
+                save(fullfile(resultsdir,allresults(k).name),'discard','-append');
+                clear newtempstruct discard
                 cc=13;
             % Zoom
             elseif cc=='z'
@@ -211,6 +225,6 @@ while k <= length(allresults)
 end
 close
 
-% Just saving the "to keep" vector to be read in by
-% ExtractInfoFromPyHMMresults.
+% The tokeep vector makes subsequent rounds of data easier. This
+% information is also stored in each file.
 save(fullfile(resultsdir,'ToAnalyzeFurther.mat'),'tokeep')
