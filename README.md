@@ -1,4 +1,4 @@
-#Traces (single molecule FRET analysis code)#
+#Traces: single molecule FRET analysis code#
 
 Traces is a software suite designed to calculate FRET-versus-time trajectories (“traces”) from a standard prism-based TIRF single-molecule FRET (smFRET) microscopy setup. It can be run as a stand-alone analysis suite, but it is written as modularly as possible with the hope that it can be adapted fairly easily to other microscopy setups and acquisition software.  
 
@@ -49,7 +49,7 @@ from the command line and follow the instructions in the manual. The smFRETdata 
 
 If you use Traces to analyze data for a publication, please cite it!
 
-Johnson S., Johnson M., Breuer L., and Narlikar G.J. (2016) Traces (single molecule FRET analysis code). (DOI coming soon)
+Johnson S., Johnson M., Breuer L., and Narlikar G.J. (2016) Traces: single molecule FRET analysis code. (DOI coming soon)
 
 ##Acknowledgements##
 
