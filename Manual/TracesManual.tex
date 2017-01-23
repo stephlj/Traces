@@ -21,6 +21,7 @@
 \newcommand{\sj}[1]{\textcolor{red}{#1}}
 % To prevent Matlab functions getting split across lines:
 \hyphenation{LoadRawImgs}
+\hyphenation{ExamineHMMresults}
 
 \bibliographystyle{unsrt}
 
@@ -418,18 +419,20 @@ $\Rightarrow$ {\it If you select ``n'' and a ``SpotsFound.mat'' file exists:} ``
 
 Hidden Markov model (HMM)-based approaches are some of the most popular methods for extracting quantitative information from FRET-vs-time trajectories. The ``extras'' subdirectory in Traces includes a function called ``ConvertTovbFRETInput.m,'' which converts the output files saved in the Traces GUI to the input format for the commonly-used vbFRET hidden Markov modeling software \cite{Bronson2009}. We have found vbFRET to be most useful for small data sets (it is relatively slow), and for data that includes fast switching between two or three states.
 
-For our purposes, we have adapted a free, open-source HMM python library called pyhsmm for use with the output files of Traces. {\bf Note: our adaptation of pyhsmm is not as well-documented or as thoroughly tested as Traces!}
+For our purposes, though, we have instead adapted a free, open-source HMM python library called pyhsmm for use with the output files of Traces. {\it Note: our adaptation of pyhsmm is not as well-documented or as thoroughly tested as Traces!} Also note: technically, pyhsmm is the name of the python library. However, in the following we will refer to the code we wrote to use this library to analyze the output of Traces as ``pyhsmm'' also. Our code can be found in the ``pyhsmm\_for\_Traces'' subdirectory in ``extras''.
 
-\subsection{Installing pyhsmm.}
+\subsection{pyhsmm with Traces: First-time setup}
+
+\subsubsection{Installing pyhsmm.}
 
 pyhsmm can be downloaded from https://github.com/mattjj/pyhsmm. Installation instructions can be found in the README in the pyhsmm repo. You will also need a python installation.
 
-\subsection{Configuring pyhsmm to load the output of Traces.}
+\subsubsection{Configuring pyhsmm to load the output of Traces.}
 
 (1) Tell pyhsmm where to look for data and where to save the results:\\
-Open config.py and edit datadir to point to the master directory for your Traces output files; edit resultsdir to point to where you want pyhsmm to store the HMM results.
+Open config.py and edit {\it datadir} to point to the master directory for your Traces output files; edit {\it resultsdir} to point to where you want pyhsmm to store the HMM results.
 
-{\it As an example, let's say I want to analyze all of my 51 nM SNF2h with 1 mM ATP data. Say I collected data on two separate days and saved the analysis of that data as}
+{\it As an example, let's say I want to analyze all of my 51 nM SNF2h with 1 mM ATP data. Say I collected data on two separate days and saved the analysis of that data in}
 
 /Users/Steph/Documents/smFRETdata/TracesOutput/SNF2h51nMATP1mM\_2015\_May05
 
@@ -444,25 +447,68 @@ Open config.py and edit datadir to point to the master directory for your Traces
 
 \noindent (2) Create a subdirectory in {\it resultsdir} for data that you want to analyze together. The name of this directory will be the input to ExamineHMMresults() or the second argument if you run auto\_analysis from the command line; it will be called ``out\_dir'' in the rest of this manual.
 
-{\it In the above example, out\_dir could be ``SNF2h51nMATP1mM.'' The full path to} out\_dir {\it would be}
+{\it In the above example,} out\_dir {\it could be ``SNF2h51nMATP1mM.'' The full path to} out\_dir {\it would be}
 
 /Users/Steph/Documents/smFRETdata/pyhsmmOutput/SNF2h51nMATP1mM\\
 
-\noindent (3) In out\_dir, create a text file called ``goodtraces.txt.'' Each line of goodtraces should list a .mat file saved by Traces that represents a single trajectory (*Spot*.mat), along with its parent directory. See the example goodtraces.txt file included with this repo for more details. 
+\noindent (3) In {\it out\_dir}, create a text file called ``goodtraces.txt.'' Each line of goodtraces should list a .mat file saved by Traces that represents a single trajectory (*Spot*.mat), along with its parent directory. See the example goodtraces.txt file included with this repo for more details. 
 
 {\it goodtraces.txt tells pyhsmm what data to load, and any information about cropping or excluding particular traces.}\\
 
-\noindent (4) If you are going to call auto\_analysis from the command line, create a directory in out\_dir called ``ResultsFigs''.\\
+\noindent (4a) If you are going to call auto\_analysis from the command line, create a directory in {\it out\_dir} called ``ResultsFigs''.\\
 
-\noindent (5) Open ExamineHMMresults.m in Matlab and edit the parameters at the top of the function.
+\noindent (4b) If you are going to use ExamineHMMresults() in Matlab to run the analysis, open ExamineHMMresults and edit the parameters at the top of the function.
 
-\subsection{Configuring pyhsmm's initial parameters.}
+{\it Note: to my knowledge, using ExamineHMMresults to call auto\_analysis by ``shelling out'' of Matlab's IDE only works on a Mac, at least as currently implemented.}
 
-\subsection{Running pyhsmm from the command line.}
+\subsubsection{Configuring models and model parameters.}
 
-\subsection{Running pyhsmm from Matlab with the GUI provided in Traces/extras.}
+pyhsmm is a general python library for fitting HMMs and related models to many kinds of noisy data, not just single-molecule FRET data. As such, there are many ways to customize your use of it to suit your particular needs.
 
-{\bf Note: to my knowledge, this only works on a Mac, unfortunately.}
+In our case, we use pyhsmm to fit HMMs with Gaussian emissions and instantaneous transitions between states; so in fret.py you will notice that we import Gaussian from pyhsmm.basic.distribution. We use a hierarchical Dirichlet process (HDP) prior to automatically select the number of states in each trajectory; and we also make use of the ``sticky'' regularizer to penalize very short-lived states (which in our case are usually noise states that we want the model to ignore). Thus we import WeakLimitStickyHDPHMM from pyhsmm.models. Obviously, if your data have very fast switching events between states, or the noise is non-Gaussian, you will want to import a different built-in distribution from the pyhsmm library, or exclude or change the sticky regularizer, {\it etc}.
+
+Regardless, in fret.py you may want to change the hyperparameters for the Gaussian emissions (see line 70, ``obs\_hypparams = ...'' in make\_model); and/or the value of the sticky regularizer, line 84, where the model is defined (also in make\_model). This is also where you would change the kind of model if you want to use something other than WeakLimitStickyHDPHMM. See the comments in fret.py for more information.
+
+Lastly, if you want to change the way data are loaded, the figures that are generated (see below), what gets saved to the .mat files that are generated (also see below), {\it etc}, you would do that in fret.py.
+
+\subsection{Running pyhsmm on Traces output files.}
+
+\subsubsection{Running pyhsmm from the command line.}
+
+Navigate to the folder containing auto\_analysis.py, FRET.py and config.py. In a command line ({\it e.g.}, in a Terminal on a Mac), run
+
+python auto\_analysis.py {\it out\_dir}
+
+\noindent where out\_dir is, continuing the example from above, SNF2h51nMATP1mM.
+
+\subsubsection{Running pyhsmm from Matlab with the GUI provided in Traces/extras.}
+
+In Matlab, call ExamineHMMresults(`out\_dir'). If everything is set up correctly, a series of ``Done with $<$each line from goodtraces.txt$>$!'' will be displayed. Once all the files are analyzed, a rudimentary GUI like the one included with Traces will appear, allowing the user to page through the results of each file's analysis. Through the GUI, you can discard or un-discard a trace, zoom and unzoom, and re-run the pyhsmm analysis for this particular trace.
+
+The GUI will display four plots: the top two show the red and green acceptor intensities, and the bottom to the calculated FRET values. The left plots show the data stored in ``RedI,'' ``GrI'', and ``FRET'' in the Traces output file (so including any smoothing for visualization that the user implemented for viewing in the Traces GUI); the right plots show the data in ``unsmoothedRedI'' {\it etc}. Note that the HMM analysis is performed on the unsmoothed data; sometimes the HMM segmentation will look wrong, until you examine the unsmoothed data that it actually works with.
+
+To change the start and end cropping, you will have to edit the goodtraces.txt file directly. You can do this while the Matlab GUI is running; if you edit goodtraces.txt, use the ``r'' option in the GUI to re-run the analysis. The goodtraces.txt file will be re-loaded by auto\_analysis, and the new cropping information used in the resulting output.
+
+
+\subsection{pyhsmm outputs.}
+
+auto\_analysis will generate a set of .png files in the ResultsFigs subdirectory, which show the unsmoothed input data with the HMM segmentation overlaid on it. It will also generate a .mat file for every line of goodtraces.txt that does not start with \#, which has all of the elements of the Traces output .mat files, plus any start or end crop values indicated in goodtraces.txt, and:
+
+{\it model\_data}: Frames-by-2 matrix, where the first column contains the donor dye intensities used as the input to pyhsmm, and the second column are the acceptor intensities;
+
+{\it model\_durations}: Durations, in frames, of each state fit by the HMM. sum(model\_durations) = size(model\_data,1).
+
+{\it model\_redgreenseq} and {\it model\_fretseq}: Frames-by-2 and 1-by-frames matrices, respectively, containing for each frame the {\it fitted} donor (``green''), acceptor (``red''), and FRET values for that frame. As an example: imagine a trajectory starts in high FRET, FRET=0.95, and the fitted HMM has this FRET state continue for 47 frames. Then model\_durations(1) = 47 and the first 47 elements of model\_fretseq will have identical values of 47.
+
+{\it discard}: If this is 0, the user indicated this trace should be discarded from further analysis. If absent or 1, keep this trace. {\it Note: this field is only generated through ExamineHMMresults.}
+
+{\it model\_stateseq\_norep}: This vector tells you the order of states assigned by the HMM (and how many there were). For example, if model\_stateseq\_norep $=[7,0,7,4,7,0]$, the fitted HMM has three unique states, which the algorithm called state 7, state 0 and state 4. The first model\_durations(1) frames in the trajectory were assigned to state 7, which has FRET value model\_fretseq(1); the next model\_durations(2) frames were assigned to state 0, which FRET value model\_fretseq(model\_durations(1)+1); the next model\_durations(3) frames were assigned to the initial state, state 7; and so on. 
+
+{\it model\_stateseq}: Same as model\_stateseq\_norep but has one state assignment per frame. \\
+
+In addition, fret.py also generates a modelfits.pkl file that contains the output of pyhsmm, if you don't want to use .mat files.\\
+
+{\it A note about the outputs of pyhsmm}: Many of these outputs are type int32, NOT double! Be careful, especially if calling auto\_analysis through the command line, that you convert them to double precision before manipulating them in a way that would generate non-integer values (for example, dividing by fps to get seconds instead of frames).
 
 \newpage
 
