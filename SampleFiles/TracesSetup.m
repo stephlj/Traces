@@ -29,12 +29,9 @@ function TracesSetup()
 
 %%%%%%%% Directory defaults: %%%%%%%%
 % Where to save analyzed data:
-%defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
-defaultsavedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET data analysis';
+defaultsavedir = '/Volumes/smFRET/smFRET data analysis';
 % Where to load data from:
-%defaultdatadir = '/Volumes/smFRET/smFRET data';
-defaultdatadir = '/Users/Steph/Desktop/current data being analyzed';
-%defaultdatadir = '/Volumes/SPEEDY';
+defaultdatadir = '/Volumes/smFRET/smFRET data';
 % Where the code is (which is where it saves this parameter file)
 codedir = '/Users/Steph/Documents/UCSF/Narlikar lab/smFRET analysis code';
 
@@ -74,22 +71,11 @@ DetectRedFlash = 0; % If this is greater than 0, Traces will look for a "flash"
 InjectDelay = 2.6; % If you are using an automated syringe pump to inject,
     % and you have measured the delay, put that information here.  This is 
     % only used if red laser flashes are detected (see above). Our delay is
-    % 3.3 +/- 0.2 sec.
-    % Update 6/2016: With the new syringes, the delay for pump 2 is
     % 2.6+/0.3 sec.
 ManualInjectMark = 11.8; %If this is greater than 0, UserSpotSelection 
     % will plot a vertical line at this number of seconds. It doesn't
     % affect anything other than plot display. This isn't used if
     % DetectRedFLash is nonzero and acceptor channel flashes are found.
-    % 8.23<-This is assuming 10fps for my old data, which
-    % as of 11/2015 I think is actually 7.38 fps!
-    % How to get this number: If DetectRedFlash finds a flash at frame 67,
-    % and my frame rate is 7.38 fps, and there's an additional delay of 3.3
-    % seconds between when I hit Withdraw on the syringe pump and when the
-    % new buffer hits the sample, then 
-    % ManualInjectMarkOld = 67.6/7.38+3.3 = 12.5 seconds <-new Micro-Manager
-    % ManualInjectMarkOld = 49.3/7.38+3.3 = 9.98 seconds <-old Micro-Manager, 3000 frame movies only!!
-    % ManualInjectMark = 67.6/7.38+2.6 = 11.8 seconds <-new Micro-Manager+new syringe
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
 FindSpotsEveryXFrames = 0; % If this is greater than 0,
