@@ -122,18 +122,16 @@ Amps = [];
             Vars(:,end+1) = tempVars(:,ss);
             bkgnd(end+1) = tempbkgnd(ss);
             Amps(end+1) = tempAmps(ss);
-        % For debugging:
-%         else
-%             if FindSpotDists(tempCenters(:,ss),spots(:,ss))>cen_tolerance
-%                 disp(sprintf('Removing spot at (%d,%d) from bad fit convergence: new spot center is %d away',...
-%                     spots(1,ss),spots(2,ss),FindSpotDists(tempCenters(:,ss),spots(:,ss))))
-%             elseif spotboundary>bkgnd+bkgnd_tolerance
-%                 disp(sprintf('Removing spot at (%d,%d) from too high background: boundary background is %d',...
-%                     spots(1,ss),spots(2,ss),spotboundary))
-%             else
-%                 disp(sprintf('Removing spot at (%d,%d) because variance is %d',...
-%                     spots(1,ss),spots(2,ss),tempVars(1,ss)))
-%             end
+        else
+            if FindSpotDists(tempCenters(:,ss),spots(:,ss))>cen_tolerance
+                disp(sprintf('Spot center refinement failed: Bad fit convergence (new spot center is %d away)',FindSpotDists(tempCenters(:,ss),spots(:,ss))))
+            end
+            if spotboundary>bkgnd+bkgnd_tolerance
+                disp(sprintf('Spot center refinement failed: Too high background (boundary background is %d)',spotboundary))
+            end
+            if tempVars(1,ss) < VarTolerance
+                disp(sprintf('Spot center refinement failed: Variance is below tolerance (%d; tolerance is %d)',tempVars(1,ss),VarTolerance))
+            end
         end
         clear spotimg localcen tempVars tempCenters spotboundary empbkgnd
     end
