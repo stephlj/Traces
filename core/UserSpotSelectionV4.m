@@ -318,9 +318,13 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 m = 1;
                                 k = kk(m);
                             end
+                        % If you are going through re-mapped spots and this
+                        % is the last spot,
                         elseif m==length(kk)
                             k = size(spots,2)+1;
                             % (This will break us out of the while loop and end this analysis session)
+                        % If you are going through re-mapped spots and just
+                        % need to go to the next one:
                         else
                             m = m+1;
                             k = kk(m);
@@ -362,7 +366,18 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         cc=13;
                     % go to the next movie:
                     elseif cc=='d'
-                        k = size(spots,2)+1;
+                        % Update 1/2017: Sometimes I hit d by accident! in
+                        % which case I don't want to lose re-mapped spots:
+                        really_end_movie = 0;
+                        if ~isempty(kk)
+                            disp('You will lose the queue of re-mapped spots; really go to next movie?')
+                            really_end_movie= input('If yes, enter 1, else 0: ');
+                        else
+                            really_end_movie=1;
+                        end
+                        if really_end_movie==1
+                            k = size(spots,2)+1;
+                        end
                         cc=13;
                     % Set background levels
                     elseif cc=='b'
