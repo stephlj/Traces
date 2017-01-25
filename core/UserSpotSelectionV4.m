@@ -369,8 +369,14 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         [x,~] = ginput(2);
                         % Make sure user actually selected something in the
                         % correct panel
-                        if isequal(trace_axes,gca)
+                        if isequal(trace_axes,gca) && x(1)~=x(2)
                             x = sort(x);
+                            if x(1)<0
+                                x(1)=1;
+                            end
+                            if x(2)>size(allRedI,2)
+                                x(2)=size(allRedI,2);
+                            end
                             Rbkgnd(k) = mean(RedI(round(x(1)*fps:x(2)*fps)));
                             Gbkgnd(k) = mean(GrI(round(x(1)*fps:x(2)*fps)));
                             clear x
