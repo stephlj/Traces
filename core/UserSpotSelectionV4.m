@@ -565,7 +565,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 InitSpot = spots(:,k);
                                 newcoords = GlobalToROICoords([],[yIlocal;xIlocal],spots(:,k),zoomsizeR,zoomsizeR);
                                 [imgs,~] = LoadScaledMovie(PathToMovie,[starttime endtime],params);
-                                [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
+                                [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params,1);
                                 % Check the new spot isn't too close to the
                                 % boundary
                                 if ~isempty(tempnewspot)
@@ -609,7 +609,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                                 InitSpot = GrSpots(:,k);
                                 newcoords = GlobalToROICoords([],[yIlocal;xIlocal],GrSpots(:,k),zoomsizeG,zoomsizeG);
                                 [~,imgs] = LoadScaledMovie(PathToMovie,[starttime endtime],params);
-                                [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params);
+                                [tempnewspot, ~] = FindRefinedSpotCenters(imgs,newcoords,0.02,params,1);
                                 if ~isempty(tempnewspot)
                                     [tempnewspot,~,~,~] = CheckSpotBoundaries(tempnewspot,...
                                             [],[],[],params,PathToMovie);
