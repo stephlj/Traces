@@ -42,7 +42,7 @@ function params = ScaleMovieV2(PathToMovie,params)
                     newMax>(mean(Maxes)+meanmultiplier*std(Maxes))
                 newMax = sortedMaxes(end-1);
                 sortedMaxes = sortedMaxes(1:end-1);
-                if length(sortedMaxes)<(length(Maxes)-7)
+                if length(sortedMaxes)<(length(Maxes)-10)
                     disp('ScaleMovieV2: A lot of max outliers?')
                     disp('To continue reducing the max value, enter: dbcont')
                     disp('To stop here, enter: stdDiffmultiplier = stdDiffmultiplier+1; meanmultiplier = meanmultiplier+1; dbcont')
