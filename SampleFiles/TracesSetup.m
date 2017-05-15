@@ -73,8 +73,8 @@ InjectDelay = 2.6; % If you are using an automated syringe pump to inject,
     % only used if red laser flashes are detected (see above). Our delay is
     % 2.6+/0.3 sec.
 ManualInjectMark = 11.8; %If this is greater than 0, UserSpotSelection 
-    % will plot a vertical line at this number of seconds. It doesn't
-    % affect anything other than plot display. This isn't used if
+    % will plot a vertical line at this number of seconds, and this value 
+    % will be saved as the time of injection. This isn't used if
     % DetectRedFLash is nonzero and acceptor channel flashes are found.
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
