@@ -12,7 +12,7 @@ Please [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find b
 
 ## Why Traces?
 
-Traces developed out of three main problems we were facing analyzing smFRET data in our lab: the need (1) for more customization options for our particular setup than were offered by other software options at the time; (2) for more automation, additional computational and manual checks to enrich for good data with less work on the part of the user, and the ability to save and rerun select parts of the analysis, in order to handle the large data sets we generate; and (3) to be able to "trace" intensity-versus-time data back to the images that generated those data. 
+Traces developed out of three main needs we were facing in analyzing smFRET data in our lab that were not met by other available software options: the need (1) for more customization options for our particular setup; (2) for more automation, additional computational and manual checks to enrich for good data with less work on the part of the user, and the ability to save and rerun select parts of the analysis, in order to handle the large data sets we generate; and (3) to be able to "trace" intensity-versus-time data back to the images that generated those data. 
 
 This last point was so important to us, especially for distinguishing complicated but real signals from experimental artifacts, that we named our software "Traces”: we want the user to always be able to "trace back" to the original images, to the analysis parameters used to get intensity-versus-time data out of those images, etc. For example, Traces allows the user to play sections of the movie, or to examine averages of sections of the movie, that generated the intensity-versus-time data being displayed for analysis.
 
