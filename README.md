@@ -37,7 +37,7 @@ More information can be found in the accompanying manual.
 
 ## Sample Data
 
-Sample data that can be analyzed by Traces can be found at [smFRETdata](https://github.com/stephlj/smFRETdata). To analyze the sample data in that repository, first copy the sample TracesSetup.m file from the SampleFiles subdirectory to the directory that contains Traces.m. Edit the parameters in TracesSetup.m (see comments in that file as well as additional details in the manual). Then run
+Sample data that can be analyzed by Traces can be found at [TracesSampleData](https://github.com/stephlj/TracesSampleData). To analyze the sample data in that repository, first copy the sample TracesSetup.m file from the SampleFiles subdirectory to the directory that contains Traces.m. Edit the parameters in TracesSetup.m (see comments in that file as well as additional details in the manual). Then run
 
 ```matlab
 Traces('SNF2h51nMATP1mM')
