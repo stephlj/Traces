@@ -455,7 +455,7 @@ Open config.py and edit {\it datadir} to point to the master directory for your 
 
 \noindent (3) In {\it out\_dir}, create a text file called ``goodtraces.txt.'' Each line of goodtraces should list a .mat file saved by Traces that represents a single trajectory (*Spot*.mat), along with its parent directory. See the example goodtraces.txt file included with this repo for more details. 
 
-{\it goodtraces.txt tells pyhsmm what data to load, and any information about cropping or excluding particular traces.}\\
+{\it goodtraces.txt tells pyhsmm what data to load, and any information about cropping or excluding particular traces. {\bf NOTE: Once you run ExamineHMMresults or auto\_analysis, pyhsmm will generate a set of output files detailed below, including a *\_Results.mat file for each line in goodtraces.txt that does not start with a \#. If you then add a \# to a line in goodtraces.txt, to remove the corresponding file from analysis, pyhsmm will not operate on that file, but the old output files will need to be removed manually!}}\\
 
 \noindent (4a) If you are going to call auto\_analysis from the command line, create a directory in {\it out\_dir} called ``ResultsFigs''.\\
 
