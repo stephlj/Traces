@@ -347,12 +347,14 @@ function Traces(rootname,debug)
                 end
                 clear n xout
 
-                if debug %Figure with all the spots found:
+                % Update 7/2017: These figures are so useful, I'm making
+                % them default display, instead of part of debug
+                %if debug %Figure with all the spots found:
                     [spotsG_abs,spotsR_abs] = SpotsIntoAbsCoords(spotsG{i},...
                             spotsR{i},params,size(allBdImgs(:,:,i),2)/2);
                     PlotDebugFigures(1,allBdImgs(:,:,i),spotsR_abs,spotsG_abs,params)
                     clear spotsG_abs spotsR_abs
-                end
+                %end
 
                 % Step 2: figure out which spots in one channel go with the spots in
                 % the other channel.  For our beads, which are brighter in the donor
@@ -382,13 +384,13 @@ function Traces(rootname,debug)
                     matchRall = [matchRall, matchR{i}];
                 end
 
-                if debug % Box in green the ones that were matched:
+                %if debug % Box in green the ones that were matched:
                     [matchG_abs,matchR_abs] = SpotsIntoAbsCoords(matchG{i},...
                             matchR{i},params,size(allBdImgs(:,:,i),2)/2);
                     PlotDebugFigures(2,allBdImgs(:,:,i),matchG_abs,matchR_abs,params,...
                         matchR{i},matchG{i},size(imgRed))
                     clear matchG_abs matchR_abs
-                end
+                %end
                 
                 % Update 11/5/2014: creating a temporary map that can be
                 % used if the greedy algorithm fails on the next data
@@ -648,15 +650,22 @@ close all
             % same labels as last time), just re-scale and recompute
             % background and intensities
             if strcmpi(useoldspots,'y') && strcmpi(useoldTform,'y')
-               prevRspots = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')));
-               spots = prevRspots.SpotsInR;
-               % If the user re-located any green spots, want to use those
-               % locations:
-               if isfield(prevRspots,'SpotsInG')
-                    SpotsInG = prevRspots.SpotsInG;
-               end
-               Vars = prevRspots.SpotVars;
-               clear prevRspots
+                if exist(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')))
+                   prevRspots = load(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')));
+                   spots = prevRspots.SpotsInR;
+                   % If the user re-located any green spots, want to use those
+                   % locations:
+                   if isfield(prevRspots,'SpotsInG')
+                        SpotsInG = prevRspots.SpotsInG;
+                   end
+                   Vars = prevRspots.SpotVars;
+                   clear prevRspots
+                else
+                    prevRspots = load(fullfile(savedir,strcat('SpotsFound',int2str(i),'.mat')));
+                    spots = prevRspots.spots;
+                    Vars = prevRspots.Vars;
+                    clear prevRspots
+                end
                disp('Scaling movie ...')
                params = ScaleMovieV2(fullfile(D_Data,ToAnalyze_FullNames{i}),params);
                UseScaledMov = 'n'; % This is so the background will get re-computed, below

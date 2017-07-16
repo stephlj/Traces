@@ -1,4 +1,4 @@
-/SampleData
+SampleData/*
 AnalysisParameters.mat
 PathToRecentMap.mat
 /old\ code
@@ -18,3 +18,4 @@ PathToRecentMap.mat
 /extras/pyhsmm_for_Traces/config.pyc
 /extras/pyhsmm_for_Traces/fret.pyc
 TracesSetup.m
+.DS_Store
