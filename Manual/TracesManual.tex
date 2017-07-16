@@ -423,6 +423,8 @@ For our purposes, though, we have instead adapted a free, open-source HMM python
 
 \subsection{pyhsmm with Traces: First-time setup}
 
+{\it Additional information on running pyhsmm on the output of Traces can also be found in the README that accompanies the sample data at stephlj/TracesSampleData repository.}
+
 \subsubsection{Installing pyhsmm.}
 
 pyhsmm can be downloaded from https://github.com/mattjj/pyhsmm. Installation instructions can be found in the README in the pyhsmm repo. You will also need a python installation.
@@ -508,7 +510,9 @@ auto\_analysis will generate a set of .png files in the ResultsFigs subdirectory
 
 In addition, fret.py also generates a modelfits.pkl file that contains the output of pyhsmm, if you don't want to use .mat files.\\
 
-{\it A note about the outputs of pyhsmm}: Many of these outputs are type int32, NOT double! Be careful, especially if calling auto\_analysis through the command line, that you convert them to double precision before manipulating them in a way that would generate non-integer values (for example, dividing by fps to get seconds instead of frames).
+{\it A note about the outputs of pyhsmm}: Many of these outputs are type int32, NOT double! Be careful, especially if calling auto\_analysis through the command line, that you convert them to double precision before manipulating them in a way that would generate non-integer values (for example, dividing by fps to get seconds instead of frames).\\
+
+Lastly, if you call pyhsmm through Matlab by running ExamineHMMresults, a .mat file called ToAnalyzeFurther.mat will be generated. This file contains a single vector, called tokeep, that is the same length as the number of *\_Results.mat files, and has a value of 1 if the corresponding trajectory is to be kept for further analysis, but 0 if it was selected to be discarded using the ``d'' option in the ExamineHMMresults GUI. This is a very fragile way of keeping track of which trajectories were flagged as to be discarded in the ExamineHMMresults GUI! If you add or remove *\_Results.mat files, ExamineHMMresults will warn you that the current number of results files does not match the length of tokeep, and if you continue, will overwrite tokeep, setting all values to 1 for the new round of analysis. It is therefore more robust to discard traces by adding a \# to the start of the line in goodtraces.txt.
 
 \newpage
 

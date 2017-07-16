@@ -6,9 +6,9 @@ from os.path import isdir
 # resultsdir: where to look for subdirectories in which to store pyhsmm output
 
 def getdirs():
-    if isdir('/Users/Steph/Documents/smFRETdata'):
-         datadir = '/Users/Steph/Documents/smFRETdata/TracesOutput'
-         resultsdir = '/Users/Steph/Documents/smFRETdata/pyhsmmOutput'
+    if isdir('/Users/Steph/Documents/TracesSampleData'):
+         datadir = '/Users/Steph/Documents/TracesSampleData/pyhsmm_Input'
+         resultsdir = '/Users/Steph/Documents/TracesSampleData/pyhsmm_Output'
     elif isdir('/Users/Steph/Documents/SomethingElse'):
         datadir = '/Users/Steph/Documents/SomethingElse/something'
         resultsdir = '/Users/Steph/Documents/SomethingElse/etc'

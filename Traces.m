@@ -1025,7 +1025,7 @@ close all
            % SpotsAndIntensities file if the user didn't re-find spots or
            % re-match them with a new transformation. I want to keep the
            % same spot indices in that case:
-           if strcmpi(useoldspots,'y') && strcmpi(useoldTform,'y')
+           if strcmpi(useoldspots,'y') && strcmpi(useoldTform,'y') && exist(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')))
                save(fullfile(savedir,strcat('SpotsAndIntensities',int2str(i),'.mat')),...
                    'RedI','GrI','-append') % Append overwrites the indicated variables, if they already exist
            else

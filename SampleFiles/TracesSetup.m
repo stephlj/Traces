@@ -74,7 +74,7 @@ InjectDelay = 2.6; % If you are using an automated syringe pump to inject,
     % 2.6+/0.3 sec.
 ManualInjectMark = 11.8; %If this is greater than 0, UserSpotSelection 
     % will plot a vertical line at this number of seconds, and this value 
-    % will be saved as the time of injection. This isn't used if
+    % will be saved as the time of injection in the Spots* files. This isn't used if
     % DetectRedFLash is nonzero and acceptor channel flashes are found.
 FramesToAvg = 20; % How many frames to average over for spotfinding. 10-20 is a good value
     % for me.
