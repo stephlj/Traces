@@ -608,7 +608,7 @@ close all
         end
         mkdir(savedir)
     else
-        saveover = input('Save directory exists; save over? (y/n)','s');
+        saveover = input('Save directory exists; continue? (y/n)','s');
         if ~strcmpi(saveover,'y')
             savepath = uigetdir(params.defaultsavedir,'Choose directory to save data in:');
             newdirname = input('New directory name:','s');
