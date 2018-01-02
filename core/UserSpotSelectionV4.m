@@ -347,7 +347,7 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         cc=13;
                     % Go to specific spot
                     elseif cc=='g'
-                        newk = input('Go to bead number: ');
+                        newk = input('Go to spot number: ');
                         % Update 3/2015: Only allow this to work if the spot
                         % the user wants to look at is one that was re-mapped:
                         if isempty(kk)
