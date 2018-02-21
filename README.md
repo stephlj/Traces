@@ -43,13 +43,13 @@ Sample data that can be analyzed by Traces can be found at [TracesSampleData](ht
 Traces('SNF2h51nMATP1mM')
 ```
 
-from the command line and follow the instructions in the manual. The smFRETdata repository also has analysis files to accompany the raw data.
+from the command line and follow the instructions in the manual. The TracesSampleData repository also has analysis files to accompany the raw data.
 
 ## Citing Traces
 
 If you use Traces to analyze data for a publication, please cite it!
 
-Johnson S., Johnson M., Breuer L., and Narlikar G.J. (2016) Traces: single molecule FRET analysis code. (DOI coming soon)
+Johnson S.L., Johnson M.J., Breuer L.A., and Narlikar G.J. (2016) Traces: single molecule FRET analysis code. (DOI coming soon)
 
 ## Acknowledgements
 
