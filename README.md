@@ -49,7 +49,7 @@ from the command line and follow the instructions in the manual. The TracesSampl
 
 If you use Traces to analyze data for a publication, please cite it!
 
-Johnson S.L., Johnson M.J., Breuer L.A., and Narlikar G.J. (2016) Traces: single molecule FRET analysis code. (DOI coming soon)
+Johnson S.L., Johnson M.J., Breuer L.A., and Narlikar G.J. (2018) Traces: single molecule FRET analysis code. DOI: 10.5281/zenodo.1211233.
 
 ## Acknowledgements
 
