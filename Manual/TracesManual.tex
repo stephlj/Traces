@@ -53,9 +53,9 @@ Stephanie Johnson, Ph.D.\\Department of Biochemistry and
 
 \section{Introduction.}
 
-Traces is a software suite designed to calculate FRET-versus-time trajectories from a standard prism-based TIRF single-molecule FRET (smFRET) microscopy setup.  The most recent version of this suite can be found at $<$https://github.com/stephlj/smFRETcode$>$.  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily to other microscopy setups and acquisition software.  
+Traces is a software suite designed to calculate FRET-versus-time trajectories from a standard prism-based TIRF single-molecule FRET (smFRET) microscopy setup.  The most recent version of this suite can be found at $<$https://github.com/stephlj/Traces$>$.  It can be run as a stand-alone analysis suite, but it is written as modularly as possible in the hopes that it can be adapted fairly easily to other microscopy setups and acquisition software.  
 
-We have attempted to avoid as much as possible ``buried'' parameters, collecting them instead in a TracesSetup.m file.  TracesSetup.m is the only function a user should have to edit regularly (though some initial modifications may need to be made to, for example, the image loading function; see below for more details). To get started, copy TracesSetup.m into the main directory (the one with Traces.m), and adjust the parameters as needed (see below for details). %Section~\ref{sec:CustomOpts} below discusses some additional options for customizing this suite to suit your particular needs.
+We have attempted to avoid as much as possible ``buried'' parameters, collecting them instead in a TracesSetup.m file.  TracesSetup.m is the only function a user should have to edit regularly (though some initial modifications may need to be made to, for example, the image loading function; see below for more details). %Section~\ref{sec:CustomOpts} below discusses some additional options for customizing this suite to suit your particular needs.
 
 The general outline of the analysis workflow is: (1) Calculate a map that correlates pixels in the acceptor channel image to pixels in the donor channel image, as these will never be perfectly aligned in an smFRET setup. Or, load an old one. (2) Find fluorescent spots in a movie or set of movies, calculate intensity-versus-time traces for each spot, and then allow the user to save good traces for downstream analyses.
 
@@ -92,15 +92,19 @@ Software and manual copyright \copyright 2014 Stephanie Johnson, University of C
 \subsection{Contact information.}
 
 If you find a bug in Traces, please open an issue through the Traces GitHub repository \\
-($<$https://github.com/stephlj/smFRETcode$>$). Please include as much information as you can about what causes the bug---what commands you entered, a screen shot of the output, {\textit etc}.  Thanks!
+($<$https://github.com/stephlj/Traces$>$). Please include as much information as you can about what causes the bug---what commands you entered, a screen shot of the output, {\textit etc}.  Thanks!
 
 \clearpage
 
 \section{Getting started.}
 
-\subsection{General requirements.}
+Copy the TracesSetup.m file in the SampleFiles directory to the same directory that contains Traces.m. Make the directory containing the Traces analysis suite code your current working directory in Matlab. Open the TracesSetup.m file in Matlab and change parameters as necessary. 
 
-Requires Matlab (has been tested with R2012b and R2013b), with the following toolbox installed:\\
+{\it For example, you will want to set } defaultdatadir, defaultsavedir, {\it and} codedir. {\it Follow the instructions under Display Defaults to make sure figures will show up well on your screen.  I recommend leaving most of the other parameters alone for now; most of them are explained in Section \ref{sec:RunningTraces} below, and will make more sense once you've run the analysis once.}
+
+\subsection{System requirements.}
+
+Requires Matlab (has been tested with R2012b and R2013b; see below for information about R2017a and later), with the following toolbox installed:\\
 
 \noindent \textbullet~Image Processing Toolbox\\
 
@@ -112,9 +116,19 @@ Requires Matlab (has been tested with R2012b and R2013b), with the following too
 
 %\noindent This code was written for analyzing prism-based TIRF images; it may not work as well for objective-based setups (for example, you may have to alter or re-write the code to find spots, or do a more sophisticated background subtraction).\\
 
-\noindent The background subtraction routine (see Sec.~\ref{sec:BkgndSub}) creates a set of additional files that get saved to the same directory as the raw image file(s) to be analyzed, and could be as large as 4 times the original movie size.  Meaning, if you take a 1 GB movie, whatever drive you load this 1 GB movie from needs to have at least 4 GB of free space! 
+\noindent {\bf \textit{Users of Matlab R2017a and later:}} there is a known issue with R2017a (and probably later versions) involving the use of Matlab's built-in polynomial transformation functions. If you're running Traces with R2017a or later, you will need to set TransformToCalc in TracesSetup.m to Poly or Affine, or MatlabAffine (you'll get an error with MatlabPoly). If you use Poly, you will get some warnings from Matlab about badly scaled matrices, and from Traces about your version of Matlab not supporting some (extra) functionality, but Traces should still run fine.\\
+
+\noindent {\bf Disk space:} The background subtraction routine (see Sec.~\ref{sec:BkgndSub}) creates a set of additional files that get saved to the same directory as the raw image file(s) to be analyzed, and could be as large as 4 times the original movie size.  Meaning, if you take a 1 GB movie, whatever drive you load this 1 GB movie from needs to have at least 4 GB of free space! 
 
 \subsection{Data format requirements.}
+
+\begin{figure}[!t]
+\begin{center}
+\includegraphics[width=4.5in]{ScreenShots/DirectoriesShot.png}
+\caption{Screen shot illustrating the directory structure assumed by Traces.m and LoadRawImgs.m.  Here ``rootname'' is ``SNF2h51nMATP1mM''  (the one to use to analyze the sample data that comes with this software). If there were an additional directory called ``SNF2h51nMATP1mM\_2'', a call to Traces of the form Traces(`SNF2h51nMATP1mM') would analyze both directories contents sequentially.  If your acquisition software creates pma's rather than tif's, the ``SNF2h51nMATP1mM\_1'' directory would have one .pma file instead of all of the .tif files, and a metadata.txt file, but not the display\_and\_comments.txt file (a file saved by Micro-Manager that we don't use).  You don't need to have multiple directories that you want to analyze at once. The highlighted directory in the middle column containing images to be analyzed will be called ``datadir'' in the rest of this manual. {\bf Note: Traces also supports newer versions of Micro-Manager that save the .tif image files, and the metadata file, in a subdirectory called ``Pos0'', as long as Pos0 is the only image-containing subdirectory that you want to analyze.}}
+\label{fig:DirectoryStructure}
+\end{center}
+\end{figure}
 
 This software assumes the following about how raw data area acquired and stored from the camera:\\
 
@@ -127,15 +141,6 @@ This software assumes the following about how raw data area acquired and stored 
 \noindent \textbullet~This suite is also capable of loading the .pma binary files saved by the Ha lab acquisition software (and used by their IDL analysis software), instead of tiffs.  Type ``help LoadPMA'' in the command line in Matlab for more information about the assumed structure of these .pma files.  However, the directory structure created by Micro-Manager is still assumed---that is, you should put each .pma file in its own directory, and, if you want to analyze multiple pma's in one batch, call each directory {\textit rootname*} ({\textit e.g.}, \textit{rootname\_1, rootname\_2, etc}) with each of these directories having only one pma.  The filename of the pma's can be whatever you want, but there can only be one per directory. {\bf NOTE: if both a .pma and a tiff(s) exist in the same folder, it will default to using the .pma!} \\
 
 \noindent \textbullet~If your acquisition software does not save a metadata.txt file, it is easy to create one yourself (alternatively, you can modify GetInfoFromMetaData.m). Type ``help GetInfoFromMetaData'' into the Matlab command line for information about how to create metadata.txt files.  A sample metadata.txt file is also included with this software.  Each directory to be analyzed must have a metadata.txt.\\ 
-
-
-\begin{figure}[!t]
-\begin{center}
-\includegraphics[width=4.5in]{ScreenShots/DirectoriesShot.png}
-\caption{Screen shot illustrating the directory structure assumed by Traces.m and LoadRawImgs.m.  Here ``rootname'' is ``SNF2h51nMATP1mM''  (the one to use to analyze the sample data that comes with this software). If there were an additional directory called ``SNF2h51nMATP1mM\_2'', a call to Traces of the form Traces(`SNF2h51nMATP1mM') would analyze both directories contents sequentially.  If your acquisition software creates pma's rather than tif's, the ``SNF2h51nMATP1mM\_1'' directory would have one .pma file instead of all of the .tif files, and a metadata.txt file, but not the display\_and\_comments.txt file (a file saved by Micro-Manager that we don't use).  You don't need to have multiple directories that you want to analyze at once. The highlighted directory in the middle column containing images to be analyzed will be called ``datadir'' in the rest of this manual. {\bf Note: Traces also supports newer versions of Micro-Manager that save the .tif image files, and the metadata file, in a subdirectory called ``Pos0'', as long as Pos0 is the only image-containing subdirectory that you want to analyze.}}
-\label{fig:DirectoryStructure}
-\end{center}
-\end{figure}
 
 \noindent \textbullet~Channel mapping (at least an initial one) is accomplished by means of images of fluorescent beads that are visible in both channels. It is assumed these beads are in directories that contain the word ``Bead'' ({\it e.g.}, ``Beads\_1'', ``Beads\_2''). Although it is not assumed there are movies (rather than single frames) in these directories, we have found it better to average 10-20 frames before finding bead positions.  It is possible to skip the channel mapping with beads step (see below where the channel mapping procedure is discussed), but your channels will have to start out fairly well aligned.\\
 
@@ -173,12 +178,8 @@ Details of how to run each module, and of what each module does, are discussed i
 
 \clearpage
 
-\section{Running the analysis (and understanding what it does).}
+\section{Running the analysis (and understanding what it does).}\label{sec:RunningTraces}
 
-Make the directory containing the Traces analysis suite code your current working directory in Matlab. Copy the TracesSetup.m file in the SampleFiles directory to the same directory that contains Traces.m. Open the TracesSetup.m file and change parameters as necessary. 
-
-{\it For example, you will want to set } defaultdatadir, defaultsavedir, {\it and} codedir. {\it Follow the instructions under Display Defaults to make sure figures will show up well on your screen.  I recommend leaving most of the other parameters alone for now; most of them are explained below, and will make more sense once you've run the analysis once.}\\
-\\
 To start the analysis, enter\\
 
 \noindent Traces(`{\it rootname}')\\
@@ -193,10 +194,10 @@ To start the analysis, enter\\
 
 {\it We (and others, e.g., \cite{Deindl2012}), routinely image a slide with surface-immobilized fluorescent beads to calculate at least a preliminary channel map, that is, a mathematical relationship between the donor and acceptor images so that FRET pairs can be automatically identified. Generating such a map is part of a process called image registration. Not all smFRET software packages rely on the calculation of a channel map to identify FRET pairs; for example, iSMS ($<$http://isms.au.dk/$>$) allows the user to align channel images somewhat by translating them horizontally and vertically, asks the user to set thresholds that identify most or all spots in each channel, and then assumes that a spot's FRET pair is whichever spot in the other channel is closest. This has many advantages (including not requiring the use images of beads as a starting point), so long as your spot density is relatively low, and especially if you use alternating laser illumination in the first part of your movie to illuminate all spots in both channels (neither of which is true for us, hence generation of a map).}
 
-{\it This software does not support the creation of a map from real data} de~novo, {\it although there are workarounds that would allow it.  For example, you can load the FRETmap object (described below) included in this suite that contains the identity transformation instead of a calculated affine or polynomial transformation (``ChannelMapping.mat'' in the SampleFiles subdirectory). Load this map using the ``L'' option, then use the GUI to generate paired spots that could be re-loaded using the ``D'' option.  However, without a bead-based map to get you close enough to see the real spot pairs in the GUI, your channels would have to be fairly well aligned to start with in order to make this work.}
+{\it This software does not support the creation of a map from real data} de~novo, {\it although there are workarounds that would allow it.  For example, you can load the FRETmap object (described below) included in this suite that contains the identity transformation instead of a calculated affine or polynomial transformation (``ChannelMapping.mat'' in the SampleFiles subdirectory). Load this map using the ``L'' option, then use the GUI to generate paired spots that could be re-loaded using the ``D'' option.  However, without a bead-based map to get you close enough to see the real spot pairs in the GUI, your channels would have to be fairly well aligned to start with in order to make this work.}\\
 
 %\sj{TODO: A potential bug I should figure out how to get rid of ... } 
-{\it Note: any time it asks you to press ``anything else'', it will probably crash if you press the space bar. Choose a different anything else!  Also: at several points in the analysis process, Matlab will pause execution, awaiting user input (look for ``Paused: Press any key'' in the bottom left corner of the screen). If you press ``enter'' to proceed when execution pauses, these ``enter'''s can get out of sync with the code being executed and may be counted as user input when you don't want them to be.  I suggest not using ``enter'' to proceed when Matlab pauses.}
+\noindent {\bf Note:} any time it asks you to press ``anything else'', it will probably crash if you press the space bar. Choose a different anything else!  Also: at several points in the analysis process, Matlab will pause execution, awaiting user input (look for ``Paused: Press any key'' in the bottom left corner of the screen). If you press ``enter'' to proceed when execution pauses, these ``enter'''s can get out of sync with the code being executed and may be counted as user input when you don't want them to be.  I suggest not using ``enter'' to proceed when Matlab pauses.
 
 \subsection{Part 1A: Creating a channel map from fluorescent beads.}
 
@@ -260,7 +261,7 @@ To start the analysis, enter\\
 
 \subsubsection{Calculating the transformation that maps from one channel to the other.}
 
-{\it The mapping from one channel to another is accomplished by a mathematical transformation that relates a point in one channel to a point in the other channel.  A best-fit transformation is calculated from paired sets of points, one set in each channel.  As discussed in more detail below (see Sec.~\ref{sec:Details}), we and others have found a 4th-degree polynomial to best describe the relationship between channels.  The degree and kind of polynomial fitted, and the option to use affine instead of polynomial, are set in TracesSetup.  Both IDL and Matlab have built-in functions to fit polynomial or affine transformations; the FRETPmap class object also includes hand-written code to do the same, though using Matlab's optimized (and professionally written) versions are always preferable when possible. (You will have to use my hand-written code if, for example, you want to fit a maximum degree 4 polynomial, which Matlab's built-in polynomial class does not support; see also Sec.~\ref{sec:Details}.)}\\
+{\it The mapping from one channel to another is accomplished by a mathematical transformation that relates a point in one channel to a point in the other channel.  A best-fit transformation is calculated from paired sets of points, one set in each channel.  As discussed in more detail below (see Sec.~\ref{sec:Details}), we and others have found a 4th-degree polynomial to best describe the relationship between channels.  The degree and kind of polynomial fitted, and the option to use affine instead of polynomial, are set in TracesSetup.  Both IDL and Matlab have built-in functions to fit polynomial or affine transformations; the FRETmap class object also includes hand-written code to do the same, though using Matlab's optimized (and professionally written) versions are always preferable when possible. (You will have to use my hand-written code if, for example, you want to fit a maximum degree 4 polynomial, which Matlab's built-in polynomial class does not support; see also Sec.~\ref{sec:Details}.)}\\
 
 \begin{figure}
 \begin{center}
