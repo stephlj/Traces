@@ -40,6 +40,13 @@ function composite = CalcCombinedImage(tform,StartImg,EndImg,ShowResults)
 
 if ~exist('ShowResults','var') ShowResults = 0; end
 
+if isnan(tform)
+    % Traces passes in a NaN for tform if Kind = Poly in FRETmap.
+    disp('CalcCombinedImage: Your version of Matlab does not support this function.')
+    composite = -1;
+    return
+end
+
 try 
     Rfixed = imref2d(size(EndImg));
     alignedimgG = imwarp(StartImg,tform,'OutputView',Rfixed);

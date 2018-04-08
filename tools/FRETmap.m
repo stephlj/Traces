@@ -380,6 +380,7 @@ classdef FRETmap < handle
                 end
             else
                 disp('Class FRETmap: method ReturnMatlabTform not defined for Kind = Poly.')
+                MatlabTform = NaN;
                 return
             end
         end
