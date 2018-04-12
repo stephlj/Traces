@@ -254,12 +254,8 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        xlim([xlims(k,1) xlims(k,2)])
        
        fret_axes = subplot(2,1,2);
-%        plot(xvect,FRET,'-b',[xvect(1) xvect(end)],[0 0],'--k',...
-%            [xvect(1) xvect(end)],[1 1],'--k')
        plot(xvect,FRET,'-b',[xvect(1) xvect(end)],[0 0],'--k',...
-           [xvect(1) xvect(end)],[1 1],'--k', [xvect(1) xvect(end)],[0.78 0.78],'--m',...
-            [xvect(1) xvect(end)],[0.68 0.68],'--m',...
-            [xvect(1) xvect(end)],[0.85 0.85],'--m')
+           [xvect(1) xvect(end)],[1 1],'--k')
        if ~isempty(InjMarkToPlot)
            hold on
            for ss = 1:length(InjMarkToPlot)
