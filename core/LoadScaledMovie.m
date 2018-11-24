@@ -125,6 +125,14 @@ function [movRed,movGreen,movRedBkgnd,movGrBkgnd,lastframe] = LoadScaledMovie(Pa
             % in separate files
         % Figure out how many frames were saved per file:
         allfiles = dir(fullfile(PathToMovie,'BackgroundImgs*.mat'));
+        % Update 11/2018: Since I delete background images (but not scaling
+        % info) after I'm done analyzing a movie, if I then want to re-load
+        % the movie, Traces crashes here because there aren't any
+        % background files to load!
+        if isempty(allfiles)
+            ComputeBackgroundImgs(PathToMovie,params);
+            allfiles = dir(fullfile(PathToMovie,'BackgroundImgs*.mat'));
+        end
         sample_filename = allfiles(1).name; % This isn't necessarily ScaledMovieFrames1to100!!
         first_num = regexpi(sample_filename,'Imgs\d+to','match');
         second_num = regexpi(sample_filename,'to\d+.mat','match');
