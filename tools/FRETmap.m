@@ -482,7 +482,9 @@ classdef FRETmap < handle
         function TformPoly = CalcPolyTform(StartMonomials,EndPts)
             x = StartMonomials;
             y = EndPts; % EndPts doesn't change to embed polynomial in a linear space
+            warning off MATLAB:nearlySingularMatrix
             TformPoly = y*x'/(x*x');
+            warning on MATLAB:nearlySingularMatrix
         end
         % Plot, as a scatter plot, a set of data points and their
         % transformation
