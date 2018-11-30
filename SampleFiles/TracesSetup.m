@@ -222,6 +222,15 @@ NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensit
     end
     MatlabVer = ver;
     MatlabDate = MatlabVer(1).Date;
+    % imshow default image size changed at least in R2017a and needs to be
+    % adjusted:
+    if str2double(MatlabDate(end-1:end))>=17
+        h=figure;
+        defaultfigsize = get(h,'Position');
+        close
+        iptsetpref('ImshowInitialMagnification',Fig2Pos(4)/defaultfigsize(4)*100);
+        clear defaultfigsize
+    end
     if UseCombinedImage == 1 && str2double(MatlabDate(end-1:end))<=11 % Testing for Matlab versions older than 2012
         disp('Warning: This version of Matlab does not support creation of a combined image.')
         UseCombinedImage = 0;
