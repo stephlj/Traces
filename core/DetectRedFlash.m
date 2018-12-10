@@ -96,10 +96,25 @@ function InjectPoints = DetectRedFlash(AcceptorMaxes,DonorMaxes,Medians,params)
     
     if isempty(RedCandidates) || isempty(MedCandidates)
         disp('No red flashes detected ... ')
-        disp('To manually indicate flash locations, enter:')
-        disp('flashes = [68, 120]; dbcont')
-        disp('(that would be for two flashes, one that starts at frame 68, one that starts at frame 120)')
-        keyboard;
+%         disp('To manually indicate flash locations, enter:')
+%         disp('flashes = [68, 120]; dbcont')
+%         disp('(that would be for two flashes, one that starts at frame 68, one that starts at frame 120)')
+%         keyboard;
+        manu = input('Manually enter flash locations? (y/n) ','s');
+        if strcmpi(manu,'y')
+            z = input('How many flashes? ');
+            flashes = zeros(1,z);
+            for zf = 1:z
+                if zf==1
+                    flashes(zf) = input('Frame where first flash occurs: ');
+                else
+                    flashes(zf) = input('Frame where next flash occurs: ');
+                end
+            end
+        else
+            disp('Entering debugger:')
+            keyboard;
+        end
         
     else
         % Iterate through each candidate and ask make sure it appears in both lists:

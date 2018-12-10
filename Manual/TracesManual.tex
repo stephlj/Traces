@@ -198,7 +198,11 @@ Details of how to run each module, and of what each module does, are discussed i
 
 \subsection{Basic setup.}
 
-1. Copy the TracesSetup.m file in the SampleFiles directory to the same directory that contains Traces.m (should be the parent directory to SampleFiles). \\
+%1. If you're running Matlab 2017a or later, go to Editor/Debugger under Preferences and uncheck ``Automatically open editor on breakpoint.''
+%
+%{\it Traces makes frequent use of breakpoints, without the need for you to mess with the code itself. This prevents functions that trigger breakpoints from being opened automatically in Matlab's editor.}\\
+
+\noindent 1. Copy the TracesSetup.m file in the SampleFiles directory to the same directory that contains Traces.m (should be the parent directory to SampleFiles). \\
 \\
 \noindent 2. Make the directory containing the Traces analysis suite code your current working directory in Matlab. \\
 \\
@@ -313,7 +317,8 @@ The mapping from one channel to another is accomplished by a mathematical transf
 \end{center}
 \end{figure}
 
-\noindent (12) After spots have been found and paired in all Bead directories, a preliminary mapping will be calculated, and then refined by the removal of obvious outliers, which are mis-paired or poorly localized spots.  (Even a handful of mismatches---{\it e.g.} 5-10 mismatched pairs out of almost 1000 pairs total---significantly reduce the accuracy of the calculated transformation!)  After every cycle of refinement, the remaining number of spots that are being used to calculate the mapping, and the residuals for the current map, will be printed to the command line.  These residuals are the sum of the squared differences between mapped spot locations and real spot locations.  The refinement process will insist that the residuals per spot drop below the ResidTolerance value in TracesSetup; if it can't manage that, it will halt in the debugger and print some instructions to the command line about how to proceed.
+\noindent (12) After spots have been found and paired in all Bead directories, a preliminary mapping will be calculated, and then refined by the removal of obvious outliers, which are mis-paired or poorly localized spots.  (Even a handful of mismatches---{\it e.g.} 5-10 mismatched pairs out of almost 1000 pairs total---significantly reduce the accuracy of the calculated transformation!)  After every cycle of refinement, the remaining number of spots that are being used to calculate the mapping, and the residuals for the current map, will be printed to the command line.  These residuals are the sum of the squared differences between mapped spot locations and real spot locations.  The refinement process will insist that the residuals per spot drop below the ResidTolerance value in TracesSetup; if it can't manage that, it will stop %in the debugger 
+and print some instructions to the command line about how to proceed.
 
 {\it Note that the residuals printed are summed over all spots; the ResidTolerance parameter is per spot, so a ``ResidualsGtoRperSpot'', which is the residuals divided by the total number of spots included in the transformation, is also printed to the command line, for comparison to the tolerance.  Note also that because we usually calculate a polynomial transformation, which is not invertible (unlike affine), a separate transformation is computed for acceptor to donor channel, and donor to acceptor; therefore both sets of residuals (``ResidualsGtoR'' and ``ResidualsRtoG'', where ``R'' stands for ``red'' and means ``acceptor'', and ``G'' means donor (``green'')) are printed.  There are also two sets of figures that display, one for one direction, one for the reverse.  They're generally pretty similar (both the figures and the residuals).}\\
 
@@ -349,7 +354,8 @@ Scaling refers to taking the raw images from the camera, which are sometimes in 
 
 {\it If ScaleChannelsSeparately=1 in TracesSetup, it will also display the maximum intensity values for the two channels separately in a middle panel.}  
 
-{\it If it has to remove a lot of outliers to find a good maximum to scale to, it will stop in the debugger and ask for user input.  Follow the instructions that print to the command line to proceed.}\\
+{\it If it has to remove a lot of outliers to find a good maximum to scale to, it will stop %in the debugger 
+and ask for user input.  Follow the instructions that print to the command line to proceed.}\\
 
 \noindent (17) Traces also provides the option of detecting a red laser flash, which we use as a fiducial mark for injection by our automated syringe pump. If the ``DetectRedFlash'' parameter is set to a value greater than 0 in TracesSetup.m, Traces will look for ``flashes'' of high intensity in the acceptor channel that aren't in the donor channel. If such flashes are found (and confirmed by the user), an additional parameter called ``InjectPoints'' will be saved to the AnalysisParameters.mat file, containing the time index of these injection marks. They will be displayed in the GUI, with the InjectDelay (in TracesSetup) added, as a vertical magenta line.\\
 

@@ -192,13 +192,26 @@ function Traces(rootname,debug)
             if size(allmatchesG,2)<0.75*InitBdNum || steps>5
                 newtform.HistResiduals('fwd');
                 disp('Channel mapping: having to exclude lots of beads to get residuals down.')
-                disp('If histogram looks ok, you can increase tolerance, for example, enter:')
-                disp('params.ResidTolerance = ResidGtoR/size(allmatchesG,2)+0.001; dbcont')
-                disp('If you want it to remove more spots with higher residuals, reduce StdDevMultiplier,')
-                disp('e.g., enter:')
-                disp('StdDevMultiplier = StdDevMultiplier-1; dbcont')
-                disp('into the command line.')
-                keyboard
+%                 disp('If histogram looks ok, you can increase tolerance, for example, enter:')
+%                 disp('params.ResidTolerance = ResidGtoR/size(allmatchesG,2)+0.001; dbcont')
+%                 disp('If you want it to remove more spots with higher residuals, reduce StdDevMultiplier,')
+%                 disp('e.g., enter:')
+%                 disp('StdDevMultiplier = StdDevMultiplier-1; dbcont')
+%                 disp('into the command line.')
+%                 keyboard
+                disp('If histogram looks ok, press 1 and then enter to increase tolerance for refinement.')
+                disp('If you want to remove more spots with higher residuals (remove more potential mismatches), press 2 and enter.')
+                a = input('');
+                close
+                while isempty(a) || (a~=1 && a~=2)
+                    a = input('Please enter 1 or 2:');
+                end
+                if a==1
+                    params.ResidTolerance = ResidGtoR/size(allmatchesG,2)+0.001;
+                elseif a==2
+                    StdDevMultiplier = StdDevMultiplier-1;
+                end
+                    
                 close
             end
             clear CurrDists CurrErrors

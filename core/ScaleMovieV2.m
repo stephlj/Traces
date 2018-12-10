@@ -44,12 +44,22 @@ function params = ScaleMovieV2(PathToMovie,params)
                 sortedMaxes = sortedMaxes(1:end-1);
                 if length(sortedMaxes)<(length(Maxes)-10)
                     disp('ScaleMovieV2: A lot of max outliers?')
-                    disp('To continue reducing the max value, enter: dbcont')
-                    disp('To stop here, enter: stdDiffmultiplier = stdDiffmultiplier+1; meanmultiplier = meanmultiplier+1; dbcont')
+                    % disp('To continue reducing the max value, enter: dbcont')
+                    % disp('To stop here, enter: stdDiffmultiplier = stdDiffmultiplier+1; meanmultiplier = meanmultiplier+1; dbcont')
+                    disp('To continue reducing the max value (thereby declaring more points outliers), press 1 and then enter')
+                    disp('To stop here, press 2 and then enter')
+                    disp('(You may be asked this question multiple times!)')
                     
                     PlotMaxes(xaxislim,[],[],Maxes,newMax,Mins,[],NormImage)
-                    keyboard
+                    % keyboard
+                    a = input('');
                     close
+                    while isempty(a) || (a~=1 && a~=2)
+                        a = input('Please enter 1 or 2:');
+                    end
+                    if a==2
+                        stdDiffmultiplier = stdDiffmultiplier+1; meanmultiplier = meanmultiplier+1;
+                    end
                 end
             end
             clear sortedMaxes MaxDiffs meanDiff stdDiff
