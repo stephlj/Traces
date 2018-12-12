@@ -236,6 +236,15 @@ NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensit
         UseCombinedImage = 0;
     end
     clear MatlabVer MatlabDate
+    % Check whether this is R2017a or later for purposes of which FRETmap
+    % class to use:
+    whichPoly = CheckPoly;
+    if strcmpi(TransformToCalc,'MatlabPoly') && strcmpi(whichPoly,'Traces')
+        disp('Warning: Must use Traces custom polynomial transformation calculator with this version of Matlab.')
+        disp('CalcCombinedImage not supported with Traces custom polynomial transformation calculator.')
+        TransformToCalc = 'Poly';
+        UseCombinedImage = 0;
+    end
 
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%
 save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
@@ -247,4 +256,4 @@ save(fullfile(codedir,'AnalysisParameters.mat'),'defaultsavedir',...
     'UseSymGauss','EndInjectFrame','DetectRedFlash','InjectDelay',...
     'ManualInjectMark','FindSpotsEveryXFrames','alpha','gamma',...
     'CheckSpotFindingEveryXFrames','GaussWeightAmp','FixSpotVar',...
-    'ScaleChannelsSeparately');
+    'ScaleChannelsSeparately','whichPoly');
