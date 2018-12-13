@@ -119,6 +119,10 @@ classdef FRETmapR2017a < handle
                 % Check that Kind is supported
                 if strcmpi(Kind,'MatlabAffine') || strcmpi(Kind,'MatlabPoly')
                     self.Kind = Kind;
+                elseif strcmpi(Kind,'Affine') % This class forces the use of Matlab built-in functions only!
+                    self.Kind = 'MatlabAffine';
+                elseif strcmpi(Kind,'Poly')
+                    self.Kind = 'MatlabPoly';
                 else
                     disp(strcat('Kind:',Kind,' not supported for class FRETmapR2017a.'))
                     self.Kind = -1;
@@ -126,7 +130,7 @@ classdef FRETmapR2017a < handle
                 end
             
             % If Kind is MatlabAffine:
-            if strcmpi(Kind,'MatlabAffine')
+            if strcmpi(self.Kind,'MatlabAffine')
                 % Check that there are at least three points:
                 if size(StartData,2)<3
                     disp('FRETmapR2017a class: Minimum three pairs of points required for affine transformation')

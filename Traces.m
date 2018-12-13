@@ -133,11 +133,20 @@ function Traces(rootname,debug)
         % quality of the fitted transform, even for ~750 spots. With
         % perfect matching and our current alignment, the residuals should
         % be <0.008 per spot (note that the residuals will increase with more spots!):
-        if oldtform.A == -1
-            newtform = -1;
-            matchedG = -1;
-            matchedR = -1;
-            return
+        if strcmpi(params.whichPoly,'preR2017a') || strcmpi(params.whichPoly,'Traces')
+            if oldtform.A == -1
+                newtform = -1;
+                matchedG = -1;
+                matchedR = -1;
+                return
+            end
+        else
+            if oldtform.tform == -1
+                newtform = -1;
+                matchedG = -1;
+                matchedR = -1;
+                return
+            end
         end
         StdDevMultiplier = 5;
         PrevResid = oldtform.ResidualsFwd;
@@ -181,9 +190,13 @@ function Traces(rootname,debug)
                 allmatchesR = [allmatchesR, matchedR{p}];
                 clear newRs tempR tempG
             end
-
-            newtform = FRETmap(allmatchesG,allmatchesR,'Green',params.TransformToCalc,...
-                params.TformMaxDeg,params.TformTotDeg);
+            
+            if strcmpi(params.whichPoly,'preR2017a') || strcmpi(params.whichPoly,'Traces')
+                newtform = FRETmap(allmatchesG,allmatchesR,'Green',params.TransformToCalc,...
+                    params.TformMaxDeg,params.TformTotDeg);
+            else 
+                newtform = FRETmapR2017a(allmatchesG,allmatchesR,'Green',params.TransformToCalc,params.TformTotDeg);
+            end
             disp(sprintf('Residuals for %d spots:',size(allmatchesG,2)))
             ResidGtoR = newtform.ResidualsFwd
             ResidRtoG = newtform.ResidualsInv
@@ -408,8 +421,12 @@ function Traces(rootname,debug)
                 % Update 11/5/2014: creating a temporary map that can be
                 % used if the greedy algorithm fails on the next data
                 % set(s)
-                tformtemp = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
-                    params.TformMaxDeg,params.TformTotDeg);
+                if strcmpi(params.whichPoly,'preR2017a') || strcmpi(params.whichPoly,'Traces')
+                    tformtemp = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
+                        params.TformMaxDeg,params.TformTotDeg);
+                else
+                    tformtemp = FRETmapR2017a(matchGall,matchRall,'Green',params.TransformToCalc,params.TformTotDeg);
+                end
 
                 clear TotImg TotImg2 imgGreen imgRed spotsGabs
             end
@@ -433,11 +450,16 @@ function Traces(rootname,debug)
         % from all bead movies or snapshots that were loaded.
         % Update 4/2014 to use my FRETmap class
         clear tformtemp
-        tformPoly = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
-            params.TformMaxDeg,params.TformTotDeg);
+        if strcmpi(params.whichPoly,'preR2017a') || strcmpi(params.whichPoly,'Traces')
+            tformPoly = FRETmap(matchGall,matchRall,'Green',params.TransformToCalc,...
+                params.TformMaxDeg,params.TformTotDeg);
         % Affine tends to do better for overlay images using imwarp, so
         % also calculating:
-        tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
+            tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
+        else
+            tformPoly = FRETmapR2017a(matchGall,matchRall,'Green',params.TransformToCalc,params.TformTotDeg);
+            tformAffine = FRETmapR2017a(matchGall,matchRall,'Green','Affine');
+        end
         disp(sprintf('Residuals for %d spots:',size(matchGall,2)))
         ResidualsGtoR = tformPoly.ResidualsFwd
         ResidualsRtoG = tformPoly.ResidualsInv
@@ -468,7 +490,11 @@ function Traces(rootname,debug)
             matchGall = matchG{1};
             matchRall = matchR{1};
         end
-        tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
+        if strcmpi(params.whichPoly,'preR2017a') || strcmpi(params.whichPoly,'Traces')
+            tformAffine = FRETmap(matchGall,matchRall,'Green','Affine');
+        else
+            tformAffine = FRETmapR2017a(matchGall,matchRall,'Green','Affine');
+        end
 
         % Finally, let the user check the resulting transformation:
         if isempty(DoMap)

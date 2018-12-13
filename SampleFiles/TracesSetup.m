@@ -239,11 +239,20 @@ NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensit
     % Check whether this is R2017a or later for purposes of which FRETmap
     % class to use:
     whichPoly = CheckPoly;
-    if strcmpi(TransformToCalc,'MatlabPoly') && strcmpi(whichPoly,'Traces')
-        disp('Warning: Must use Traces custom polynomial transformation calculator with this version of Matlab.')
-        disp('CalcCombinedImage not supported with Traces custom polynomial transformation calculator.')
-        TransformToCalc = 'Poly';
-        UseCombinedImage = 0;
+    if (strcmpi(TransformToCalc,'MatlabAffine') || strcmpi(TransformToCalc,'MatlabPoly')) && strcmpi(whichPoly,'Traces') % User wants to use Matlab polynomial transformation calculator but neither of the versions
+            % in FRETmap or FRETmapR2017a work. Assume MatlabAffine won't
+            % work in those cases either.
+        disp('Warning: Must use Traces custom transformation calculator code with this version of Matlab.')
+        if strcmpi(TransformToCalc,'MatlabPoly')
+            disp('CalcCombinedImage not supported with Traces custom polynomial transformation calculator.')
+            UseCombinedImage = 0;
+        end
+        if strcmpi(TransformToCalc,'MatlabAffine')
+            TransformToCalc = 'Poly';
+        else
+            TransformToCalc = 'Poly';
+        end
+        
     end
 
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%

@@ -178,7 +178,11 @@ function [newspotsR,newspotsG] = UserPickSptsForAffine(imgR,imgG,spotsR,spotsG,b
         close
 
         % Make an affine transformation with these user-paired spots
-        tformAffine = FRETmap(spotsGforAffine,spotsRforAffine,'Green','MatlabAffine');
+        if strcmpi(params.whichPoly,'preR2017a') || strcmpi(params.whichPoly,'Traces')
+            tformAffine = FRETmap(spotsGforAffine,spotsRforAffine,'Green','MatlabAffine');
+        else
+            tformAffine = FRETmapR2017a(spotsGforAffine,spotsRforAffine,'Green','MatlabAffine');
+        end
 
         % Re-pair spots and return new matches:
         attempts = attempts+1;
