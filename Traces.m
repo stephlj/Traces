@@ -141,7 +141,7 @@ function Traces(rootname,debug)
                 return
             end
         else
-            if oldtform.tform == -1
+            if isa(oldtform.tform,'double') && oldtform.tform == -1
                 newtform = -1;
                 matchedG = -1;
                 matchedR = -1;

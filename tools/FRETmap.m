@@ -340,7 +340,7 @@ classdef FRETmap < handle
             elseif strcmpi(direction,'inv')
                 Atouse = self.Ainv;
             else
-                disp(strcat('Direction: ',direction,' not defined for FRETmap class method HistResiduals.'))
+                disp(strcat('Direction: ',direction,' not defined for FRETmap class method ReturnMatlabTform.'))
                 return
             end
             if strcmpi(self.Kind,'Affine') || strcmpi(self.Kind,'MatlabAffine')

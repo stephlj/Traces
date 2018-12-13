@@ -53,7 +53,7 @@ end
 RedI = zeros(size(Rspots,2),totframes);
 GrI = zeros(size(Rspots,2),totframes);
 % Find the spots in the coordinate system of the other (green) channel:
-if isa(tform,'FRETmap')
+if isa(tform,'FRETmap') || isa(tform,'FRETmapR2017a')
     Gspots = tform.FRETmapInv(Rspots);
     numspots = size(Rspots,2);
 elseif tform == 1

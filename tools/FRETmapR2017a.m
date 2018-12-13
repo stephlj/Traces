@@ -207,6 +207,17 @@ classdef FRETmapR2017a < handle
             end
         end
       
+        function MatlabTform = ReturnMatlabTform(self,direction)
+            if strcmpi(direction, 'fwd')
+                % empirically:
+                MatlabTform = self.tformInv;
+            elseif strcmpi(direction,'inv')
+                MatlabTform = self.tform;
+            else
+                disp(strcat('Direction: ',direction,' not defined for FRETmapR22017a class method ReturnMatlabTform.'))
+                return
+            end
+        end
         
         % Plot the residuals from the fit that produced the mapping
         % contained in this object
