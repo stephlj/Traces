@@ -236,23 +236,30 @@ NormImage = 0; % If this is 1, ScaleMovieV2 will normalize each pixel's intensit
         UseCombinedImage = 0;
     end
     clear MatlabVer MatlabDate
-    % Check whether this is R2017a or later for purposes of which FRETmap
-    % class to use:
-    whichPoly = CheckPoly;
-    if (strcmpi(TransformToCalc,'MatlabAffine') || strcmpi(TransformToCalc,'MatlabPoly')) && strcmpi(whichPoly,'Traces') % User wants to use Matlab polynomial transformation calculator but neither of the versions
-            % in FRETmap or FRETmapR2017a work. Assume MatlabAffine won't
-            % work in those cases either.
-        disp('Warning: Must use Traces custom transformation calculator code with this version of Matlab.')
-        if strcmpi(TransformToCalc,'MatlabPoly')
-            disp('CalcCombinedImage not supported with Traces custom polynomial transformation calculator.')
-            UseCombinedImage = 0;
+    % Check which FRETmap class, FRETmap or FRETmapR2017a (or neither),
+    % will work if the user wants to do the channel mapping with Matlab's
+    % built-in functions:
+    if strcmpi(TransformToCalc,'Affine') || strcmpi(TransformToCalc,'Poly')
+        % User wants to use Traces's custom transformation calculation
+        % code, which works no matter what version of Matlab they're
+        % running (so far anyway)
+        whichPoly = 'Traces';
+    else
+        whichPoly = CheckPoly;
+        if (strcmpi(TransformToCalc,'MatlabAffine') || strcmpi(TransformToCalc,'MatlabPoly')) && strcmpi(whichPoly,'Traces') 
+            % User wants to use Matlab polynomial transformation calculator but neither of the versions    
+            % in FRETmap or FRETmapR2017a work. Assume MatlabAffine won't work in those cases either.
+            disp('Warning: Must use Traces custom transformation calculator code with this version of Matlab.')
+            if strcmpi(TransformToCalc,'MatlabPoly') && UseCombinedImage==1
+                disp('CalcCombinedImage not supported with Traces custom polynomial transformation calculator.')
+                UseCombinedImage = 0;
+            end
+            if strcmpi(TransformToCalc,'MatlabAffine')
+                TransformToCalc = 'Affine';
+            else
+                TransformToCalc = 'Poly';
+            end
         end
-        if strcmpi(TransformToCalc,'MatlabAffine')
-            TransformToCalc = 'Poly';
-        else
-            TransformToCalc = 'Poly';
-        end
-        
     end
 
 %%%%%%%%%%%%% Save the paramters %%%%%%%%%%%%%%%%%%%%
