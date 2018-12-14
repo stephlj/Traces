@@ -1,5 +1,7 @@
 # Traces: single molecule FRET analysis code
 
+![Traces summary](Manual/TracesImg_ForGitRepo.png)
+
 Traces calculates FRET-versus-time trajectories (“traces”) from a standard prism-based TIRF single-molecule FRET (smFRET) microscopy setup. It can be run as a stand-alone analysis suite, but it is written as modularly as possible with the hope that it can be adapted fairly easily to other microscopy setups and acquisition software.  
 
 We have attempted to avoid as much as possible "buried" parameters, collecting them instead in the TracesSetup.m file.  TracesSetup.m is the only function a user should have to edit regularly (though some initial modifications may need to be made to, for example, the image loading function; see the accompanying manual for more details).
