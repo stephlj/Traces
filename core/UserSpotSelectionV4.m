@@ -209,14 +209,14 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        figure(h2)
        % plot red channel with circle around spot
        %subplot('Position',[0.05 0.3 0.45 0.65])
-       subplot('Position',[0.08 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
+       imgRall = subplot('Position',[0.08 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)]);
        imshow(imgRinit)
        hold on
        boxfun(spots(:,k),sqrt(1./(2.*spotVars(:,k))).*5,'r');
        hold off
        title('Red','Fontsize',12)
        % plot green channel with circle around spot
-       subplot('Position',[0.54 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)])
+       imgGall = subplot('Position',[0.54 0.23 0.39 0.39*size(imgRinit,1)/size(imgRinit,2)]);
        imshow(imgGinit)
        hold on
        boxfun(GrSpots(:,k),sqrt(1./(2.*spotVars(:,k))).*5,'g');
@@ -388,7 +388,9 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                         [x,~] = ginput(2);
                         % Make sure user actually selected something in the
                         % correct panel
-                        if isequal(trace_axes,gca) && x(1)~=x(2)
+                        % if isequal(trace_axes,gca) && x(1)~=x(2)
+                        % Update for R2017a and later (see below under z):
+                        if(isequal(trace_axes,gca) || isequal(fret_axes,gca)) && x(1)~=x(2)
                             x = sort(x);
                             if x(1)<0
                                 x(1)=1;
@@ -456,7 +458,20 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
                     % Zoom
                     elseif cc=='z'
                         [x,~] = ginput(2);
-                        if isequal(trace_axes,gca) && x(1)~=x(2)
+                        % Update for R2017a and later:
+                        % For some reason, after ginput, gca doesn't always
+                        % return an axes that is exactly the same as
+                        % traces_axes. Since for ginput the user had to
+                        % click on one of the two figures (presumably),
+                        % what I really want to make sure is that it's NOT
+                        % the other one:
+                        % if isequal(trace_axes,gca) && x(1)~=x(2)
+%                         if ~isequal(imgRzoom_axes,gca) && ...
+%                             ~isequal(imgGzoom_axes,gca) && ...
+%                             ~isequal(imgRall,gca) && ~isequal(imgGall,gca) && x(1)~=x(2)
+                        % Oh--actually it looks like sometimes it returns fret_axes 
+                        % instead of traces_axes, that's all! 
+                        if (isequal(trace_axes,gca) || isequal(fret_axes,gca)) && x(1)~=x(2)
                             x = sort(x);
                             if x(1)<0
                                 x(1)=1;
