@@ -6,6 +6,8 @@ We have attempted to avoid as much as possible "buried" parameters, collecting t
 
 The general outline of the analysis workflow is: (1) Calculate a map that correlates pixels in the acceptor channel image to pixels in the donor channel image, as these will never be perfectly aligned in an smFRET setup. Or, load an old one. (2) Find fluorescent spots in a movie or set of movies, calculate intensity-versus-time traces for each spot, and then allow the user to save good traces for downstream analyses.
 
+Traces also includes code for downstream analyses of FRET-versus-time trajectories, based on fitting hidden Markov models (HMMs) with Gaussian emissions to the data to quantify "dwells" or "pauses". We have also developed a companion package called [Slopey](https://github.com/stephlj/slopey) for quantifying fast, non-instantaneous transitions between dwells.
+
 More information (including detailed derivations of, for example, the channel mapping linear algebra) can be found in the manual that accompanies this repository.
 
 Please [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find bugs in Traces. 
@@ -14,7 +16,7 @@ Please [open an issue](http://www.youtube.com/watch?v=TJlYiMp8FuY) if you find b
 
 Traces developed out of three main needs we were facing in analyzing smFRET data in our lab that were not met by other available software options: the need (1) for more customization options for our particular setup; (2) for more automation, additional computational and manual checks to enrich for good data with less work on the part of the user, and the ability to save and rerun select parts of the analysis, in order to handle the large data sets we generate; and (3) to be able to "trace" intensity-versus-time data back to the images that generated those data. 
 
-This last point was so important to us, especially for distinguishing complicated but real signals from experimental artifacts, that we named our software "Traces”: we want the user to always be able to "trace back" to the original images, to the analysis parameters used to get intensity-versus-time data out of those images, etc. For example, Traces allows the user to play sections of the movie, or to examine averages of sections of the movie, that generated the intensity-versus-time data being displayed for analysis.
+This last point was so important to us, especially for distinguishing complicated but real signals from experimental artifacts, that we named our software "Traces": we want the user to always be able to "trace back" to the original images, to the analysis parameters used to get intensity-versus-time data out of those images, etc. For example, Traces allows the user to play sections of the movie, or to examine averages of sections of the movie, that generated the intensity-versus-time data being displayed for analysis.
 
 More generally, just as controls and sanity checks are essential for rigorously interpreting experimental results, similar controls and checks are crucial for verifying that any software's output is "right". Therefore Traces offers the user visualizations, plots, and sanity checks after every manipulation of the data, so that the user can assess how Traces is doing, instead of treating the process of taking a set of raw camera images and generating FRET-versus-time traces as a black box.
 
