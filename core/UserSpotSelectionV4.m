@@ -251,6 +251,10 @@ disp('e=end of trace (after this point FRET set to zero); d=done with movie')
        xlabel('Time (sec)','Fontsize',12)
        ylabel('Intensity (a.u.)','Fontsize',12)
        title(strcat('Spot',int2str(k),'/',int2str(size(spots,2))),'Fontsize',12)
+       % Backwards compatibility
+       if xlims(k,2)==0
+           xlims(k,2)=size(allRedI,2)/fps;
+       end
        xlim([xlims(k,1) xlims(k,2)])
        
        fret_axes = subplot(2,1,2);
