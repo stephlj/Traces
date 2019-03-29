@@ -635,7 +635,6 @@ close all
             ToAnalyze_FullNames{g} = ToAnalyze(g).name;
         end
     end
-    params.fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze_FullNames{1}),'fps');
     
     % Make sure not saving over old data:
     if ~exist(fullfile(params.defaultsavedir,rootname),'dir')
@@ -662,6 +661,10 @@ close all
 
     for i = 1:length(ToAnalyze)
         disp(strcat('Analyzing:',ToAnalyze(i).name))
+        
+        % Update 3/2019 to allow different movies in the same data set to
+        % have different fps:
+        params.fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze_FullNames{i}),'fps');
 
         % Update 12/2013: If this movie has already been analyzed, provide
         % the option to use the previously found spots, instead of
@@ -1105,8 +1108,10 @@ close all
                 params = load(fullfile(savedir,strcat('AnalysisParameters.mat')));
                 params = params.params;
            else
-               save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
+               params = load('AnalysisParameters.mat');
            end
+           params.fps = GetInfoFromMetaData(fullfile(D_Data,ToAnalyze_FullNames{i}),'fps');
+           save(fullfile(savedir,strcat('AnalysisParameters.mat')),'params');
            disp(strcat('Movie ',int2str(i),'of',int2str(length(ToAnalyze))))
            if params.IntensityGaussWeight
                if isempty(params.FixSpotVar)
