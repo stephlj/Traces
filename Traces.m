@@ -265,7 +265,7 @@ function Traces(rootname,debug)
             end
             clear Map prevmapdir
         else
-            disp('Map not found.')
+            disp(strcat('Map not found in directory: ',D_Beads))
             return
         end
     else
@@ -273,6 +273,10 @@ function Traces(rootname,debug)
             D_Beads = uigetdir(params.defaultdatadir,'Select directory with beads');
             % Figure out how many bead files to analyze there are:
             AllBeads = dir(fullfile(D_Beads,'Bead*'));
+            if isempty(AllBeads)
+                disp(strcat('No bead files found in directory: ',D_Beads));
+                return
+            end
             num_BeadDir = input(sprintf('How many bead files to use for transformation? Max: %d (Enter to use max) ',...
                 length(AllBeads)));
             if isempty(num_BeadDir) || num_BeadDir >= length(AllBeads)
